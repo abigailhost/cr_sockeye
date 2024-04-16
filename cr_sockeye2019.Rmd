@@ -1,0 +1,399 @@
+---
+title: "cr_sockeye"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Downloading Data
+```{r}
+if(!require(tidyverse))install.packages("tidyverse");library(tidyverse)
+if(!require(gsheet))install.packages("gsheet");library(gsheet)
+
+write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1PuZgbr8eBlCNh1ygfhuv2W_xsryhhezn/edit#gid=1548316807",format="csv"),stringsAsFactors = F),
+          row.names = FALSE,
+          "odata/crbody_2019.csv") #downloads 2019 body comp data from google sheets, make sure shareable by link in google
+
+write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1zOiVbDwnPme8mJdAlvX1QJ30etYJGBwA/edit#gid=1261110748",format="csv"),stringsAsFactors = F),
+          row.names = FALSE,
+          "odata/crpathogens_2019.csv") 
+
+write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1PuZgbr8eBlCNh1ygfhuv2W_xsryhhezn/edit#gid=1571451659",format="csv"),stringsAsFactors = F),
+          row.names = FALSE,
+          "odata/bodypath_2019.csv") 
+
+bodycomp <- read.csv("odata/crbody_2019.csv")
+path <- read.csv("odata/crpathogens_2019.csv")
+bodypath <- read.csv("odata/bodypath_2019.csv") #full dataset w/ body comp AND pathogen results for 2019
+```
+
+## Manipulating data files
+```{r}
+library(lme4)
+library(Matrix)
+library(MASS)
+library(dplyr)
+
+#manipulating data frames / eliminating unimportant columns
+path_loads_all <- subset(path, select = c(unique_id,site, 10:56))
+path_loads <- subset(path_loads_all, select = c(1:5, 7:8, 10:14, 16:18, 20:25, 27:30, 32:34, 36, 38, 40:49))
+str(path_loads)
+
+#If i eliminate hkg (which has one very high load in MN), utilize this code ======= path_loads <- subset(path_loads_all, select = c(1:5, 7:8, 10:14, 17:18, 20:25, 27:30, 32:34, 36, 38, 40:48))
+
+#visualizing distributions of pathogens, specifically in pathogen data set
+hist(path_loads$c_b_cys)
+hist(path_loads$de_sal)
+hist(path_loads$fa_mar)
+hist(path_loads$fl_psy)
+hist(path_loads$hkg)
+hist(path_loads$ic_hof)
+hist(path_loads$ic_mul)
+hist(path_loads$ihnv)
+hist(path_loads$lo_sal)
+hist(path_loads$pa_kab)
+hist(path_loads$pa_min)
+hist(path_loads$pa_ther)
+hist(path_loads$sch)
+hist(path_loads$sp_des)
+hist(path_loads$te_bry)
+
+
+#manipulating data types for figures/analysis
+path_loads$Arena1 <- as.numeric(path_loads$Arena1)
+path_loads$arena2 <- as.numeric(path_loads$arena2)
+path_loads$ascv <- as.numeric(path_loads$ascv)
+path_loads$ce_sha <- as.numeric(path_loads$ce_sha)
+path_loads$cov <- as.numeric(path_loads$cov)
+path_loads$ctv <- as.numeric(path_loads$ctv)
+path_loads$my_arc <- as.numeric(path_loads$my_arc)
+path_loads$my_ins <- as.numeric(path_loads$my_ins)
+path_loads$na_sal <- as.numeric(path_loads$na_sal)
+path_loads$ne_per <- as.numeric(path_loads$ne_per)
+path_loads$pisck_sal <- as.numeric(path_loads$pisck_sal)
+path_loads$prv <- as.numeric(path_loads$prv)
+path_loads$pspv <- as.numeric(path_loads$pspv)
+path_loads$reov <- as.numeric(path_loads$reov)
+path_loads$rlo <- as.numeric(path_loads$rlo)
+path_loads$smallUK <- as.numeric(path_loads$smallUK)
+path_loads$te_mar <- as.numeric(path_loads$te_mar)
+path_loads$toti <- as.numeric(path_loads$toti)
+path_loads$ven <- as.numeric(path_loads$ven)
+path_loads$vhsv <- as.numeric(path_loads$vhsv)
+path_loads$vi_ang <- as.numeric(path_loads$vi_ang)
+path_loads$vi_sal <- as.numeric(path_loads$vi_sal)
+path_loads$site <- as.factor(path_loads$site)
+str(path_loads)
+
+
+#making site a factor in bodypath dataframe
+bodypath$site <- as.factor(bodypath$site)
+str(bodypath)
+```
+
+## Body Composition Data Visualization
+```{r}
+detach(path_loads)
+attach(bodypath)
+library(ggplot2)
+library(lme4)
+bodypath
+
+#weight and site
+hist(bodypath$Fish_Wt) #normal
+??lm()
+siteweight_lm <- lm(Fish_Wt~site)
+anova(siteweight_lm) #yes, weight is effected significantly by site/sampling location
+ggplot(bodypath, aes(site, Fish_Wt, fill = site)) + geom_bar(stat= "identity") #visual of weight distribution across sites
+
+#E density & site
+siteEdensity_lm <-lm(EnergyDensity_mJ.kg_1~site)
+anova(siteEdensity_lm)
+ggplot(bodypath, aes(site, EnergyDensity_mJ.kg_1, fill = site)) + geom_bar(stat= "identity", na.rm = TRUE) +  xlab("Site") + ylab("Energy Density (mJ/kg)")
+
+#weight & E density
+ggplot(bodypath, aes(x = Fish_Wt, y = EnergyDensity_mJ.kg_1, col = site)) + geom_point() + xlab("Fish Weight (g)") + ylab("Energy Density (mJ/kg)")
+weight_Edensity_lm <- lm(Fish_Wt~EnergyDensity_mJ.kg_1)
+anova(weight_Edensity_lm)
+#may want to account for site and date in this model, using random effects??
+
+#E density & sex
+Edensitysex_lm <- lm(EnergyDensity_mJ.kg_1~Sex)
+anova(Edensitysex_lm)
+ggplot(bodypath, aes(Sex, EnergyDensity_mJ.kg_1, fill = site)) + geom_boxplot() #ugly but displays E density across sites according to sex
+
+```
+## Bar Plots for each Pathogen, for prevalence/load over various locations in river
+```{r}
+??barplot
+library(ggplot2)
+??ggplot2
+library(PNWColors)
+names(pnw_palettes)
+pal <- pnw_palette("Lake",9, type = "continuous")
+
+
+ggplot(bodypath, aes(x = site, y = c_b_cys, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() + ylab("Prevalence of Candidatus branchiomonas cysticola") + xlab("Site") #lots of loads per river
+ggplot(bodypath, aes(x = site, y = c_b_cys, fill = site)) + geom_boxplot() + scale_fill_brewer() + theme_classic() + ylab("Prevalence of Candidatus branchiomonas cysticola") + xlab("Site") #boxplot version of visualization
+
+bodypath_cc <- bodypath[1:8,]
+ggplot(bodypath_cc, aes(x = site, y = c_b_cys, fill = site)) + geom_boxplot() + scale_fill_brewer() + theme_minimal() + ylab("Prevalence of Candidatus branchiomonas cysticola") + xlab("Site") #boxplot version of visualization of just CC
+
+
+ggplot(bodypath, aes(x = site, y = de_sal, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #not a lot of prevelance
+
+ggplot(bodypath, aes(x = site, y = fa_mar, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #only one point of prevalence in TNL
+
+ggplot(bodypath, aes(x = site, y = fl_psy, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() # good prevalence
+
+ggplot(bodypath, aes(x = site, y = hkg, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() # lots of LOW river prevalence values, but one very high prevalence in MN (this may be the outlier)-- What do I do about this?
+
+ggplot(bodypath, aes(x = site, y = ic_hof, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() # one prevalence/load noted in CC, low river
+
+ggplot(bodypath, aes(x = site, y = ic_mul, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #mediocre prevalence
+
+ggplot(bodypath, aes(x = site, y = ihnv, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #some prevalence in GK and one fish with presence in St. Annes
+
+ggplot(bodypath, aes(x = site, y = lo_sal, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #lots of presence, mixed between Upper and Lower River
+
+ggplot(bodypath, aes(x = site, y = pa_kab, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #presence in CC, but none up river
+
+ggplot(bodypath, aes(x = site, y = pa_min, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #multiple fish with presence in PC
+
+ggplot(bodypath, aes(x = site, y = pa_ther, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #one fish with presence in EW
+
+ggplot(bodypath, aes(x = site, y = sch, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #one fish in PC
+
+ggplot(bodypath, aes(x = site, y = sp_des, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #lots of mid-upper river prevalence in mulitple fish
+
+ggplot(bodypath, aes(x = site, y = te_bry, fill = site, col = "black")) + geom_bar(stat = "identity", col = "black") + scale_fill_brewer() + theme_minimal() #lots of presence in GJ and some in MA and LL
+
+
+#pathogens of note via presence: c_b_cys, fl_psy, ic_mul, lo_sal, pa_min, sp_des, te_bry
+#initial scatterplot relationships of E density & pathogen prevalence
+ggplot(bodypath, aes(x = EnergyDensity_mJ.kg_1, y = c_b_cys, col = site)) + geom_point() + xlab("Energy Density") + ylab("Prevalence of Candidatus branchiomonas cysticola")
+
+ggplot(bodypath, aes(x = EnergyDensity_mJ.kg_1, y = fl_psy, col = site)) + geom_point() + xlab("Energy Density") + ylab("Prevalence of Flavobacterium psychrophilum")
+
+ggplot(bodypath, aes(x = EnergyDensity_mJ.kg_1, y = lo_sal, col = site)) + geom_point() + xlab("Energy Density") + ylab("Prevalence of Loma salmonae")
+
+ggplot(bodypath, aes(x = EnergyDensity_mJ.kg_1, y = pa_min, col = site)) + geom_point() + xlab("Energy Density") + ylab("Prevalence of Parvicapsula minibicornis")
+
+ggplot(bodypath, aes(x = EnergyDensity_mJ.kg_1, y = sp_des, col = site)) + geom_point() + xlab("Energy Density") + ylab("Prevalence of Sphaerothecum destruens")
+
+ggplot(bodypath, aes(x = EnergyDensity_mJ.kg_1, y = te_bry, col = site)) + geom_point() + xlab("Energy Density") + ylab("Prevalence of Tetracapsuloides bryosalmonae")
+
+
+#can i do a figure where I look at one river site, all pathogens? so 9 figures instead of x amount of pathogens
+
+```
+## Pathogen Prevalence Boxplots
+```{r}
+#fish with multiple presences in multiple locations, that work visually with a boxplot
+par(mfrow=c(2,2))
+
+ggplot(bodypath, aes(x = site, y = c_b_cys, fill = site)) + geom_boxplot() + scale_fill_brewer() + theme_classic() + ylab("Prevalence of Candidatus branchiomonas cysticola") + xlab("Site") #boxplot visualization of c_b_cys
+
+ggplot(bodypath, aes(x = site, y = de_sal, fill = site)) + geom_boxplot() + scale_fill_brewer() + theme_classic() #de_sal
+
+ggplot(bodypath, aes(x = site, y = fl_psy, fill = site)) + geom_boxplot() + scale_fill_brewer() + theme_classic() #fl_psy
+
+ggplot(bodypath, aes(x = site, y = lo_sal, fill = site)) + geom_boxplot() + scale_fill_brewer() + theme_classic() #lots of presence, mixed between Upper and Lower River
+
+ggplot(bodypath, aes(x = site, y = pa_min, fill = site)) + geom_boxplot() + scale_fill_brewer() + theme_classic() #multiple fish with presence in PC
+
+ggplot(bodypath, aes(x = site, y = sp_des, fill = site)) + geom_boxplot() + scale_fill_brewer() + theme_classic() #lots of mid-upper river prevalence in mulitple fish
+
+ggplot(bodypath, aes(x = site, y = te_bry, fill = site)) + geom_boxplot() + scale_fill_brewer() + theme_classic() #lots of presence in GJ and some in MA and LL
+
+
+```
+
+
+## PC scores for pathogen data
+```{r}
+detach(bodypath)
+attach(path_loads)
+str(path_loads)
+path_pca <- princomp(path_loads[,3:38],cor=F, scores=T, covmat = NULL)
+summary(path_pca, loadings=T, cutoff=0.0001)
+path_pca
+path_pca$scores
+
+screeplot(path_pca, type=c('lines'), main = "Line Screeplot for Pathogen PCA")
+
+#as reminder, to remove hkg outlier: path_loads <- subset(path_loads_all, select = c(1:5, 7:8, 10:14, 17:18, 20:25, 27:30, 32:34, 36, 38, 40:48))
+
+#site analysis, if MN outlier IS present
+site_scores<-cbind(path_loads$site,path_pca$scores[,1:2])
+site_scores <- as.data.frame(site_scores)
+str(site_scores)
+site_scores$V1 <- as.factor(site_scores$V1)
+site_scores$Comp.1 <- as.numeric(site_scores$Comp.1)
+site_scores$Comp.2 <- as.numeric(site_scores$Comp.2)
+
+plot(site_scores[,2], site_scores[,3], col = site_scores[,1], pch=19, xlab= "PC-1", ylab = "PC-2", main="PC-2 vs PC-1 for Pathogen Data, grouped by site in river")
+legend("bottomleft", legend = unique(site_scores[,1]), col=1:9, pch=19, cex=0.5)
+
+
+#site analysis, if I eliminate the one MN outlier
+site_scores<-cbind(path_loads$site,path_pca$scores[,1:2])
+site_scores <- as.data.frame(site_scores)
+site_scores1 <- as.data.frame(site_scores[-54,])
+str(site_scores1)
+site_scores1$V1 <- as.factor(site_scores1$V1)
+site_scores1$Comp.1 <- as.numeric(site_scores1$Comp.1)
+site_scores1$Comp.2 <- as.numeric(site_scores1$Comp.2)
+
+plot(site_scores1[,2], site_scores1[,3], col = site_scores1[,1], pch=19, xlab= "PC-1", ylab = "PC-2", main="PC-2 vs PC-1 for Pathogen Data, grouped by site in river")
+legend("bottomleft", legend = unique(site_scores1[,1]), col=1:9, pch=19, cex=0.5)
+
+library(car)
+
+#do an outlier test
+#outlier.test
+# linear modeling for pathogens of interest vs body comp
+
+```
+
+## Pathogen Analysis, transformed data-- new datasheet
+```{r}
+write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1zOiVbDwnPme8mJdAlvX1QJ30etYJGBwA/edit#gid=855164179",format="csv"),stringsAsFactors = F),
+          row.names = FALSE,
+          "odata/updatedpathogens_2019.csv") 
+
+path2 <- read.csv("odata/updatedpathogens_2019.csv")
+str(path2)
+
+
+path_loads_2 <- subset(path2, select = c(unique_id,site, fluidigm_num, 10:22, 24:57))
+str(path_loads_2)
+path2_work <- subset(path_loads_2, select = c(1:6, 8:9, 11:15, 17:19, 21:26, 28:31, 33:35, 37, 39, 41:50))
+str(path2_work)
+
+#transforming structure 
+path2_work$Arena1 <- as.numeric(path2_work$Arena1)
+path2_work$arena2 <- as.numeric(path2_work$arena2)
+path2_work$ascv <- as.numeric(path2_work$ascv)
+path2_work$ce_sha <- as.numeric(path2_work$ce_sha)
+path2_work$cov <- as.numeric(path2_work$cov)
+path2_work$ctv <- as.numeric(path2_work$ctv)
+path2_work$my_arc <- as.numeric(path2_work$my_arc)
+path2_work$my_ins <- as.numeric(path2_work$my_ins)
+path2_work$na_sal <- as.numeric(path2_work$na_sal)
+path2_work$ne_per <- as.numeric(path2_work$ne_per)
+path2_work$pisck_sal <- as.numeric(path2_work$pisck_sal)
+path2_work$prv <- as.numeric(path2_work$prv)
+path2_work$pspv <- as.numeric(path2_work$pspv)
+path2_work$reov <- as.numeric(path2_work$reov)
+path2_work$rlo <- as.numeric(path2_work$rlo)
+path2_work$smallUK <- as.numeric(path2_work$smallUK)
+path2_work$te_mar <- as.numeric(path2_work$te_mar)
+path2_work$toti <- as.numeric(path2_work$toti)
+path2_work$ven <- as.numeric(path2_work$ven)
+path2_work$vhsv <- as.numeric(path2_work$vhsv)
+path2_work$vi_ang <- as.numeric(path2_work$vi_ang)
+path2_work$vi_sal <- as.numeric(path2_work$vi_sal)
+str(path2_work)
+
+#transforming data, testing w/ histograms
+path2_work <- path2_work %>%
+  mutate(c_b_cys = log(c_b_cys + 1))
+
+path2_work <- path2_work %>%
+  mutate(de_sal = log(de_sal + 1))
+
+path2_work <- path2_work %>%
+  mutate(fa_mar = log(fa_mar + 1))
+
+path2_work <- path2_work %>%
+  mutate(fl_psy = log(fl_psy + 1))
+
+path2_work <- path2_work %>%
+  mutate(hkg_r = log(hkg_r))
+
+path2_work <- path2_work %>%
+  mutate(ic_hof = log(ic_hof + 1))
+
+path2_work <- path2_work %>%
+  mutate(ic_mul = log(ic_mul + 1))
+
+path2_work <- path2_work %>%
+  mutate(ihnv = log(ihnv + 1))
+
+path2_work <- path2_work %>%
+  mutate(lo_sal = log(lo_sal + 1))
+
+path2_work <- path2_work %>%
+  mutate(pa_kab = log(pa_kab + 1))
+
+path2_work <- path2_work %>%
+  mutate(pa_min = log(pa_min + 1))
+
+path2_work <- path2_work %>%
+  mutate(pa_pse = log(pa_pse + 1))
+
+path2_work <- path2_work %>%
+  mutate(pa_ther = log(pa_ther + 1))
+
+path2_work <- path2_work %>%
+  mutate(sch = log(sch + 1))
+
+path2_work <- path2_work %>%
+  mutate(sp_des = log(sp_des + 1))
+
+path2_work <- path2_work %>%
+  mutate(te_bry = log(te_bry + 1))
+
+
+#attach(path_loads)
+str(path2_work)
+
+#remove pathogens with all 0 loads
+path2_work <- subset(path2_work, select = c(1:3, 7, 11:18, 23:26, 32, 34:35))
+write.csv(path2_work, "wdata/workingpathogendata.csv") #saving this datafile, in case -- log transformations, only includes pathogens with loadings present for at least one fish in one CR location
+
+#PCA
+path2_work <- drop_na(path2_work) #dropping NA values from data
+path2_pca <- princomp(path2_work[,4:19],cor=F, scores=T, covmat = NULL)
+summary(path2_pca, loadings=T, cutoff=0.00001)
+path2_pca
+path2_pca$scores
+
+screeplot(path2_pca, type=c('lines'), main = "Line Screeplot for Pathogen PCA")
+
+site_scores2<-cbind(path2_work$site, path2_pca$scores[,1:4])
+site_scores2 <- as.data.frame(site_scores2)
+str(site_scores2)
+site_scores2$V1 <- as.factor(site_scores2$V1)
+site_scores2$Comp.1 <- as.numeric(site_scores2$Comp.1)
+site_scores2$Comp.2 <- as.numeric(site_scores2$Comp.2)
+site_scores2$Comp.3 <- as.numeric(site_scores2$Comp.3)
+site_scores2$Comp.4 <- as.numeric(site_scores2$Comp.4)
+
+#PC2 vs PC1 figure
+plot(site_scores2[,2], site_scores2[,3], col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, xlab= "PC-1", ylab = "PC-2", main="PC-2 vs PC-1 for Pathogen Data, grouped by site in river")
+legend("bottomleft", legend = unique(site_scores2[,1]), col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, cex=0.5)
+
+#PC3 vs PC1 figure
+plot(site_scores2[,2], site_scores2[,4], col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, xlab= "PC-1", ylab = "PC-3", main="PC-3 vs PC-1 for Pathogen Data, grouped by site in river")
+legend("bottomleft", legend = unique(site_scores2[,1]), col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, cex=0.5)
+
+#PC3 vs PC2 figure
+plot(site_scores2[,3], site_scores2[,4], col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, xlab= "PC-2", ylab = "PC-3", main="PC-3 vs PC-2 for Pathogen Data, grouped by site in river")
+legend("bottomleft", legend = unique(site_scores2[,1]), col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, cex=0.5)
+
+#PC4 vs PC1 figure
+plot(site_scores2[,2], site_scores2[,5], col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, xlab= "PC-1", ylab = "PC-4", main="PC-4 vs PC-1 for Pathogen Data, grouped by site in river")
+legend("bottomleft", legend = unique(site_scores2[,1]), col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, cex=0.5)
+
+#PC4 vs PC2 figure
+plot(site_scores2[,3], site_scores2[,5], col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, xlab= "PC-2", ylab = "PC-4", main="PC-4 vs PC-2 for Pathogen Data, grouped by site in river")
+legend("bottomleft", legend = unique(site_scores2[,1]), col = c("darkblue","lightblue","lightpink", "goldenrod1","lightgreen","seagreen","coral2","plum4","deepskyblue3"), pch=19, cex=0.5)
+
+#look at principal components as explanatory variable
+```

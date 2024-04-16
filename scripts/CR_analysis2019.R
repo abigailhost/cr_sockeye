@@ -16,4 +16,6 @@ write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1zOi
 # 0 = negative result	
 # 999 = duplicate results did not match. This is most often due to the high CT (low load) samples on the edge of the detection limits (or LOD limit in LOD worksheet) and can generally be converted to a negative (0)	
 
-
+bodycomp <- read.csv("odata/crbody_2019.csv")
+path <- read.csv("odata/crpathogens_2019.csv")
+str(path)
