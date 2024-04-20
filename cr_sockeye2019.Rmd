@@ -63,7 +63,7 @@ str(lowerriver)
 runtimeEmodel <- lm(EnergyDensity_mJ.kg_1~runtime, data = lowerriver)
 anova(runtimeEmodel)
 
-ggplot(lowerriver, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Canyon Creek") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) + theme(axis.title=element_text(size=12))
+ggplot(lowerriver, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Canyon Creek") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 
 
 
@@ -91,9 +91,7 @@ str(upperriver)
 upperriverEmodel <- lm(EnergyDensity_mJ.kg_1~site, data = upperriver)
 anova(upperriverEmodel)
 
- #drop NA column
-
-ggplot(upperriver, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across 6 spawning sites in the Copper River, AK") + geom_boxplot() +  scale_fill_manual(values = c("#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=12))
+ggplot(upperriver, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across 6 spawning sites in the Copper River, AK") + geom_boxplot() +  scale_fill_manual(values = c("#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 
 ```
 ## Eliminating EW and PC rows
@@ -139,11 +137,12 @@ bodypath1$totalE <- (bodypath1$EnergyDensity_mJ.kg_1*bodypath1$Fish_Wt)
 ## Pathogen Richness (Explanatory Variable)
 ```{r}
 pathrichness <- bodypath1[,c(1:2,6,49:86)]
-write.csv(pathrichness, "wdata/2019_pathogenrichness.csv") #smaller dataframe with pathogen richness, for presentation
+write.csv(pathrichness, "wdata/2019_pathogenrichness.csv") # smaller data frame with pathogen richness, for presentation
 
 # prevalence was calculated in excel spreadsheet for simplicity, not used for code
 
-bodypath1$path_richness #path richness column, all adjusted for columns that needed to be removed/rows that needed to be removed
+#bodypath1$path_richness 
+## path richness column, all adjusted for columns that needed to be removed/rows that needed to be removed
 
 ```
 
@@ -359,22 +358,26 @@ ggplot(bodypath1, aes(bodypath1$PC1_scores, bodypath1$totalE)) + geom_point() + 
 
 
 
-
-
 #Richness Plots for Data Presentation
 install.packages("gridExtra")
 library(gridExtra)
-richness_scbm_plot <- ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$sc_bodymass)) + geom_point() + geom_smooth(method = "lm", col = "blue", ) + xlab("Pathogen Richness") + ylab("Size Corrected Body Mass") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14, face="bold"))
+richness_scbm_plot <- ggplot(bodypath1, aes(path_richness, sc_bodymass)) + geom_point() + geom_smooth(method = "lm", col = "blue", ) + xlab("Pathogen Richness") + ylab("Residuals for Size Corrected Body Mass") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14, face="bold"))
 
-richness_ED_plot <- ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$EnergyDensity_mJ.kg_1)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Energy Density (mJ/kg)") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14, face="bold"))
+richness_ED_plot <- ggplot(bodypath1, aes(path_richness, EnergyDensity_mJ.kg_1)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Energy Density (mJ/kg)") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14, face="bold"))
 
-richness_TE_plot <- ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$totalE)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Total Energy (mJ)") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14, face="bold"))
+richness_TE_plot <- ggplot(bodypath1, aes(path_richness, totalE)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Total Energy (mJ)") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14, face="bold"))
 
 grid.arrange(richness_scbm_plot, richness_ED_plot, richness_TE_plot, ncol = 3)
 
 
 #Load Plots for Data Presentation
+loads_scbm_plot <- ggplot(bodypath1, aes(PC1_scores, sc_bodymass)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen PC1 Score") + ylab("Residuals for Size Corrected Body Mass") + theme(axis.text=element_text(size=11), axis.title=element_text(size=14, face="bold"))
 
+loads_ED_plot <- ggplot(bodypath1, aes(PC1_scores, EnergyDensity_mJ.kg_1)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen PC1 Score") + ylab("Energy Density") + theme(axis.text=element_text(size=11), axis.title=element_text(size=14, face="bold"))
+
+loads_TE_plot <- ggplot(bodypath1, aes(PC1_scores, totalE)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen PC1 Score") + ylab("Total Energy") + theme(axis.text=element_text(size=11), axis.title=element_text(size=14, face="bold"))
+
+grid.arrange(loads_scbm_plot, loads_ED_plot, loads_TE_plot, ncol = 3)
 ```
 
 
@@ -406,14 +409,21 @@ bodypath1$site <- factor(bodypath1$site,
 #Response Variable =  pathogen richness
 pathr_site_lm <- lm(bodypath1$path_richness ~ bodypath1$site)
 anova(pathr_site_lm)
-ggplot(bodypath1, aes(bodypath1$site, bodypath1$path_richness, fill = site)) + geom_boxplot() + xlab("Site") + ylab("Pathogen Richness") + scale_fill_manual(values = c("#1F78B4","#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A"))
+ggplot(bodypath1, aes(site, path_richness, fill = site)) + geom_boxplot() + xlab("Site") + ylab("Pathogen Richness") + scale_fill_manual(values = c("#1F78B4","#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + geom_jitter()+ theme(axis.text=element_text(size=11), axis.title=element_text(size=14, face="bold"), title = element_text(size=16, face="bold"), legend.text = element_text(size=12))
+
 
 #response variable = pathogen load (PC score)
 pathscore_site_lm <- lm(bodypath1$PC1_scores ~ bodypath1$site)
 anova(pathscore_site_lm)
-ggplot(bodypath1, aes(bodypath1$site, bodypath1$PC1_scores, fill = site)) + geom_boxplot() + xlab("Site") + ylab("Pathogen PC1 Score") + scale_fill_manual(values = c("#1F78B4","#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A"))
+ggplot(bodypath1, aes(bodypath1$site, bodypath1$PC1_scores, fill = site)) + geom_boxplot() + xlab("Site") + ylab("Pathogen PC1 Score") + scale_fill_manual(values = c("#1F78B4","#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + geom_jitter()+ theme(axis.text=element_text(size=11), axis.title=element_text(size=14, face="bold"), title = element_text(size=16, face="bold"), legend.text = element_text(size=12))
 
 
+#Plots for Data Presentation
+richness_site_plot <- ggplot(bodypath1, aes(site, path_richness, fill = site)) + geom_boxplot() + xlab("Site") + ylab("Pathogen Richness") + scale_fill_manual(values = c("#1F78B4","#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + geom_jitter()+ theme(axis.text=element_text(size=11), axis.title=element_text(size=14, face="bold"), title = element_text(size=16, face="bold"), legend.text = element_text(size=12))
+
+loads_site_plot <- ggplot(bodypath1, aes(bodypath1$site, bodypath1$PC1_scores, fill = site)) + geom_boxplot() + xlab("Site") + ylab("Pathogen PC1 Score") + scale_fill_manual(values = c("#1F78B4","#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + geom_jitter()+ theme(axis.text=element_text(size=11), axis.title=element_text(size=14, face="bold"), title = element_text(size=16, face="bold"), legend.text = element_text(size=12))
+
+grid.arrange(richness_site_plot, loads_site_plot, ncol = 2)
 ```
 
 
