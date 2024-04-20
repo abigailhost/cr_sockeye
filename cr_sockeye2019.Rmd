@@ -63,7 +63,7 @@ str(lowerriver)
 runtimeEmodel <- lm(EnergyDensity_mJ.kg_1~runtime, data = lowerriver)
 anova(runtimeEmodel)
 
-ggplot(lowerriver, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Canyon Creek") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F"))
+ggplot(lowerriver, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Canyon Creek") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) + theme(axis.title=element_text(size=12))
 
 
 
@@ -73,18 +73,18 @@ upperriver <- upperriver[-(32:72),]
 upperriver <- upperriver[-(21),]#All upper river data samples (subtracting Eyak, Power Creek, and KL)
 
 upperriver$site <- factor(upperriver$site,
-                             levels = c("LL",
-                                        "MA",
-                                        "SA",
-                                        "GH",
+                             levels = c("TN",
                                         "MN",
-                                        "TN"),
-                             labels = c("LL",
-                                        "MA",
-                                        "SA",
                                         "GH",
+                                        "SA",
+                                        "MA",
+                                        "LL"),
+                             labels = c("TN",
                                         "MN",
-                                        "TN"))
+                                        "GH",
+                                        "SA",
+                                        "MA",
+                                        "LL"))
 
 write.csv(upperriver, "wdata/upperriverbodycomp_2019.csv")
 str(upperriver)
@@ -93,7 +93,7 @@ anova(upperriverEmodel)
 
  #drop NA column
 
-ggplot(upperriver, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Canyon Creek") + geom_boxplot() +  scale_fill_manual(values = c("#B2DF8A", "#E31A1C","#FF7F00", "#33A02C","#FB9A99","#CAB2D6"))
+ggplot(upperriver, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across 6 spawning sites in the Copper River, AK") + geom_boxplot() +  scale_fill_manual(values = c("#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=12))
 
 ```
 ## Eliminating EW and PC rows
@@ -122,13 +122,16 @@ library(dplyr)
 names(bodypath1)[names(bodypath1)== "sc_bm_resid"] <- "sc_bodymass" #rename column
 
 bodypath1 <- bodypath1[-(45),] #eliminates LL6, which has a -999 value of ihnv, which i eliminated via NA in the path loadings
+
+#may need to eliminate SA5 because no data for E content -- maybe not though?
 write.csv(bodypath1, "wdata/bodypathogenanalysis_data2019.csv")
 
 # energy density
 bodypath1$EnergyDensity_mJ.kg_1
 
 #total energy??
-#how to calculate this?
+#how to calculate this? == E density * Fish Weight
+bodypath1$totalE <- (bodypath1$EnergyDensity_mJ.kg_1*bodypath1$Fish_Wt)
 
 
 ```
@@ -246,9 +249,10 @@ path_work$site <- factor(path_work$site,
 install.packages("vegan")
 library(vegan)
 pca_vec <- envfit(path_pca$scores[,1:2], path_work[,4:16], permutations=0)
-plot(path_pca$scores[,1:2], cex=1, asp=1, pch=c(16), col=c("#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), xlab = "Principal Component 1", ylab = "Principal Component 2", main = "PC 2 vs PC 1, with vectors indicating
-the correlation between the component scores")
-legend(7,4, legend = sort(unique(path_work[,2])), col = c("#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C",  "#FF7F00", "#CAB2D6"), pch=c(16), cex=1)
+plot(path_pca$scores[,1:2], cex=1.5, asp=1, pch=c(16), col=c("#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), ylab="", xlab="", cex.main=1.5, main = "PC 2 vs PC 1, with vectors indicating the correlation between the component scores")
+mtext("Principal Component 2", side=2, line=2.2, cex=1.5)
+mtext("Principal Component 1", side=1, line=2.2, cex=1.5)
+legend(7,4.5, legend = sort(unique(path_work[,2])), col = c("#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C",  "#FF7F00", "#CAB2D6"), pch=c(16), cex=1.2, title ="Site")
 plot(pca_vec, col="black", new = F, cex=1) #The envfit() function fits vectors indicating the correlation between the component scores (plotted in the scatterplot)
 
 
@@ -287,29 +291,130 @@ legend("bottomleft", legend = unique(site_scores[,1]), col=c("#B2DF8A", "#33A02C
 
 
 #PC3 vs PC1 figure
-plot(site_scores2[,2], site_scores2[,4], col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, xlab= "PC-1", ylab = "PC-3", main="PC-3 vs PC-1")
-legend("bottomleft", legend = unique(site_scores2[,1]),col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, cex=0.5)
+plot(site_scores[,2], site_scores[,4], col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, xlab= "PC-1", ylab = "PC-3", main="PC-3 vs PC-1")
+legend("bottomleft", legend = unique(site_scores[,1]),col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, cex=0.5)
 
 #PC3 vs PC2 figure
-plot(site_scores2[,3], site_scores2[,4], col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, xlab= "PC-2", ylab = "PC-3", main="PC-3 vs PC-2")
-legend("bottomleft", legend = unique(site_scores2[,1]),col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, cex=0.5)
+plot(site_scores[,3], site_scores[,4], col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, xlab= "PC-2", ylab = "PC-3", main="PC-3 vs PC-2")
+legend("bottomleft", legend = unique(site_scores[,1]),col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, cex=0.5)
 
 #PC4 vs PC1 figure
-plot(site_scores2[,2], site_scores2[,5], col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, xlab= "PC-1", ylab = "PC-4", main="PC-4 vs PC-1")
-legend("bottomleft", legend = unique(site_scores2[,1]), col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, cex=0.5)
+plot(site_scores[,2], site_scores[,5], col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, xlab= "PC-1", ylab = "PC-4", main="PC-4 vs PC-1")
+legend("bottomleft", legend = unique(site_scores[,1]), col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, cex=0.5)
 
 #PC4 vs PC2 figure
-plot(site_scores2[,3], site_scores2[,5], col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, xlab= "PC-2", ylab = "PC-4", main="PC-4 vs PC-2 for Pathogen Data, grouped by site in river")
-legend("bottomleft", legend = unique(site_scores2[,1]), col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, cex=0.4)
+plot(site_scores[,3], site_scores[,5], col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, xlab= "PC-2", ylab = "PC-4", main="PC-4 vs PC-2 for Pathogen Data, grouped by site in river")
+legend("bottomleft", legend = unique(site_scores[,1]), col=c("#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FF7F00", "#CAB2D6"), pch=19, cex=1)
 
 #look at principal components as explanatory variable
 ```
+## PCA Loadings (PC1) ---> bodypath1 dataframe
+```{r}
+path_pca$scores[,1]
+path_pc1scores <- as.data.frame(path_pca$scores[,1])
+
+bodypath1 <- cbind(bodypath1, path_pc1scores) #adding PC1 scores as a column of bodypath1
+library(dplyr)
+names(bodypath1)[names(bodypath1)== "path_pca$scores[, 1]"] <- "PC1_scores"
+
+```
+
+## HYPOTHESIS #1 Linear Analysis 
+```{r}
+# Hypothesis #1 ===  Body size, fecundity, and energy density of sockeye are negatively correlated to pathogen prevalence.
+
+# response variables = size corrected body mass, energy density, total energy
+# explanatory variables = pathogen richness, pathogen PC scores
+
+# lm(Y ~ X)
+
+#pathogen richness as explanatory
+pathr_scbm_lm <- lm(bodypath1$sc_bodymass ~ bodypath1$path_richness)
+anova(pathr_scbm_lm)
+ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$sc_bodymass)) + geom_point() + geom_smooth(method = "lm", col = "blue", ) + xlab("Pathogen Richness") + ylab("Size Corrected Body Mass")
+
+pathr_ED_lm <- lm(bodypath1$EnergyDensity_mJ.kg_1 ~ bodypath1$path_richness)
+anova(pathr_ED_lm)
+ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$EnergyDensity_mJ.kg_1)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Energy Density (mJ/kg")
+
+pathr_TE_lm <- lm(bodypath1$totalE ~ bodypath1$path_richness)
+anova(pathr_TE_lm)
+ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$totalE)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Total Energy (mJ)")
+
+
+#pathogen PC Scores as explanatory
+pathscore_scbm_lm <- lm(bodypath1$sc_bodymass ~ bodypath1$PC1_scores)
+anova(pathscore_scbm_lm)
+ggplot(bodypath1, aes(bodypath1$PC1_scores, bodypath1$sc_bodymass)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen PC1 Score") + ylab("Size Corrected Body Mass")
+
+
+pathscore_ED_lm <- lm(bodypath1$EnergyDensity_mJ.kg_1 ~ bodypath1$PC1_scores)
+anova(pathscore_ED_lm)
+ggplot(bodypath1, aes(bodypath1$PC1_scores, bodypath1$EnergyDensity_mJ.kg_1)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen PC1 Score") + ylab("Energy Density")
+
+
+pathscore_TE_lm <- lm(bodypath1$totalE ~ bodypath1$PC1_scores)
+anova(pathscore_TE_lm)
+ggplot(bodypath1, aes(bodypath1$PC1_scores, bodypath1$totalE)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen PC1 Score") + ylab("Total Energy")
 
 
 
 
 
+#Richness Plots for Data Presentation
+install.packages("gridExtra")
+library(gridExtra)
+richness_scbm_plot <- ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$sc_bodymass)) + geom_point() + geom_smooth(method = "lm", col = "blue", ) + xlab("Pathogen Richness") + ylab("Size Corrected Body Mass") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14, face="bold"))
 
+richness_ED_plot <- ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$EnergyDensity_mJ.kg_1)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Energy Density (mJ/kg)") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14, face="bold"))
+
+richness_TE_plot <- ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$totalE)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Total Energy (mJ)") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14, face="bold"))
+
+grid.arrange(richness_scbm_plot, richness_ED_plot, richness_TE_plot, ncol = 3)
+
+
+#Load Plots for Data Presentation
+
+```
+
+
+## Hypothesis #2 Linear Analysis
+```{r}
+# Hypothesis #2 ===  Sockeye in early run-timing groups will have lower pathogen richness & loads than sockeye in later run-timing groups.
+
+# response variables = pathogen richness, pathogen PC scores
+# explanatory variables = site (b/c only "early run timing" fish taken for pathogens in CC)
+
+# lm(Y ~ X)
+
+bodypath1$site <- factor(bodypath1$site,
+                             levels = c("CC",
+                                        "TN",
+                                        "MN",
+                                        "GH",
+                                        "SA",
+                                        "MA",
+                                        "LL"),
+                             labels = c("CC",
+                                        "TN",
+                                        "MN",
+                                        "GH",
+                                        "SA",
+                                        "MA",
+                                        "LL"))
+
+#Response Variable =  pathogen richness
+pathr_site_lm <- lm(bodypath1$path_richness ~ bodypath1$site)
+anova(pathr_site_lm)
+ggplot(bodypath1, aes(bodypath1$site, bodypath1$path_richness, fill = site)) + geom_boxplot() + xlab("Site") + ylab("Pathogen Richness") + scale_fill_manual(values = c("#1F78B4","#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A"))
+
+#response variable = pathogen load (PC score)
+pathscore_site_lm <- lm(bodypath1$PC1_scores ~ bodypath1$site)
+anova(pathscore_site_lm)
+ggplot(bodypath1, aes(bodypath1$site, bodypath1$PC1_scores, fill = site)) + geom_boxplot() + xlab("Site") + ylab("Pathogen PC1 Score") + scale_fill_manual(values = c("#1F78B4","#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A"))
+
+
+```
 
 
 
