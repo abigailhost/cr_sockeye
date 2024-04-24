@@ -316,6 +316,8 @@ bodypath1 <- cbind(bodypath1, path_pc1scores) #adding PC1 scores as a column of 
 library(dplyr)
 names(bodypath1)[names(bodypath1)== "path_pca$scores[, 1]"] <- "PC1_scores"
 
+write.csv(bodypath1, "wdata/bodypathogenanalysis_data2019.csv")
+
 ```
 
 ## HYPOTHESIS #1 Linear Analysis 
