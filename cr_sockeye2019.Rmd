@@ -331,31 +331,37 @@ write.csv(bodypath1, "wdata/bodypathogenanalysis_data2019.csv")
 
 #pathogen richness as explanatory
 pathr_scbm_lm <- lm(bodypath1$sc_bodymass ~ bodypath1$path_richness)
+summary(pathr_scbm_lm)
 anova(pathr_scbm_lm)
 ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$sc_bodymass)) + geom_point() + geom_smooth(method = "lm", col = "blue", ) + xlab("Pathogen Richness") + ylab("Size Corrected Body Mass")
 
 pathr_ED_lm <- lm(bodypath1$EnergyDensity_mJ.kg_1 ~ bodypath1$path_richness)
+summary(pathr_ED_lm)
 anova(pathr_ED_lm)
 ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$EnergyDensity_mJ.kg_1)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Energy Density (mJ/kg")
 
 pathr_TE_lm <- lm(bodypath1$totalE ~ bodypath1$path_richness)
 anova(pathr_TE_lm)
+summary(pathr_TE_lm)
 ggplot(bodypath1, aes(bodypath1$path_richness, bodypath1$totalE)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen Richness") + ylab("Total Energy (mJ)")
 
 
 #pathogen PC Scores as explanatory
 pathscore_scbm_lm <- lm(bodypath1$sc_bodymass ~ bodypath1$PC1_scores)
 anova(pathscore_scbm_lm)
+summary(pathscore_scbm_lm)
 ggplot(bodypath1, aes(bodypath1$PC1_scores, bodypath1$sc_bodymass)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen PC1 Score") + ylab("Size Corrected Body Mass")
 
 
 pathscore_ED_lm <- lm(bodypath1$EnergyDensity_mJ.kg_1 ~ bodypath1$PC1_scores)
 anova(pathscore_ED_lm)
+summary(pathscore_ED_lm)
 ggplot(bodypath1, aes(bodypath1$PC1_scores, bodypath1$EnergyDensity_mJ.kg_1)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen PC1 Score") + ylab("Energy Density")
 
 
 pathscore_TE_lm <- lm(bodypath1$totalE ~ bodypath1$PC1_scores)
 anova(pathscore_TE_lm)
+summary(pathscore_TE_lm)
 ggplot(bodypath1, aes(bodypath1$PC1_scores, bodypath1$totalE)) + geom_point() + geom_smooth(method = "lm", col = "blue") + xlab("Pathogen PC1 Score") + ylab("Total Energy")
 
 
@@ -411,6 +417,7 @@ bodypath1$site <- factor(bodypath1$site,
 #Response Variable =  pathogen richness
 pathr_site_lm <- lm(bodypath1$path_richness ~ bodypath1$site)
 anova(pathr_site_lm)
+pathr_site_lm
 ggplot(bodypath1, aes(site, path_richness, fill = site)) + geom_boxplot() + xlab("Site") + ylab("Pathogen Richness") + scale_fill_manual(values = c("#1F78B4","#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + geom_jitter()+ theme(axis.text=element_text(size=11), axis.title=element_text(size=14, face="bold"), title = element_text(size=16, face="bold"), legend.text = element_text(size=12))
 
 
