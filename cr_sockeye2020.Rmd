@@ -1,0 +1,33 @@
+---
+title: "cr_sockeye2020"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+if(!require(tidyverse))install.packages("tidyverse");library(tidyverse)
+if(!require(gsheet))install.packages("gsheet");library(gsheet)
+
+write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1MRHgx_XU8p2nui4binK5fWNEP-T1lKE0iAwjSACcuU8/edit#gid=1888166607",format="csv"),stringsAsFactors = F),
+          row.names = FALSE,
+          "odata/crbody_2020.csv") #downloads 2019 body comp data from google sheets, make sure shareable by link in google
+
+bodycomp2020 <- read.csv("odata/crbody_2020.csv")
+```
+
+## donwloading packages & adjusted data files
+```{r}
+library(lme4)
+library(Matrix)
+library(MASS)
+library(dplyr)
+
+#making site a factor in bodypath dataframe
+bodycomp2020$site <- as.factor(bodycomp2020$site)
+str(bodypath)
+```
