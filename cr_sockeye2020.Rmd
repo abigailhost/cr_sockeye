@@ -47,7 +47,7 @@ lowerriver$runtime <- factor(lowerriver$runtime,
                                         "Mid",
                                         "Late")) #changing labels within dataframe
 
-write.csv(lowerriver, "wdata/workinglowerriverbodycomp_2019.csv")
+write.csv(lowerriver, "wdata/workinglowerriverbodycomp_2020.csv")
 str(lowerriver)
 
 runtimeEmodel <- lm(EnergyDensity_mJ.kg_1~runtime, data = lowerriver)
@@ -79,4 +79,11 @@ upperriver$site <- factor(upperriver$site,
                                         "MA",
                                         "LL",
                                         "CL"))
+
+write.csv(upperriver, "wdata/upperriverbodycomp_2020.csv")
+str(upperriver)
+upperriverEmodel <- lm(EnergyDensity_mJ.kg_1~site, data = upperriver)
+anova(upperriverEmodel)
+
+ggplot(upperriver, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across 6 spawning sites in the Copper River, AK") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 ```

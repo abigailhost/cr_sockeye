@@ -1,0 +1,104 @@
+---
+title: "cr_sockeye2021"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+if(!require(tidyverse))install.packages("tidyverse");library(tidyverse)
+if(!require(gsheet))install.packages("gsheet");library(gsheet)
+
+write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1MRHgx_XU8p2nui4binK5fWNEP-T1lKE0iAwjSACcuU8/edit#gid=1634652378",format="csv"),stringsAsFactors = F),
+          row.names = FALSE,
+          "odata/crbody_2021.csv") #downloads 2019 body comp data from google sheets, make sure shareable by link in google
+
+bodycomp2021 <- read.csv("odata/crbody_2021.csv")
+```
+
+## donwloading packages & adjusted data files
+```{r}
+library(lme4)
+library(Matrix)
+library(MASS)
+library(dplyr)
+
+#making site a factor in bodycomp2020 dataframe
+bodycomp2021$site <- as.factor(bodycomp2021$site)
+str(bodycomp2021)
+```
+
+
+## Energy Density Analysis for CC & Upper River
+```{r}
+write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1MRHgx_XU8p2nui4binK5fWNEP-T1lKE0iAwjSACcuU8/edit#gid=271403162",format="csv"),stringsAsFactors = F),
+          row.names = FALSE,
+          "odata/lowerriverdata_2021.csv")
+
+lowerriver21 <- read.csv("odata/lowerriverdata_2021.csv")
+lowerriver21$runtime <- factor(lowerriver21$runtime,
+                             levels = c("Early",
+                                        "Middle",
+                                        "Late"),
+                             labels = c("Early",
+                                        "Mid",
+                                        "Late")) #changing labels within dataframe
+
+write.csv(lowerriver21, "wdata/workinglowerriverbodycomp_2021.csv")
+str(lowerriver)
+
+runtimeEmodel21 <- lm(EnergyDensity_mJ.kg_1~runtime, data = lowerriver21)
+anova(runtimeEmodel21)
+
+ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Baird Creek") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+
+
+
+upperriver21 <- bodycomp2021[61:187,]
+
+#sites from 2021: MN, TN, FC, GH, MA, SA, CL (n=2), LL, KL, UKL (upper KL)
+
+upperriver21$site <- factor(upperriver21$site,
+                             levels = c("MN",
+                                        "TN",
+                                        "GH",
+                                        "FC",
+                                        "SA",
+                                        "MA",
+                                        "BN",
+                                        "LL",
+                                        "CL",
+                                        "KL",
+                                        "UKL"),
+                             labels = c("MN",
+                                        "TN",
+                                        "GH",
+                                        "FC",
+                                        "SA",
+                                        "MA",
+                                        "BN",
+                                        "LL",
+                                        "CL",
+                                        "KL",
+                                        "UKL"))
+
+write.csv(upperriver21, "wdata/upperriverbodycomp_2021.csv")
+str(upperriver)
+upperriverEmodel21 <- lm(EnergyDensity_mJ.kg_1~site, data = upperriver21)
+anova(upperriverEmodel21)
+
+#ggplot(upperriver21, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across 6 spawning sites in the Copper River, AK") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter() 
+
+#not enough colors, but keeping for consistency
+
+
+ggplot(upperriver21, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across 6 spawning sites in the Copper River, AK") + geom_boxplot() +  scale_fill_manual(values = c("#9E0142", "#D53E4F", "#F46D43", "#FDAE61", "#FEE08B", "#FFFFBF", "#E6F598", "#ABDDA4", "#66C2A5", "#3288BD", "#5E4FA2")) + theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+
+
+```

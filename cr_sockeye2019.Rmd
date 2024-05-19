@@ -280,6 +280,7 @@ library(RColorBrewer)
 display.brewer.all()
 display.brewer.pal(n=9, name = "Paired")
 brewer.pal(n = 9, name = "Paired")
+brewer.pal(n = 11, name = "Spectral")
 # "#A6CEE3"  "#B2DF8A" "#33A02C" "#FB9A99" "#E31A1C" "#FDBF6F" "#FF7F00" "#CAB2D6"
 
 
