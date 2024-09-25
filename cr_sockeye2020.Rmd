@@ -53,16 +53,18 @@ str(lowerriver)
 runtimeEmodel <- lm(EnergyDensity_mJ.kg_1~runtime, data = lowerriver)
 anova(runtimeEmodel)
 
-ggplot(lowerriver, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Canyon Creek") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+ggplot(lowerriver, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Baird Canyon") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 
 
 
 
 upperriver <- bodycomp2020[61:120,]
 upperriver <- upperriver[-(22:23),]
-upperriver <- upperriver[-(20),]#All upper river data samples (subtracting NAs)
+upperriver <- upperriver[-(20),]
+upperriver <- upperriver[-(47),] 
+#All upper river data samples (subtracting NAs and the sole CL site)
 
-#sites from 2020: MN, FC, GH, MA, SA, CL (n=1), LL
+#sites from 2020: MN, FC, GH, MA, SA, LL
 
 upperriver$site <- factor(upperriver$site,
                              levels = c("MN",
@@ -70,20 +72,18 @@ upperriver$site <- factor(upperriver$site,
                                         "FC",
                                         "SA",
                                         "MA",
-                                        "LL",
-                                        "CL"),
+                                        "LL"),
                              labels = c("MN",
                                         "GH",
                                         "FC",
                                         "SA",
                                         "MA",
-                                        "LL",
-                                        "CL"))
+                                        "LL"))
 
 write.csv(upperriver, "wdata/upperriverbodycomp_2020.csv")
 str(upperriver)
 upperriverEmodel <- lm(EnergyDensity_mJ.kg_1~site, data = upperriver)
 anova(upperriverEmodel)
 
-ggplot(upperriver, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across 6 spawning sites in the Copper River, AK") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+ggplot(upperriver, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across 6 spawning sites in the Copper River, AK in 2020") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#CAB2D6", "#FB9A99", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 ```

@@ -54,7 +54,7 @@ str(lowerriver)
 runtimeEmodel21 <- lm(EnergyDensity_mJ.kg_1~runtime, data = lowerriver21)
 anova(runtimeEmodel21)
 
-ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Baird Creek") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Baird Canyon") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 
 
 
@@ -97,7 +97,7 @@ anova(upperriverEmodel21)
 #not enough colors, but keeping for consistency
 
 
-ggplot(upperriver21, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across 6 spawning sites in the Copper River, AK") + geom_boxplot() +  scale_fill_manual(values = c("#9E0142", "#D53E4F", "#F46D43", "#FDAE61", "#FEE08B", "#FFFFBF", "#E6F598", "#ABDDA4", "#66C2A5", "#3288BD", "#5E4FA2")) + theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+ggplot(upperriver21, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across spawning sites in the Copper River, AK") + geom_boxplot() +  scale_fill_manual(values = c("#9E0142", "#D53E4F", "#F46D43", "#FDAE61", "#FEE08B", "#FFFFBF", "#E6F598", "#ABDDA4", "#66C2A5", "#3288BD", "#5E4FA2")) + theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 
 
 
