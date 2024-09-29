@@ -278,6 +278,41 @@ upper21 <- ggplot(upperriver21, aes(site, y=EnergyDensity_mJ.kg_1, fill = site))
 grid.arrange(upper19, upper20, upper21, ncol = 3)
 
 ```
+### Body Composition for 2019
+```{r}
+# fecundity vs site? -- Crossin et al. "egg number (fecundity) and ovary mass decrease with migration distance (Linley, 1993), reflecting an energetic necessity to invest in other functions affecting reproductive success"
+
+#in this dataset == fecundity weight is (Female fecundity estimate 1 - weight of eggs in subsample 1 (g))
+
+#ANOVA/linear analysis for fecundity_wt and site
+upperriverFecundity19 <- lm(Fem_Fecun_1_wt~site, data=upperriver19)
+anova(upperriverFecundity19)
+
+ggplot(data=subset(upperriver19, !is.na(Fem_Fecun_1_wt)), aes(site, y=Fem_Fecun_1_wt, fill = site)) + xlab("Sampling Site") + ylab("Female Fecundity Weight") + ggtitle("Female Fecundity across 6 spawning sites in the Copper River, AK in 2019") + geom_boxplot() +  scale_fill_manual(values = c("#FB9A99", "#CAB2D6", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=18, face="bold"), axis.text.x = element_text(size=16), axis.text.y=element_text(size=12), title = element_text(size=20, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+
+#what about fecundity #?
+upperriverFecunditynum19 <- lm(Fem_Fecun_1_num~site, data=upperriver19)
+anova(upperriverFecunditynum19)
+
+ggplot(data=subset(upperriver19, !is.na(Fem_Fecun_1_num)), aes(site, y=Fem_Fecun_1_num, fill = site)) + xlab("Sampling Site") + ylab("Female Fecundity Number (# Eggs)") + ggtitle("Female Fecundity across 6 spawning sites in the Copper River, AK in 2019") + geom_boxplot() +  scale_fill_manual(values = c("#FB9A99", "#CAB2D6", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=18, face="bold"), axis.text.x = element_text(size=16), axis.text.y=element_text(size=12), title = element_text(size=20, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+#what about egg size?
+upperrivereggsize19 <- lm(Fem_Egg_Sz_1~site, data=upperriver19)
+anova(upperrivereggsize19)
+
+ggplot(data=subset(upperriver19, !is.na(Fem_Egg_Sz_1)), aes(site, y=Fem_Egg_Sz_1, fill = site)) + xlab("Sampling Site") + ylab("Female Egg Size") + ggtitle("Female Egg Size across 6 spawning sites in the Copper River, AK in 2019") + geom_boxplot() +  scale_fill_manual(values = c("#FB9A99", "#CAB2D6", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=18, face="bold"), axis.text.x = element_text(size=16), axis.text.y=element_text(size=12), title = element_text(size=20, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+#what about gonad mass? (overall, not divided by female/male)
+upperrivergonadmass19 <- lm(Gonad_Wt~site, data=upperriver19)
+anova(upperrivergonadmass19)
+
+ggplot(data=subset(upperriver19, !is.na(Gonad_Wt)), aes(site, y=Gonad_Wt, fill = site)) + xlab("Sampling Site") + ylab("Gonad Weight (g)") + ggtitle("Gonad Weight across 6 spawning sites in the Copper River, AK in 2019") + geom_boxplot() +  scale_fill_manual(values = c("#FB9A99", "#CAB2D6", "#33A02C","#FF7F00", "#E31A1C","#B2DF8A")) + theme(axis.title=element_text(size=18, face="bold"), axis.text.x = element_text(size=16), axis.text.y=element_text(size=12), title = element_text(size=20, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+```
+
+
+
 
 ### 2019 Pathogens
 ```{r}
