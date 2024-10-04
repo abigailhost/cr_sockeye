@@ -97,6 +97,14 @@ anova(runtimeEmodel20)
 
 ggplot(lowerriver20, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Baird Canyon in 2020") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 
+#manipulate lowerriver20 so ___ for sex become NA
+lowerriver20$Sex <- as.character(lowerriver20$Sex)
+lowerriver20$Sex[lowerriver20$Sex==""] <- NA
+lowerriver20$Sex <- as.factor(lowerriver20$Sex)
+
+#plotting sex and energy density across run-timing
+ggplot(data=subset(lowerriver20, !is.na(Sex)), aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Canyon Creek in 2020") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter() #trying to add a comparison of sex
+
 
 #2021
 write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1MRHgx_XU8p2nui4binK5fWNEP-T1lKE0iAwjSACcuU8/edit#gid=271403162",format="csv"),stringsAsFactors = F),
@@ -134,6 +142,16 @@ low20 <- ggplot(lowerriver20, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runti
 low21 <- ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2021") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) + ylim(20,30) + theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20), axis.title.y=element_blank(),  axis.text.y=element_text(size=20), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
 
 grid.arrange(low19, low20, low21, ncol = 3)
+
+
+#grouped plot-- Sex and Energy density across run-timing group
+lowsex19 <- ggplot(lowerriver19, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2019") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20), axis.text.y=element_text(size=20), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+
+lowsex20 <- ggplot(data=subset(lowerriver20, !is.na(Sex)), aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2020") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20), axis.title.y=element_blank(), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+
+lowsex21 <- ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle(" 2021") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20),  axis.title.y=element_blank(), title = element_text(size=24, face="bold"), legend.text = element_text(size=20)) + geom_jitter()
+
+grid.arrange(lowsex19, lowsex20, lowsex21, ncol = 3)
 ```
 
 ### Energy Density & Spawning Site (Upper River)
@@ -312,6 +330,9 @@ ggplot(data=subset(upperriver19, !is.na(Gonad_Wt)), aes(site, y=Gonad_Wt, fill =
 
 #divided by male and female
 ggplot(data=subset(upperriver19, !is.na(Gonad_Wt)), aes(x=site, y=Gonad_Wt, fill = Sex)) + xlab("Sampling Site") + ylab("Gonad Weight (g)") + ggtitle("Gonad Weight across 6 spawning sites in the Copper River, AK in 2019") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) + theme(axis.title=element_text(size=18, face="bold"), axis.text.x = element_text(size=16), axis.text.y=element_text(size=12), title = element_text(size=20, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+
+
 
 ```
 
