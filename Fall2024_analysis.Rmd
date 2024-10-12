@@ -74,6 +74,12 @@ ggplot(lowerriver19, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xl
 
 ggplot(lowerriver19, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Canyon Creek in 2019") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter() #trying to add a comparison of sex
 
+###sex and body size across run-timing
+ggplot(data=lowerriver19, aes(runtime, y=Fish_Wt, fill = Sex)) + xlab("Run Timing Group") + ylab("Body Weight (kg)") + ggtitle("Sockeye Body Weight (kg) across run-timing group and Sex in Canyon Creek in 2019") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+SexWeight19 <- lm(Fish_Wt ~ Sex, data = lowerriver19)
+anova(SexWeight19) # P-value = 0.05629
+
 
 #2020
 write.csv(read.csv(text=gsheet2text("https://docs.google.com/spreadsheets/d/1MRHgx_XU8p2nui4binK5fWNEP-T1lKE0iAwjSACcuU8/edit#gid=736449373",format="csv"),stringsAsFactors = F),
@@ -97,13 +103,20 @@ anova(runtimeEmodel20)
 
 ggplot(lowerriver20, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Baird Canyon in 2020") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 
-#manipulate lowerriver20 so ___ for sex become NA
+###manipulate lowerriver20 so ___ for sex become NA
 lowerriver20$Sex <- as.character(lowerriver20$Sex)
 lowerriver20$Sex[lowerriver20$Sex==""] <- NA
 lowerriver20$Sex <- as.factor(lowerriver20$Sex)
 
-#plotting sex and energy density across run-timing
+###plotting sex and energy density across run-timing
 ggplot(data=subset(lowerriver20, !is.na(Sex)), aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Canyon Creek in 2020") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter() #trying to add a comparison of sex
+
+###sex and body size across run-timing
+ggplot(data=subset(lowerriver20, !is.na(Sex)), aes(runtime, y=Fish_Wt, fill = Sex)) + xlab("Run Timing Group") + ylab("Body Weight (kg)") + ggtitle("Sockeye Body Weight (kg) across run-timing group and Sex in Canyon Creek in 2020") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+SexWeight20 <- lm(Fish_Wt ~ Sex, data = lowerriver20)
+anova(SexWeight20) # P-value = 0.058
+
 
 
 #2021
@@ -126,32 +139,49 @@ str(lowerriver21)
 runtimeEmodel21 <- lm(EnergyDensity_mJ.kg_1~runtime, data = lowerriver21)
 anova(runtimeEmodel21)
 
-ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Baird Canyon in 2021") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Baird Canyon in 2021") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
 
 ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("Energy Density (mJ/kg) across run-timing group in Baird Canyon in 2021") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter() #comparison of sex
+
+###sex and body size across run-timing
+ggplot(data=lowerriver21, aes(runtime, y=Fish_Wt, fill = Sex)) + xlab("Run Timing Group") + ylab("Body Weight (kg)") + ggtitle("Sockeye Body Weight (kg) across run-timing group and Sex in Canyon Creek in 2021") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=14, face="bold"), axis.text.x = element_text(size=12), axis.text.y=element_text(size=12), title = element_text(size=16, face="bold"), legend.text = element_text(size=12)) + geom_jitter()
+
+SexWeight21 <- lm(Fish_Wt ~ Sex, data = lowerriver21)
+anova(SexWeight21) # P-value = 0.01504 *
+
 
 
 #plots for poster-- Energy and Lower River run-timing
 install.packages("gridExtra")
 library(gridExtra)
 
-low19 <- ggplot(lowerriver19, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2019") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) + ylim(20,30) + theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20), axis.text.y=element_text(size=20), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+low19 <- ggplot(lowerriver19, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2019") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) + ylim(20,30) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.text.y=element_text(size=24), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
  
-low20 <- ggplot(lowerriver20, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2020") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  ylim(20,30) + theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20), axis.title.y=element_blank(),  axis.text.y=element_text(size=20), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+low20 <- ggplot(lowerriver20, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2020") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) +  ylim(20,30) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.title.y=element_blank(),  axis.text.y=element_text(size=24), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
   
-low21 <- ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2021") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) + ylim(20,30) + theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20), axis.title.y=element_blank(),  axis.text.y=element_text(size=20), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+low21 <- ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = runtime)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2021") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C", "#FDBF6F")) + ylim(20,30) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.title.y=element_blank(),  axis.text.y=element_text(size=24), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
 
 grid.arrange(low19, low20, low21, ncol = 3)
 
 
-#grouped plot-- Sex and Energy density across run-timing group
-lowsex19 <- ggplot(lowerriver19, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2019") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20), axis.text.y=element_text(size=20), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+#grouped plot-- Sex and Energy density across run-timing group and sex
+lowsexE19 <- ggplot(lowerriver19, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2019") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) + ylim(20,30) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.text.y=element_text(size=24), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
 
-lowsex20 <- ggplot(data=subset(lowerriver20, !is.na(Sex)), aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2020") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20), axis.title.y=element_blank(), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+lowsexE20 <- ggplot(data=subset(lowerriver20, !is.na(Sex)), aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2020") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) + ylim(20,30) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.title.y=element_blank(), axis.text.y=element_text(size=24), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
 
-lowsex21 <- ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle(" 2021") + geom_boxplot() +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  theme(axis.title=element_text(size=20, face="bold"), axis.text.x = element_text(size=20),  axis.title.y=element_blank(), title = element_text(size=24, face="bold"), legend.text = element_text(size=20)) + geom_jitter()
+lowsexE21 <- ggplot(lowerriver21, aes(runtime, y=EnergyDensity_mJ.kg_1, fill = Sex)) + xlab("Run Timing Group") + ylab("Energy Density (mJ/kg)") + ggtitle("2021") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) + ylim(20,30) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24),  axis.title.y=element_blank(), axis.text.y=element_text(size=24), title = element_text(size=24, face="bold"), legend.text = element_text(size=24)) + geom_jitter()
 
-grid.arrange(lowsex19, lowsex20, lowsex21, ncol = 3)
+grid.arrange(lowsexE19, lowsexE20, lowsexE21, ncol = 3)
+
+
+#grouped plot-- Sex and Body Weight across run-timing group and Sex
+lowsexWeight19 <- ggplot(data=lowerriver19, aes(runtime, y=Fish_Wt, fill = Sex)) + xlab("Run Timing Group") + ylab("Body Weight (kg)") + ggtitle("2019") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) + ylim(0.25,3.75) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.text.y=element_text(size=24), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+
+lowsexWeight20 <- ggplot(data=subset(lowerriver20, !is.na(Sex)), aes(runtime, y=Fish_Wt, fill = Sex)) + xlab("Run Timing Group") + ylab("Body Weight (kg)") + ggtitle("2020") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) + ylim(0.25,3.75) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.title.y=element_blank(), axis.text.y=element_text(size=24), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+
+lowsexWeight21 <- ggplot(data=lowerriver21, aes(runtime, y=Fish_Wt, fill = Sex)) + xlab("Run Timing Group") + ylab("Body Weight (kg)") + ggtitle("2021") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) + ylim(0.25,3.75) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.text.y=element_text(size=24), axis.title.y=element_blank(), title = element_text(size=24, face="bold"), legend.text = element_text(size=24)) + geom_jitter()
+
+grid.arrange(lowsexWeight19, lowsexWeight20, lowsexWeight21, ncol = 3)
 ```
 
 ### Energy Density & Spawning Site (Upper River)
@@ -294,6 +324,16 @@ upper21 <- ggplot(upperriver21, aes(site, y=EnergyDensity_mJ.kg_1, fill = site))
 
 
 grid.arrange(upper19, upper20, upper21, ncol = 3)
+
+#plots for analysis -- color changes + edits to legend title
+# code for colors: TN = "#CAB2D6", MN = "#FB9A99", GH = "#33A02C", SA = "#FF7F00", MA = "#1F78B4", LL= ""#B2DF8A", FC = "#A6CEE3", BN = ""#FDAE61", CL = "#FFFFBF", KL = ""#66C2A5"
+upper19new <- ggplot(upperriver19, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("2019") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c( "#5E4FA2", "#CAB2D6","#33A02C","#FF7F00","#1F78B4","#B2DF8A")) + ylim(15,26)+ theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.text.y=element_text(size=24), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+ 
+upper20new <- ggplot(upperriver20, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("2020") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#5E4FA2","#A6CEE3","#33A02C", "#FF7F00","#1F78B4","#B2DF8A")) + ylim(15,26) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=24), axis.text.y=element_text(size=24), axis.title.y=element_blank(), title = element_text(size=24, face="bold"), legend.position = "none") + geom_jitter()
+  
+upper21new <- ggplot(upperriver21, aes(site, y=EnergyDensity_mJ.kg_1, fill = site)) + xlab("Sampling Site") + ylab("Energy Density (mJ/kg)") + ggtitle("2021") + geom_boxplot(lwd=1.5) +  scale_fill_manual(values = c("#5E4FA2", "#CAB2D6","#A6CEE3", "#33A02C", "#FF7F00","#1F78B4", "#B2DF8A","#66C2A5")) +ylim(15,26) + theme(axis.title=element_text(size=24, face="bold"), axis.text.x = element_text(size=20), axis.text.y=element_text(size=24), axis.title.y=element_blank(), title = element_text(size=24, face="bold"), legend.text = element_text(size=24)) + labs(fill = "Site") + geom_jitter()
+
+grid.arrange(upper19new, upper20new, upper21new, ncol = 3)
 
 ```
 ### Body Composition for 2019
