@@ -1,0 +1,386 @@
+---
+title: "AICc_bodycomp"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Body Size as response variable, lower river
+```{r}
+## Explanatory variables can include: 
+  # run-timing group
+  # year
+  # sex
+
+# control for = river mile/collection_location, so include this in all models 
+
+#first model, null model
+  # body size ~ 1 
+
+#second model
+  # body size ~ collection_location (categorical variable of site)
+
+#third model 
+  # body size ~ collection_location + run-timing
+
+#fourth model
+  # body size ~ collection_location + sex
+
+#fifth model
+  # body size ~ collection_location + year
+
+#sixth model
+  # body size ~ collection_location + run-timing group + sex
+
+#seventh model
+  # body size ~ collection_location + run-timing group + year
+
+#eighth model
+  # body size ~ collection_location + sex + year
+
+#ninth model 
+  # body size ~ collection_location + year + sex + sex:year
+
+#tenth model
+  # body size ~ collection_location + run-timing group + sex + run-timing group:sex
+
+#eleventh model 
+  #body size ~ collection_location + run-timing group + year + run-timing group:year
+
+#GLOBAL model
+  # body size ~ collection_location + run-timing group + sex + year 
+
+```
+
+## Body Size as response variable, genetic stock
+```{r}
+## Explanatory variables can include: 
+  # genetic stock
+  # year
+  # sex
+
+# control for = river mile/collection_location, so include this in all models 
+
+#first model, null model
+  # body size ~ 1 
+
+#second model
+  # body size ~ collection_location (categorical variable of site)
+
+#third model 
+  # body size ~ collection_location + GSI
+
+#fourth model
+  # body size ~ collection_location + sex
+
+#fifth model
+  # body size ~ collection_location + year
+
+#sixth model
+  # body size ~ collection_location + GSI + sex
+
+#seventh model
+  # body size ~ collection_location + GSI + year
+
+#eighth model
+  # body size ~ collection_location + sex + year
+
+#ninth model 
+  # body size ~ collection_location + year + sex + sex:year
+
+#tenth model
+  # body size ~ collection_location + GSI + sex + GSI:sex
+
+#eleventh model 
+  #body size ~ collection_location + GSO + year + GSI:year
+
+#GLOBAL model
+  # body size ~ collection_location + GSI + sex + year 
+
+```
+
+## size-corrected mass as response variable, lower river
+``` {r}
+## Explanatory variables can include: 
+  # run-timing group
+  # year
+  # sex
+
+# control for = river mile/collection_location, so include this in all models 
+
+#first model, null model
+  # size-corrected mass ~ 1 
+
+#second model
+  # size-corrected mass ~ collection_location (categorical variable of site)
+
+#third model 
+  # size-corrected mass ~ collection_location + run-timing
+
+#fourth model
+  # size-corrected mass ~ collection_location + sex
+
+#fifth model
+  # size-corrected mass ~ collection_location + year
+
+#sixth model
+  # size-corrected mass ~ collection_location + run-timing group + sex
+
+#seventh model
+  # size-corrected mass ~ collection_location + run-timing group + year
+
+#eighth model
+  # size-corrected mass ~ collection_location + sex + year
+
+#ninth model 
+  # size-corrected mass ~ collection_location + year + sex + sex:year
+
+#tenth model
+  # size-corrected mass ~ collection_location + run-timing group + sex + run-timing group:sex
+
+#eleventh model 
+  #size-corrected mass ~ collection_location + run-timing group + year + run-timing group:year
+
+#GLOBAL model
+  # size-corrected mass ~ collection_location + run-timing group + sex + year 
+
+```
+
+## size-corrected mass as response variable, GSI
+``` {r}
+## Explanatory variables can include: 
+  # GSI
+  # year
+  # sex
+
+# control for = river mile/collection_location, so include this in all models 
+
+#first model, null model
+  # size-corrected mass ~ 1 
+
+#second model
+  # size-corrected mass ~ collection_location (categorical variable of site)
+
+#third model 
+  # size-corrected mass ~ collection_location + GSI
+
+#fourth model
+  # size-corrected mass ~ collection_location + sex
+
+#fifth model
+  # size-corrected mass ~ collection_location + year
+
+#sixth model
+  # size-corrected mass ~ collection_location + GSI + sex
+
+#seventh model
+  # size-corrected mass ~ collection_location + GSI + year
+
+#eighth model
+  # size-corrected mass ~ collection_location + sex + year
+
+#ninth model 
+  # size-corrected mass ~ collection_location + year + sex + sex:year
+
+#tenth model
+  # size-corrected mass ~ collection_location + GSI + sex + GSI:sex
+
+#eleventh model 
+  #size-corrected mass ~ collection_location + GSI + year + GSI:year
+
+#GLOBAL model
+  # size-corrected mass ~ collection_location + GSI + sex + year 
+
+```
+
+## energy density as response variable, lower river
+``` {r}
+## Explanatory variables can include: 
+  # run-timing group
+  # year
+  # sex
+
+# control for = river mile/collection_location, so include this in all models 
+
+#first model, null model
+  # energy density ~ 1 
+
+#second model
+  # energy density ~ collection_location (categorical variable of site)
+
+#third model 
+  # energy density ~ collection_location + run-timing
+
+#fourth model
+  # energy density ~ collection_location + sex
+
+#fifth model
+  # energy density ~ collection_location + year
+
+#sixth model
+  # energy density ~ collection_location + run-timing group + sex
+
+#seventh model
+  # energy density ~ collection_location + run-timing group + year
+
+#eighth model
+  # energy density ~ collection_location + sex + year
+
+#ninth model 
+  # energy density ~ collection_location + year + sex + sex:year
+
+#tenth model
+  # energy density ~ collection_location + run-timing group + sex + run-timing group:sex
+
+#eleventh model 
+  # energy density ~ collection_location + run-timing group + year + run-timing group:year
+
+#GLOBAL model
+  # energy density ~ collection_location + run-timing group + sex + year 
+
+```
+
+## energy density as response variable, GSI
+``` {r}
+## Explanatory variables can include: 
+  # GSI
+  # year
+  # sex
+
+# control for = river mile/collection_location, so include this in all models 
+
+#first model, null model
+  # energy density ~ 1 
+
+#second model
+  # energy density ~ collection_location (categorical variable of site)
+
+#third model 
+  # energy density ~ collection_location + GSI
+
+#fourth model
+  # energy density ~ collection_location + sex
+
+#fifth model
+  # energy density ~ collection_location + year
+
+#sixth model
+  # energy density ~ collection_location + GSI + sex
+
+#seventh model
+  # energy density ~ collection_location + GSI + year
+
+#eighth model
+  # energy density ~ collection_location + sex + year
+
+#ninth model 
+  # energy density ~ collection_location + year + sex + sex:year
+
+#tenth model
+  # energy density ~ collection_location + GSI+ sex + GSI:sex
+
+#eleventh model 
+  # energy density ~ collection_location + GSI + year + GSI:year
+
+#GLOBAL model
+  # energy density ~ collection_location + GSI + sex + year 
+
+```
+
+## total energy as response variable, lower river
+``` {r}
+## Explanatory variables can include: 
+  # run-timing group
+  # year
+  # sex
+
+# control for = river mile/collection_location, so include this in all models 
+
+#first model, null model
+  # total energy ~ 1 
+
+#second model
+  # total energy ~ collection_location (categorical variable of site)
+
+#third model 
+  # total energy ~ collection_location + run-timing
+
+#fourth model
+  # total energy ~ collection_location + sex
+
+#fifth model
+  # total energy ~ collection_location + year
+
+#sixth model
+  # total energy ~ collection_location + run-timing group + sex
+
+#seventh model
+  # total energy ~ collection_location + run-timing group + year
+
+#eighth model
+  # total energy ~ collection_location + sex + year
+
+#ninth model 
+  # total energy ~ collection_location + year + sex + sex:year
+
+#tenth model
+  # total energy ~ collection_location + run-timing group + sex + run-timing group:sex
+
+#eleventh model 
+  # total energy ~ collection_location + run-timing group + year + run-timing group:year
+
+#GLOBAL model
+  # total energy ~ collection_location + run-timing group + sex + year 
+
+```
+
+## total energy as response variable, GSI
+``` {r}
+## Explanatory variables can include: 
+  # GSI
+  # year
+  # sex
+
+# control for = river mile/collection_location, so include this in all models 
+
+#first model, null model
+  # total energy ~ 1 
+
+#second model
+  # total energy ~ collection_location (categorical variable of site)
+
+#third model 
+  # total energy ~ collection_location + GSI
+
+#fourth model
+  # total energy ~ collection_location + sex
+
+#fifth model
+  # total energy ~ collection_location + year
+
+#sixth model
+  # total energy ~ collection_location + GSI + sex
+
+#seventh model
+  # total energy ~ collection_location + GSI + year
+
+#eighth model
+  # total energy ~ collection_location + sex + year
+
+#ninth model 
+  # total energy ~ collection_location + year + sex + sex:year
+
+#tenth model
+  # total energy ~ collection_location + GSI+ sex + GSI:sex
+
+#eleventh model 
+  # total energy ~ collection_location + GSI + year + GSI:year
+
+#GLOBAL model
+  # total energy ~ collection_location + GSI + sex + year 
+
+```
