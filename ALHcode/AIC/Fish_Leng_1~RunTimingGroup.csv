@@ -1,0 +1,13 @@
+Model
+Fish_Leng_1~1
+Fish_Leng_1~Collection_Location
+Fish_Leng_1~Collection_Location + RunTimingGroup
+Fish_Leng_1~Collection_Location + Sex
+Fish_Leng_1~Collection_Location + Year
+Fish_Leng_1~Collection_Location + RunTimingGroup + Sex
+Fish_Leng_1~Collection_Location + RunTimingGroup + Year
+Fish_Leng_1~Collection_Location + Sex + Year
+Fish_Leng_1~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex
+Fish_Leng_1~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year
+Fish_Leng_1~Collection_Location + Sex + Year + Sex:Year
+Fish_Leng_1~Collection_Location + RunTimingGroup + Sex + Year
