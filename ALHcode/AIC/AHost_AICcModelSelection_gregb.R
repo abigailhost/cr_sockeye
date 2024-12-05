@@ -135,18 +135,23 @@ model12 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Sex + Year, dat
 
 
 AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12)
+
 #table of AIC results
 mynames1 <- paste("model", as.character(1:12), sep = "")
-myaicc1 <- aictab(list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12), modnames = mynames)
-print(myaicc1, LL = FALSE)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12)
 
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+# Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("bodysize_pc~Collection_Location + RunTimingGroup + Sex + Year","bodysize_pc~Collection_Location + RunTimingGroup + Sex","bodysize_pc~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex","bodysize_pc~Collection_Location + Sex + Year","bodysize_pc~Collection_Location + Sex","bodysize_pc~Collection_Location + RunTimingGroup + Year","bodysize_pc~Collection_Location + RunTimingGroup","bodysize_pc~Collection_Location + Sex + Year + Sex:Year","bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year","bodysize_pc~Collection_Location","bodysize_pc~Collection_Location + Year","bodysize_pc~1")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
 write.csv(aic_df, file = "ALHcode/AIC/AICresults_bodysize~RunTimingGroup.csv", row.names = FALSE)
 
-# Optional: If you want to view the data frame
-print(aic_df)
+
 #for body size, when the variable is a PC score of all body metrics, the best model as chosen by AIC is the global model including all main factors but no interactions
 
 #### CHECK DIRECTION OF PC SCORE ###
@@ -161,5 +166,26 @@ ggplot(DataSet, aes(x=Fish_Grth, y=bodysize_pc)) +
 ggplot(DataSet, aes(x=Fish_Ht, y=bodysize_pc)) +
   geom_point()
 # direction of PC score is all positive according to these plots
+
+
+
+
+
+
+
+
+#' =====================================================
+#' Section 2: AICc code from Greg's Class, scBodyMass_1~RunTimingGroup test
+#' =====================================================
+
+
+
+
+
+
+
+
+
+
 
 
