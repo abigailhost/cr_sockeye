@@ -178,8 +178,35 @@ ggplot(DataSet, aes(x=Fish_Ht, y=bodysize_pc)) +
 #' Section 2: AICc code from Greg's Class, scBodyMass_1~RunTimingGroup test
 #' =====================================================
 
+#re-load data: 
+DataSet<-read.csv("ALHcode/AIC/lowerriver_bodycomp_all.csv")[,-1]
+str(DataSet)
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+#calculated size corrected body mass from DataSet ----- residuals of a linear regression of weight ~ length
+DataSet$Fish_Leng_Total <- DataSet$Fish_Leng_1 + DataSet$Fish_Leng_2
+#row 80 seems incorrect-- length_2 snout to eye is 41.0 cm, too long-- eliminate for this analysis
+DataSet <- DataSet[-57,]
+sizecorrected_bodymass_lm <- lm(DataSet$Fish_Wt ~ DataSet$Fish_Leng_Total)
+sizecorrected_bodymass_residuals <- residuals(sizecorrected_bodymass_lm)
+plot(sizecorrected_bodymass_residuals, DataSet$Fish_Leng_Total)
+sizecorrected_bodymass <- as.data.frame(sizecorrected_bodymass_residuals)
+DataSet <- cbind(DataSet, sizecorrected_bodymass)
 
 
+max(DataSet$Fish_Leng_Total)
+sc_bm_lm <- lm(bodypath1$Fish_Wt ~ bodypath1$Fish_Leng_1)
+sc_bm_resid <- residuals(sc_bm_lm) 
+sc_bm_resid
+plot(sc_bm_resid, bodypath1$Fish_Leng_1)
+length(bodypath1$Fish_Leng_1)
+
+sc_bodymass <- as.data.frame(sc_bm_resid)
+bodypath1 <- cbind(bodypath1, sc_bodymass)
 
 
 
