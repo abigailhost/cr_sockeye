@@ -175,7 +175,7 @@ ggplot(DataSet, aes(x=Fish_Ht, y=bodysize_pc)) +
 
 
 #' =====================================================
-#' Section 2: AICc code from Greg's Class, scBodyMass_1~RunTimingGroup test
+#' Section 3: AICc code from Greg's Class, scBodyMass_1~RunTimingGroup test
 #' =====================================================
 
 #re-load data: 
@@ -195,18 +195,38 @@ sizecorrected_bodymass_lm <- lm(DataSet$Fish_Wt ~ DataSet$Fish_Leng_Total)
 sizecorrected_bodymass_residuals <- residuals(sizecorrected_bodymass_lm)
 plot(sizecorrected_bodymass_residuals, DataSet$Fish_Leng_Total)
 sizecorrected_bodymass <- as.data.frame(sizecorrected_bodymass_residuals)
-DataSet <- cbind(DataSet, sizecorrected_bodymass)
+DataSet <- cbind(DataSet, sizecorrected_bodymass) #now I have size corrected residuals assigned as new variable in the DataSet
+
+#Set up Models
+scModel1 <- lm(sizecorrected_bodymass_residuals ~ 1, data = DataSet)
+scModel2 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location, data = DataSet)
+scModel3 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup, data = DataSet)
+scModel4 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + Sex, data = DataSet)
+scModel5 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + Year, data = DataSet)
+scModel6 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex, data = DataSet)
+scModel7 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Year, data = DataSet)
+scModel8 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + Sex + Year, data = DataSet)
+scModel9 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+scModel10 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
+scModel11 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + Sex + Year + Sex:Year, data = DataSet)
+scModel12 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex + Year, data = DataSet)
+
+AIC(scModel1, scModel2, scModel3, scModel4, scModel5, scModel6, scModel7, scModel8, scModel9, scModel10, scModel11, scModel12)
+scModels <- list(scModel1, scModel2, scModel3, scModel4, scModel5, scModel6, scModel7, scModel8, scModel9, scModel10, scModel11, scModel12)
+
+# Generate AIC table
+mynames2 <- paste("model", as.character(1:12), sep = "")
+myaicc2 <- aictab(scModels, modnames = mynames2)
+print(myaicc2) #so model 3 is the best for size corrected bodymass
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc2)
+aic_df$ModelName <- c("sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup", "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Year", "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", "sizecorrected_bodymass_residuals ~ Collection_Location", "sizecorrected_bodymass_residuals ~ Collection_Location + Year", "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex", "sizecorrected_bodymass_residuals ~ Collection_Location + Sex + Year + Sex:Year","sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex + Year", "sizecorrected_bodymass_residuals ~ Collection_Location + Sex", "sizecorrected_bodymass_residuals ~ Collection_Location + Sex + Year", "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", "sizecorrected_bodymass_residuals ~ 1")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "ALHcode/AIC/AICresults_SizeCorrectedBodyMass~RunTimingGroup.csv", row.names = FALSE)
 
 
-max(DataSet$Fish_Leng_Total)
-sc_bm_lm <- lm(bodypath1$Fish_Wt ~ bodypath1$Fish_Leng_1)
-sc_bm_resid <- residuals(sc_bm_lm) 
-sc_bm_resid
-plot(sc_bm_resid, bodypath1$Fish_Leng_1)
-length(bodypath1$Fish_Leng_1)
-
-sc_bodymass <- as.data.frame(sc_bm_resid)
-bodypath1 <- cbind(bodypath1, sc_bodymass)
 
 
 
@@ -216,3 +236,161 @@ bodypath1 <- cbind(bodypath1, sc_bodymass)
 
 
 
+
+
+#' =====================================================
+#' Section 4: AICc code from Greg's Class, EnergyDensity~RunTimingGroup test
+#' =====================================================
+DataSet<-read.csv("ALHcode/AIC/lowerriver_bodycomp_all.csv")[,-1]
+str(DataSet)
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+
+edModel1 <- lm(EnergyDensity_mJ.kg_1 ~ 1, data = DataSet)
+edModel2 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location, data = DataSet)
+edModel3 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup, data = DataSet)
+edModel4 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex, data = DataSet)
+edModel5 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + Year, data = DataSet)
+edModel6 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex, data = DataSet)
+edModel7 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year, data = DataSet)
+edModel8 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex + Year, data = DataSet)
+edModel9 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+edModel10 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
+edModel11 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex + Year + Sex:Year, data = DataSet)
+edModel12 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + Year, data = DataSet)
+
+AIC(edModel1, edModel2, edModel3, edModel4, edModel5, edModel6, edModel7, edModel8, edModel9, edModel10, edModel11, edModel12)
+edModels <- list(edModel1, edModel2, edModel3, edModel4, edModel5, edModel6, edModel7, edModel8, edModel9, edModel10, edModel11, edModel12)
+
+# Generate AIC table
+mynames3 <- paste("model", as.character(1:12), sep = "")
+myaicc3 <- aictab(edModels, modnames = mynames3)
+print(myaicc3) #so model 10 is the best, followed closely by model 3 for energy density as response variable
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc3)
+aic_df$ModelName <- c("EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location", "EnergyDensity_mJ.kg_1 ~ Collection_Location + Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex", "EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex + Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex + Year + Sex:Year", "EnergyDensity_mJ.kg_1 ~ 1")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+write.csv(aic_df, file = "ALHcode/AIC/AICresults_EnergyDensity~RunTimingGroup.csv", row.names = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#' =====================================================
+#' Section 5: AICc code from Greg's Class, Total Energy~RunTimingGroup test
+#' =====================================================
+DataSet<-read.csv("ALHcode/AIC/lowerriver_bodycomp_all.csv")[,-1]
+str(DataSet)
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+#make total energy metric (Energy Density * Weight)
+DataSet$TotalEnergy <- (DataSet$EnergyDensity_mJ.kg_1) * (DataSet$Fish_Wt)
+
+#Models
+teModel1 <- lm(TotalEnergy ~ 1, data = DataSet)
+teModel2 <- lm(TotalEnergy ~ Collection_Location, data = DataSet)
+teModel3 <- lm(TotalEnergy ~ Collection_Location + RunTimingGroup, data = DataSet)
+teModel4 <- lm(TotalEnergy ~ Collection_Location + Sex, data = DataSet)
+teModel5 <- lm(TotalEnergy ~ Collection_Location + Year, data = DataSet)
+teModel6 <- lm(TotalEnergy ~ Collection_Location + RunTimingGroup + Sex, data = DataSet)
+teModel7 <- lm(TotalEnergy ~ Collection_Location + RunTimingGroup + Year, data = DataSet)
+teModel8 <- lm(TotalEnergy ~ Collection_Location + Sex + Year, data = DataSet)
+teModel9 <- lm(TotalEnergy ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+teModel10 <- lm(TotalEnergy ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
+teModel11 <- lm(TotalEnergy ~ Collection_Location + Sex + Year + Sex:Year, data = DataSet)
+teModel12 <- lm(TotalEnergy ~ Collection_Location + RunTimingGroup + Sex + Year, data = DataSet)
+
+AIC(teModel1, teModel2, teModel3, teModel4, teModel5, teModel6, teModel7, teModel8, teModel9, teModel10, teModel11, teModel12)
+teModels <- list(teModel1, teModel2, teModel3, teModel4, teModel5, teModel6, teModel7, teModel8, teModel9, teModel10, teModel11, teModel12)
+
+mynames4 <- paste("model", as.character(1:12), sep = "")
+myaicc4 <- aictab(teModels, modnames = mynames4)
+print(myaicc4)
+
+aic_df <- as.data.frame(myaicc4)
+aic_df$ModelName <- c("TotalEnergy ~ Collection_Location + RunTimingGroup + Sex + Year", "TotalEnergy ~ Collection_Location + RunTimingGroup + Sex", "TotalEnergy ~ Collection_Location + Sex", "TotalEnergy ~ Collection_Location + Sex + Year", "TotalEnergy ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", "TotalEnergy ~ Collection_Location + Sex + Year + Sex:Year", "TotalEnergy ~ Collection_Location + RunTimingGroup + Year", "TotalEnergy ~ Collection_Location + RunTimingGroup", "TotalEnergy ~ Collection_Location", "TotalEnergy ~ Collection_Location + Year", "TotalEnergy ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", "TotalEnergy ~ 1")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+write.csv(aic_df, file = "ALHcode/AIC/AICresults_TotalEnergy~RunTimingGroup.csv", row.names = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#' =====================================================
+#' Section 6: AICc code from Greg's Class, GonadMass~RunTimingGroup test
+#' =====================================================
+DataSet<-read.csv("ALHcode/AIC/lowerriver_bodycomp_PCscores.csv")[,-1]
+str(DataSet)
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+
+gmModel1 <- lm(Gonad_Wt~1, data = DataSet)
+gmModel2 <- lm(Gonad_Wt~Collection_Location, data = DataSet)
+gmModel3 <- lm(Gonad_Wt~Collection_Location + bodysize_pc, data = DataSet)
+gmModel4 <- lm(Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1, data = DataSet)
+gmModel5 <- lm(Gonad_Wt~Collection_Location + RunTimingGroup, data = DataSet)
+gmModel6 <- lm(Gonad_Wt~Collection_Location + Sex, data = DataSet)
+gmModel7 <- lm(Gonad_Wt~Collection_Location + Year, data = DataSet)
+gmModel8 <- lm(Gonad_Wt~Collection_Location + bodysize_pc + EnergyDensity_mJ.kg_1, data = DataSet)
+gmModel9 <- lm(Gonad_Wt~Collection_Location + bodysize_pc*EnergyDensity_mJ.kg_1, data = DataSet)
+gmModel10 <- lm(Gonad_Wt~Collection_Location + bodysize_pc + RunTimingGroup, data = DataSet)
+gmModel11 <- lm(Gonad_Wt~Collection_Location + bodysize_pc*RunTimingGroup, data = DataSet)
+gmModel12 <- lm(Gonad_Wt~Collection_Location + bodysize_pc + Sex, data = DataSet)
+gmModel13 <- lm(Gonad_Wt~Collection_Location + bodysize_pc*Sex, data = DataSet)
+gmModel14 <- lm(Gonad_Wt~Collection_Location + bodysize_pc + Year, data = DataSet)
+gmModel15 <- lm(Gonad_Wt~Collection_Location + bodysize_pc*Year, data = DataSet)
+gmModel16 <- lm(Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1 + RunTimingGroup, data = DataSet)
+gmModel17 <- lm(Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1*RunTimingGroup, data = DataSet)
+gmModel18 <- lm(Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1 + Sex, data = DataSet)
+gmModel19 <- lm(Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1*Sex, data = DataSet)
+gmModel20 <- lm(Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1 + Year, data = DataSet)
+gmModel21 <- lm(Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1*Year, data = DataSet)
+gmModel22 <- lm(Gonad_Wt~Collection_Location + RunTimingGroup + Sex, data = DataSet)
+gmModel23 <- lm(Gonad_Wt~Collection_Location + RunTimingGroup*Sex, data = DataSet)
+gmModel24 <- lm(Gonad_Wt~Collection_Location + RunTimingGroup + Year, data = DataSet)
+gmModel25 <- lm(Gonad_Wt~Collection_Location + RunTimingGroup*Year, data = DataSet)
+gmModel26 <- lm(Gonad_Wt~Collection_Location + Sex + Year, data = DataSet)
+gmModel27 <- lm(Gonad_Wt~Collection_Location + Sex*Year, data = DataSet)
+gmModel28 <- lm(Gonad_Wt~Collection_Location + (bodysize_pc + EnergyDensity_mJ.kg_1 + RunTimingGroup + Sex + Year)^2, data = DataSet)
+gmModel29 <- lm(Gonad_Wt~Collection_Location + bodysize_pc + EnergyDensity_mJ.kg_1 + RunTimingGroup + Sex + Year, data = DataSet)
+
+
+
+AIC(gmModel1, gmModel2, gmModel3, gmModel4, gmModel5, gmModel6, gmModel7, gmModel8, gmModel9, gmModel10, gmModel11, gmModel12, gmModel13, gmModel14, gmModel15, gmModel16, gmModel17, gmModel18, gmModel19, gmModel20, gmModel21, gmModel22, gmModel23, gmModel24, gmModel25, gmModel26, gmModel27, gmModel28, gmModel29)
+gmModels <- list(gmModel1, gmModel2, gmModel3, gmModel4, gmModel5, gmModel6, gmModel7, gmModel8, gmModel9, gmModel10, gmModel11, gmModel12, gmModel13, gmModel14, gmModel15, gmModel16, gmModel17, gmModel18, gmModel19, gmModel20, gmModel21, gmModel22, gmModel23, gmModel24, gmModel25, gmModel26, gmModel27, gmModel28, gmModel29)
+
+mynames5 <- paste("model", as.character(1:29), sep = "")
+myaicc5 <- aictab(gmModels, modnames = mynames5)
+print(myaicc5)
