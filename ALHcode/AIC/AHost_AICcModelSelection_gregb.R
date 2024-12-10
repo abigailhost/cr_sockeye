@@ -79,6 +79,21 @@ print(myaicc, LL = FALSE)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #' =====================================================
 #' Section 2: AICc code from Greg's Class, BodySizePC_1~RunTimingGroup test
 #' =====================================================
@@ -168,6 +183,40 @@ ggplot(DataSet, aes(x=Fish_Ht, y=bodysize_pc)) +
 # direction of PC score is all positive according to these plots
 
 
+# Visualizing the results from the AIC-selected model: Model 12
+# bodysize_pc ~ Collection_Location + RunTimingGroup + Sex + Year
+library(dplyr)
+
+DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
+                               levels = c("Early",
+                                          "Middle",
+                                          "Late"),
+                               labels = c("Early",
+                                          "Middle",
+                                          "Late"))
+
+ggplot(data=DataSet[-(114),], aes(x = Collection_Location, y = bodysize_pc, fill = Sex)) +
+  geom_boxplot() +
+  labs(title = "Body Size by Collection Location and Sex") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+ggplot(DataSet, aes(x = Year, y = bodysize_pc, fill = RunTimingGroup)) +
+  geom_boxplot() +
+  labs(title = "Body Size by Run Timing Group and Year") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -225,6 +274,43 @@ colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
 write.csv(aic_df, file = "ALHcode/AIC/AICresults_SizeCorrectedBodyMass~RunTimingGroup.csv", row.names = FALSE)
+
+
+
+#Visualizing results for AIC-Selected Model 3:
+ #  lm(sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup, data = DataSet)
+DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
+                                 levels = c("Early",
+                                            "Middle",
+                                            "Late"),
+                                 labels = c("Early",
+                                            "Middle",
+                                            "Late"))
+plot(scModel3)
+
+ggplot(DataSet, aes(x = RunTimingGroup, y = sizecorrected_bodymass_residuals, fill = Collection_Location)) +
+  geom_boxplot() +
+  labs(title = "Residuals of Size-Corrected Body Mass by Collection Location and Run Timing Group") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(DataSet, aes(x = RunTimingGroup, y = sizecorrected_bodymass_residuals, fill = Collection_Location)) +
+  geom_violin() +
+  labs(title = "Residuals of Size-Corrected Body Mass by Collection Location and Run Timing Group") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+interaction.plot(DataSet$Collection_Location, DataSet$RunTimingGroup, DataSet$sizecorrected_bodymass_residuals,
+                 xlab = "Collection Location", ylab = "Residuals of Size-Corrected Body Mass",
+                 trace.label = "Run Timing Group", col = 1:3)
+
+ggplot(DataSet, aes(x = RunTimingGroup, y = sizecorrected_bodymass_residuals, color = RunTimingGroup)) +
+  geom_jitter() +
+  facet_wrap(~ Collection_Location) +
+  labs(title = "Residuals of Size-Corrected Body Mass by Run Timing Group, Faceted by Collection Location") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+
 
 
 
