@@ -387,10 +387,108 @@ gmModel28 <- lm(Gonad_Wt~Collection_Location + (bodysize_pc + EnergyDensity_mJ.k
 gmModel29 <- lm(Gonad_Wt~Collection_Location + bodysize_pc + EnergyDensity_mJ.kg_1 + RunTimingGroup + Sex + Year, data = DataSet)
 
 
-
 AIC(gmModel1, gmModel2, gmModel3, gmModel4, gmModel5, gmModel6, gmModel7, gmModel8, gmModel9, gmModel10, gmModel11, gmModel12, gmModel13, gmModel14, gmModel15, gmModel16, gmModel17, gmModel18, gmModel19, gmModel20, gmModel21, gmModel22, gmModel23, gmModel24, gmModel25, gmModel26, gmModel27, gmModel28, gmModel29)
 gmModels <- list(gmModel1, gmModel2, gmModel3, gmModel4, gmModel5, gmModel6, gmModel7, gmModel8, gmModel9, gmModel10, gmModel11, gmModel12, gmModel13, gmModel14, gmModel15, gmModel16, gmModel17, gmModel18, gmModel19, gmModel20, gmModel21, gmModel22, gmModel23, gmModel24, gmModel25, gmModel26, gmModel27, gmModel28, gmModel29)
 
 mynames5 <- paste("model", as.character(1:29), sep = "")
 myaicc5 <- aictab(gmModels, modnames = mynames5)
 print(myaicc5)
+
+
+aic_df <- as.data.frame(myaicc5)
+aic_df$ModelName <- c("Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1 + Sex",
+                      "Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1*Sex",
+                      "Gonad_Wt~Collection_Location + bodysize_pc + EnergyDensity_mJ.kg_1 + RunTimingGroup + Sex + Year",
+                      "Gonad_Wt~Collection_Location + bodysize_pc + Sex",
+                      "Gonad_Wt~Collection_Location + Sex",
+                      "Gonad_Wt~Collection_Location + bodysize_pc*Sex",
+                      "Gonad_Wt~Collection_Location + RunTimingGroup + Sex",
+                      "Gonad_Wt~Collection_Location + Sex + Year",
+                      "Gonad_Wt~Collection_Location + Sex*Year",
+                      "Gonad_Wt~Collection_Location + RunTimingGroup*Sex",
+                      "Gonad_Wt~Collection_Location + (bodysize_pc + EnergyDensity_mJ.kg_1 + RunTimingGroup + Sex + Year)^2",
+                      "Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1",
+                      "Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1*Year",
+                      "Gonad_Wt~Collection_Location + bodysize_pc*EnergyDensity_mJ.kg_1",
+                      "Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1 + Year",
+                      "Gonad_Wt~Collection_Location + bodysize_pc + EnergyDensity_mJ.kg_1",
+                      "Gonad_Wt~Collection_Location",
+                      "Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1 + RunTimingGroup",
+                      "Gonad_Wt~Collection_Location + bodysize_pc",
+                      "Gonad_Wt~Collection_Location + Year",
+                      "Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1*RunTimingGroup",
+                      "Gonad_Wt~Collection_Location + RunTimingGroup",
+                      "Gonad_Wt~Collection_Location + bodysize_pc + Year",
+                      "Gonad_Wt~Collection_Location + RunTimingGroup + Year",
+                      "Gonad_Wt~Collection_Location + bodysize_pc + RunTimingGroup",
+                      "Gonad_Wt~Collection_Location + bodysize_pc*RunTimingGroup",
+                      "Gonad_Wt~1",
+                      "Gonad_Wt~Collection_Location + RunTimingGroup*Year",
+                      "Gonad_Wt~Collection_Location + bodysize_pc*Year")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+write.csv(aic_df, file = "ALHcode/AIC/AICresults_GonadMass~RunTimingGroup.csv", row.names = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+#' =====================================================
+#' Section 7: AICc code from Greg's Class, Fecundity~RunTimingGroup test
+#' =====================================================
+DataSet<-read.csv("ALHcode/AIC/lowerriver_bodycomp_PCscores.csv")[,-1]
+str(DataSet)
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+#need to filter out all females to one dataset
+DataSet <- subset(DataSet, Sex == "F")
+
+#fecundity is egg #, averaged across 3 different samples
+DataSet$avgFecundity <- rowMeans(DataSet[, c("Fem_Fecun_1_num", "Fem_Fecun_2_num", "Fem_Fecun_3_num")], na.rm = TRUE)
+
+#models
+fecModel1 <- lm(avgFecundity~1, data = DataSet)
+fecModel2 <- lm(avgFecundity~Collection_Location, data = DataSet)
+fecModel3 <- lm(avgFecundity~Collection_Location + bodysize_pc, data = DataSet)
+fecModel4 <- lm(avgFecundity~Collection_Location + EnergyDensity_mJ.kg_1, data = DataSet)
+fecModel5 <- lm(avgFecundity~Collection_Location + RunTimingGroup, data = DataSet)
+fecModel6 <- lm(avgFecundity~Collection_Location + Year, data = DataSet)
+fecModel7 <- lm(avgFecundity~Collection_Location + bodysize_pc + EnergyDensity_mJ.kg_1, data = DataSet)
+fecModel8 <- lm(avgFecundity~Collection_Location + bodysize_pc*EnergyDensity_mJ.kg_1, data = DataSet)
+fecModel9 <- lm(avgFecundity~Collection_Location + bodysize_pc + RunTimingGroup, data = DataSet)
+fecModel10 <- lm(avgFecundity~Collection_Location + bodysize_pc*RunTimingGroup, data = DataSet)
+fecModel11 <- lm(avgFecundity~Collection_Location + bodysize_pc + Year, data = DataSet)
+fecModel12 <- lm(avgFecundity~Collection_Location + bodysize_pc*Year, data = DataSet)
+fecModel13 <- lm(avgFecundity~Collection_Location + EnergyDensity_mJ.kg_1 + RunTimingGroup, data = DataSet)
+fecModel14 <- lm(avgFecundity~Collection_Location + EnergyDensity_mJ.kg_1*RunTimingGroup, data = DataSet)
+fecModel15 <- lm(avgFecundity~Collection_Location + EnergyDensity_mJ.kg_1 + Year, data = DataSet)
+fecModel16 <- lm(avgFecundity~Collection_Location + EnergyDensity_mJ.kg_1*Year, data = DataSet)
+fecModel17 <- lm(avgFecundity~Collection_Location + RunTimingGroup + Year, data = DataSet)
+fecModel18 <- lm(avgFecundity~Collection_Location + RunTimingGroup*Year, data = DataSet)
+fecModel19 <- lm(avgFecundity~Collection_Location + bodysize_pc + EnergyDensity_mJ.kg_1 + RunTimingGroup, data = DataSet)
+fecModel20 <- lm(avgFecundity~Collection_Location + bodysize_pc + EnergyDensity_mJ.kg_1 + Year, data = DataSet)
+fecModel21 <- lm(avgFecundity~Collection_Location + bodysize_pc + RunTimingGroup + Year, data = DataSet)
+fecModel22 <- lm(avgFecundity~Collection_Location + EnergyDensity_mJ.kg_1 + RunTimingGroup + Year, data = DataSet)
+fecModel23 <- lm(avgFecundity~Collection_Location + (bodysize_pc + EnergyDensity_mJ.kg_1 + RunTimingGroup + Year)^2, data = DataSet)
+fecModel24 <- lm(avgFecundity~Collection_Location + bodysize_pc + EnergyDensity_mJ.kg_1 + RunTimingGroup + Year, data = DataSet)
+
+#AIC
+AIC(fecModel1, fecModel2, fecModel3, fecModel4, fecModel5, fecModel6, fecModel7, fecModel8, fecModel9, fecModel10, fecModel11, fecModel12, fecModel13, fecModel14, fecModel15, fecModel16, fecModel17, fecModel18, fecModel19, fecModel20, fecModel21, fecModel22, fecModel23, fecModel24)
+fecModels <- list(fecModel1, fecModel2, fecModel3, fecModel4, fecModel5, fecModel6, fecModel7, fecModel8, fecModel9, fecModel10, fecModel11, fecModel12, fecModel13, fecModel14, fecModel15, fecModel16, fecModel17, fecModel18, fecModel19, fecModel20, fecModel21, fecModel22, fecModel23, fecModel24)
+
+mynames6 <- paste("model", as.character(1:24), sep = "")
+myaicc6 <- aictab(fecModels, modnames = mynames6)
+print(myaicc6)
+
+
