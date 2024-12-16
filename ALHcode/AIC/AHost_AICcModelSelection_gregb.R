@@ -160,27 +160,93 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("bodysize_pc~Collection_Location + RunTimingGroup + Sex + Year","bodysize_pc~Collection_Location + RunTimingGroup + Sex","bodysize_pc~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex","bodysize_pc~Collection_Location + Sex + Year","bodysize_pc~Collection_Location + Sex","bodysize_pc~Collection_Location + RunTimingGroup + Year","bodysize_pc~Collection_Location + RunTimingGroup","bodysize_pc~Collection_Location + Sex + Year + Sex:Year","bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year","bodysize_pc~Collection_Location","bodysize_pc~Collection_Location + Year","bodysize_pc~1")
+aic_df$ModelName <- c("bodysize_pc~Collection_Location + RunTimingGroup + Sex + Year",
+                      "bodysize_pc~Collection_Location + RunTimingGroup + Sex",
+                      "bodysize_pc~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", 
+                      "bodysize_pc~Collection_Location + Sex", 
+                      "bodysize_pc~Collection_Location + Sex + Year",
+                      "bodysize_pc~Collection_Location + Sex + Year + Sex:Year", 
+                      "bodysize_pc~Collection_Location + RunTimingGroup + Year",
+                      "bodysize_pc~Collection_Location + RunTimingGroup", 
+                      "bodysize_pc~1", 
+                      "bodysize_pc~Collection_Location", 
+                      "bodysize_pc~Collection_Location + Year", 
+                      "bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
-write.csv(aic_df, file = "ALHcode/AIC/AICresults_bodysize~RunTimingGroup.csv", row.names = FALSE)
+write.csv(aic_df, file = "ALHcode/AIC/bodysize~runtiminggroup/AICresults_bodysize~RunTimingGroup.csv", row.names = FALSE)
+
+#Now I have the model selection, best model, model weights, etc-- I can now figure out parameter estimates for model 12 (the best model, lowest AIC for bodysize)
+# Identify the best model (based on the lowest AIC weight)
+str(aic_df)
+print(aic_df$AICcWt)
+
+# Find the index of the best model (the one with the highest AIC weight)
+best_model_index <- which.max(aic_df$AICcWt)
+print(best_model_index)
+
+best_model_name <- aic_df$ModelName[best_model_index]
+best_model_aic_weight <- aic_df$AICcWt[best_model_index]
+print(paste("Best model is:", best_model_name))
+print(paste("AIC weight of the best model:", best_model_aic_weight)) #so model 12 is the best model
+
+best_model_summary <- summary(model12) #Extract the best model and its summary
+print(best_model_summary)
+
+# Extract coefficients (parameter estimates) and standard errors
+param_estimates <- best_model_summary$coefficients[, 1]  # Estimate
+std_errors <- best_model_summary$coefficients[, 2]       # Standard Error
+t_values <- best_model_summary$coefficients[, 3]          # t-values
+p_values <- best_model_summary$coefficients[, 4]          # p-values
+
+# Calculate 95% Confidence Intervals
+conf_intervals <- confint(model12)[-(9),]  # Default is 95% CI
+
+# ombine all the information into a data frame
+param_df <- data.frame(
+  Parameter = rownames(best_model_summary$coefficients),
+  Estimate = param_estimates,
+  Std_Error = std_errors,
+  t_value = t_values,
+  p_value = p_values,
+  CI_Lower = conf_intervals[, 1],
+  CI_Upper = conf_intervals[, 2]
+)
+
+# Print the table
+print(param_df)
+
+# Save the results to a CSV for your manuscript
+write.csv(param_df, file = "ALHcode/AIC/bodysize~runtiminggroup/bodysize~runtiminggroup_model12_ParamEstimates.csv", row.names = FALSE)
 
 
-#for body size, when the variable is a PC score of all body metrics, the best model as chosen by AIC is the global model including all main factors but no interactions
+
+###### Model Averaging can now be completed ######
+install.packages("MuMIn")
+library(MuMIn)
+
+# Create a model selection table (this will give you AIC, AIC weights, etc.)
+model_weights <- myaicc1$AICcWt ##Get the AIC weights from the AIC table
+model_avg <- model.avg(models, weights = model_weights)
+summary(model_avg)
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
+
+# Convert the coefficients into a tidy data frame
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
+coefs_df$CI_Upper <- avg_confint[, 2]  # Add upper bound of confidence intervals
+print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
+
+
 
 #### CHECK DIRECTION OF PC SCORE ###
 library(ggplot2)
 ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc)) +
   geom_point()
-#so direction of PC score is positive, check with other variables
-
-ggplot(DataSet, aes(x=Fish_Grth, y=bodysize_pc)) +
-  geom_point()
-
-ggplot(DataSet, aes(x=Fish_Ht, y=bodysize_pc)) +
-  geom_point()
-# direction of PC score is all positive according to these plots
+#so direction of PC score is positive, can check with other variables
 
 
 # Visualizing the results from the AIC-selected model: Model 12
@@ -226,6 +292,9 @@ ggplot(DataSet, aes(x = Year, y = bodysize_pc, fill = RunTimingGroup)) +
 #' =====================================================
 #' Section 3: AICc code from Greg's Class, scBodyMass_1~RunTimingGroup test
 #' =====================================================
+rm(list = ls())
+library(MuMIn)
+library(AICcmodavg)
 
 #re-load data: 
 DataSet<-read.csv("ALHcode/AIC/lowerriver_bodycomp_all.csv")[,-1]
@@ -239,7 +308,7 @@ str(DataSet)
 #calculated size corrected body mass from DataSet ----- residuals of a linear regression of weight ~ length
 DataSet$Fish_Leng_Total <- DataSet$Fish_Leng_1 + DataSet$Fish_Leng_2
 #row 80 seems incorrect-- length_2 snout to eye is 41.0 cm, too long-- eliminate for this analysis
-DataSet <- DataSet[-57,]
+ # DataSet <- DataSet[-57,] ==== this data set was edited, the row is no longer an issue
 sizecorrected_bodymass_lm <- lm(DataSet$Fish_Wt ~ DataSet$Fish_Leng_Total)
 sizecorrected_bodymass_residuals <- residuals(sizecorrected_bodymass_lm)
 plot(sizecorrected_bodymass_residuals, DataSet$Fish_Leng_Total)

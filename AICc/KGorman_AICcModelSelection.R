@@ -23,7 +23,7 @@ list.files()
 # Testing for normality of delta.15.N, delta.13.C. and R.PC1.2
 
 list.files()
-SSD.IsoVarSex.DataSet<-read.csv("ADPE.SSD.IsoVarSex.DataSet.Sub3.csv")
+SSD.IsoVarSex.DataSet<-read.csv("AICc/ADPE.SSD.IsoVarSex.DataSet.Sub3.csv")
 SSD.IsoVarSex.DataSet
 nrow(SSD.IsoVarSex.DataSet)
 
@@ -74,10 +74,10 @@ getwd()
 list.files()
 
 # Identify the data to be used.
-DataFileName<- "ADPE.SSD.IsoVarSex.DataSet.Sub3.csv"
+DataFileName<- "AICc/ADPE.SSD.IsoVarSex.DataSet.Sub3.csv"
 
 # Identify the models to be run.
-ModelFileName<-"ADPE.SSD.IsoVarSex.DataSet.CandSet.csv"
+ModelFileName<-"AICc/ADPE.SSD.IsoVarSex.DataSet.CandSet.csv"
 
 #-----
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
@@ -196,10 +196,10 @@ AIC.Output<-calculate.AIC(AICModelMatrix,as.character(ModelSet))
 print(AIC.Output)
 
 # Write AIC Final Matrix output to .csv files.
-write.table(AIC.Output, file="AICFinalMatrix.csv", col.names=NA, sep=",")
+write.table(AIC.Output, file="AICc/AICFinalMatrix.csv", col.names=NA, sep=",")
 
 # Write model output to .csv files.
-sink(paste("Model Summaries_",out="",".doc",sep=""))
+sink(paste("AICc/Model Summaries_",out="",".doc",sep=""))
 
 for (i in 1:length(ModelSet)) {
   
@@ -225,7 +225,7 @@ getwd()
 list.files()
 
 # Identify the new data WS to be used.
-DataFileName2<- "W.AICFinalMatrixWS.csv"
+DataFileName2<- "AICc/AICFinalMatrix.csv"
 
 # Import data.
 DataSet2<-read.csv(DataFileName2)
@@ -518,7 +518,7 @@ W.AICFinalMatrix<- cbind(DataSet2,W.ParaEstMatrix,W.ParaEst.SEMatrix)
 W.AICFinalMatrix
 
 # Write W.AICFinaMatrix to a .cvs file
-write.table(W.AICFinalMatrix, file="W.AICFinalMatrix.csv", col.names=NA, sep=",")
+write.table(W.AICFinalMatrix, file="AICc/W.AICFinalMatrix.csv", col.names=NA, sep=",")
 
 #-----
 # III. Bind ParalikMatrix, s.W.ParaEst.SEMatrix, s.W.ParaEst.CIMatrix
@@ -533,7 +533,7 @@ s.W.AICFinalMatrixColName<- c("Paralik","s.W.ParaEst","UncondSE","UncondCI")
 s.W.AICFinalMatrixColName
 
 # Write s.W.AICFinaMatrix to a .cvs file. Note will have to move Column names over 1 column to be correct because R is weird.
-write.table(s.W.AICFinalMatrix, file="s.W.AICFinalMatrix.csv", col.names=(s.W.AICFinalMatrixColName), sep=",")
+write.table(s.W.AICFinalMatrix, file="AICc/s.W.AICFinalMatrix.csv", col.names=(s.W.AICFinalMatrixColName), sep=",")
 
 #-----
 # End code. You should have now produced the following files with this code: 1-AICFinalMatrix.csv; use this file to sort models by deltaAIC.c and in excel calculate manually the cumAIC.c.W values. 2-Model Summaries_.doc; this is a word doc that holds the output from all models in the Candidate Set. 3-W.AICFinalMatrixWS.csv; this file is used as DataSet2 to run weighted calcs. 4-W.AICFinalMatrix.csv; this file contains all Models, Para Ests and associated SEs, AIC.c.Ws for each model, calculated W.Para Ests and associated W.SEs. These are the data that are used to create summed weighted estimates. 5-s.W.AICFinalMatrix.csv; this file holds summed weighted estimates including Parameter Likelihoods, s.W.ParaEsts, unconditional SEs, and unconditional CIs. !!When all these files have been created, cut and paste them into 1 excel file with 4 sheets for each part of the analysis and label this excel file the same name as that for the Model Summaries_.doc file so that things can be referenced easily within the same analysis.
