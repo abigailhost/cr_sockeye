@@ -105,7 +105,7 @@ any(is.na(lowerriver_bodycomp_all$Fish_Grth)) #Na's present, will need to omit t
 lowerriver_bodycomp_all[is.na(lowerriver_bodycomp_all$Fish_Grth), ] #row 64 has NA, remove for PC
 
 lowerriver_bodycomp_all_pc <- lowerriver_bodycomp_all[-64,] #new dataframe with no NA's for bodysize metrics
-
+      # length1 vs girth, length2 v girth, height v girth-- best R2 value and estimate girth for missing value
 bc_pca1 <- princomp(lowerriver_bodycomp_all_pc[,c(12,14,16,19)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
 summary(bc_pca1, loadings=T, cutoff=0.0001) #summary of PC analysis
 bc_pca1$scores
