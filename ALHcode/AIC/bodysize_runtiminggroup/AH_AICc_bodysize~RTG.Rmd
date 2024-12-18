@@ -1,0 +1,232 @@
+---
+title: "AH_AICc_bodysize~RTG"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
+```
+
+
+#' =====================================================
+#' AICc code for BodySizePC_1~RunTimingGroup models
+#' =====================================================
+
+### Loading Data
+```{r}
+library(AICcmodavg)
+library(lubridate)
+
+#data loading
+bc19 <- read.csv("ALHcode/AIC/bodycomp_2019.csv")
+bc20 <- read.csv("ALHcode/AIC/bodycomp_2020.csv")
+bc21 <- read.csv("ALHcode/AIC/bodycomp_2021.csv")
+#need to bind all together for total body comp dataset, lower river only
+
+bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
+write.csv(bc_LR_total, "ALHcode/AIC/lowerriver_bodycomp_all.csv")
+lowerriver_bodycomp_all<-read.csv("ALHcode/AIC/lowerriver_bodycomp_all.csv")[,-1]
+#all data is loaded now
+
+#need to add year to dataset
+lowerriver_bodycomp_all$Collection_Date <- as.Date(lowerriver_bodycomp_all$Collection_Date)
+
+# Create a new column 'year' from the collection_date
+lowerriver_bodycomp_all$Year <- year(lowerriver_bodycomp_all$Collection_Date)
+
+write.csv(lowerriver_bodycomp_all, "ALHcode/AIC/lowerriver_bodycomp_all.csv")
+
+```
+
+
+### Calculating PC Score for body size
+```{r}
+lowerriver_bodycomp_all <- "ALHcode/AIC/lowerriver_bodycomp_all.csv"
+lowerriver_bodycomp_all<-read.csv("ALHcode/AIC/lowerriver_bodycomp_all.csv")[,-1]
+
+#checking NA
+any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
+any(is.na(lowerriver_bodycomp_all$Fish_Ht))
+any(is.na(lowerriver_bodycomp_all$Fish_Grth)) #Na's present, will need to omit them for PC score
+lowerriver_bodycomp_all[is.na(lowerriver_bodycomp_all$Fish_Grth), ] #row 64 has NA, remove for PC
+
+lowerriver_bodycomp_all_pc <- lowerriver_bodycomp_all[-64,] #new dataframe with no NA's for bodysize metrics
+      # length1 vs girth, length2 v girth, height v girth-- best R2 value and estimate girth for missing value
+
+bc_pca1 <- princomp(lowerriver_bodycomp_all_pc[,c(12,14,16,19)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
+
+summary(bc_pca1, loadings=T, cutoff=0.0001) #summary of PC analysis
+bc_pca1$scores
+screeplot(bc_pca1, type=c('lines'))
+bodysize_pc <- bc_pca1$scores[,1]
+
+#combine dataframe with column for body size PC scores
+lowerriver_bodycomp_pc_new <- cbind(lowerriver_bodycomp_all_pc, bodysize_pc) 
+
+#Now, run AIC again but PC1 scores are the response variable / numeric
+write.csv(lowerriver_bodycomp_pc_new, "ALHcode/AIC/lowerriver_bodycomp_PCscores.csv")
+```
+
+
+### Import Data for models
+```{r}
+lowerriver_bodycomp_PCscores <- "ALHcode/AIC/lowerriver_bodycomp_PCscores.csv"
+
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(lowerriver_bodycomp_PCscores)[,-1]
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet)
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location) 
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+```
+
+# Making Models for bodysize_pc~RunTimingGroup
+model1 <- lm(bodysize_pc~1, data=DataSet)
+model2 <- lm(bodysize_pc~Collection_Location, data = DataSet)
+model3 <- lm(bodysize_pc~Collection_Location + RunTimingGroup, data = DataSet)
+model4 <- lm(bodysize_pc~Collection_Location + Sex, data = DataSet)
+model5 <- lm(bodysize_pc~Collection_Location + Year, data = DataSet)
+model6 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Sex, data = DataSet)
+model7 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Year, data = DataSet)
+model8 <- lm(bodysize_pc~Collection_Location + Sex + Year, data = DataSet)
+model9 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+model10 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
+model11 <- lm(bodysize_pc~Collection_Location + Sex + Year + Sex:Year, data = DataSet)
+model12 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Sex + Year, data = DataSet)
+
+
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:12), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("bodysize_pc~Collection_Location + RunTimingGroup + Sex + Year",
+                      "bodysize_pc~Collection_Location + RunTimingGroup + Sex",
+                      "bodysize_pc~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", 
+                      "bodysize_pc~Collection_Location + Sex", 
+                      "bodysize_pc~Collection_Location + Sex + Year",
+                      "bodysize_pc~Collection_Location + Sex + Year + Sex:Year", 
+                      "bodysize_pc~Collection_Location + RunTimingGroup + Year",
+                      "bodysize_pc~Collection_Location + RunTimingGroup", 
+                      "bodysize_pc~1", 
+                      "bodysize_pc~Collection_Location", 
+                      "bodysize_pc~Collection_Location + Year", 
+                      "bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "ALHcode/AIC/bodysize~runtiminggroup/AICresults_bodysize~RunTimingGroup.csv", row.names = FALSE)
+
+#Now I have the model selection, best model, model weights, etc-- I can now figure out parameter estimates for model 12 (the best model, lowest AIC for bodysize)
+# Identify the best model (based on the lowest AIC weight)
+str(aic_df)
+print(aic_df$AICcWt)
+
+# Find the index of the best model (the one with the highest AIC weight)
+best_model_index <- which.max(aic_df$AICcWt)
+print(best_model_index)
+
+best_model_name <- aic_df$ModelName[best_model_index]
+best_model_aic_weight <- aic_df$AICcWt[best_model_index]
+print(paste("Best model is:", best_model_name))
+print(paste("AIC weight of the best model:", best_model_aic_weight)) #so model 12 is the best model
+
+best_model_summary <- summary(model12) #Extract the best model and its summary
+print(best_model_summary)
+
+# Extract coefficients (parameter estimates) and standard errors
+param_estimates <- best_model_summary$coefficients[, 1]  # Estimate
+std_errors <- best_model_summary$coefficients[, 2]       # Standard Error
+t_values <- best_model_summary$coefficients[, 3]          # t-values
+p_values <- best_model_summary$coefficients[, 4]          # p-values
+
+# Calculate 95% Confidence Intervals
+conf_intervals <- confint(model12)[-(9),]  # Default is 95% CI
+
+# ombine all the information into a data frame
+param_df <- data.frame(
+  Parameter = rownames(best_model_summary$coefficients),
+  Estimate = param_estimates,
+  Std_Error = std_errors,
+  t_value = t_values,
+  p_value = p_values,
+  CI_Lower = conf_intervals[, 1],
+  CI_Upper = conf_intervals[, 2]
+)
+
+# Print the table
+print(param_df)
+
+# Save the results to a CSV for your manuscript
+write.csv(param_df, file = "ALHcode/AIC/bodysize~runtiminggroup/bodysize~runtiminggroup_model12_ParamEstimates.csv", row.names = FALSE)
+
+
+
+###### Model Averaging can now be completed ######
+install.packages("MuMIn")
+library(MuMIn)
+
+# Create a model selection table (this will give you AIC, AIC weights, etc.)
+model_weights <- myaicc1$AICcWt ##Get the AIC weights from the AIC table
+model_avg <- model.avg(models, weights = model_weights)
+summary(model_avg)
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
+
+# Convert the coefficients into a tidy data frame
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
+coefs_df$CI_Upper <- avg_confint[, 2]  # Add upper bound of confidence intervals
+print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
+
+
+
+#### CHECK DIRECTION OF PC SCORE ###
+library(ggplot2)
+ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc)) +
+  geom_point()
+#so direction of PC score is positive, can check with other variables
+
+
+# Visualizing the results from the AIC-selected model: Model 12
+# bodysize_pc ~ Collection_Location + RunTimingGroup + Sex + Year
+library(dplyr)
+
+DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
+                               levels = c("Early",
+                                          "Middle",
+                                          "Late"),
+                               labels = c("Early",
+                                          "Middle",
+                                          "Late"))
+
+ggplot(data=DataSet[-(114),], aes(x = Collection_Location, y = bodysize_pc, fill = Sex)) +
+  geom_boxplot() +
+  labs(title = "Body Size by Collection Location and Sex") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+ggplot(DataSet, aes(x = Year, y = bodysize_pc, fill = RunTimingGroup)) +
+  geom_boxplot() +
+  labs(title = "Body Size by Run Timing Group and Year") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
