@@ -9,7 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
 ```
 
-
 #' =====================================================
 #' AICc code for BodySizePC_1~RunTimingGroup models
 #' =====================================================
@@ -92,7 +91,14 @@ str(DataSet)
 
 ```
 
-# Making Models for bodysize_pc~RunTimingGroup
+### Making Models for bodysize_pc~RunTimingGroup
+```{r}
+# Models for reference
+bodysize_RTG_modelset <- "ALHcode/AIC/bodysize_runtiminggroup/bodysize_runtiminggroupbodysize~RunTimingGroup_modelset.csv"
+ModelSet<-read.csv(bodysize_RTG_modelset)
+
+```
+
 model1 <- lm(bodysize_pc~1, data=DataSet)
 model2 <- lm(bodysize_pc~Collection_Location, data = DataSet)
 model3 <- lm(bodysize_pc~Collection_Location + RunTimingGroup, data = DataSet)
