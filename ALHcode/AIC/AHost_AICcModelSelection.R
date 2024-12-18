@@ -175,7 +175,7 @@ aic_df$ModelName <- c("bodysize_pc~Collection_Location + RunTimingGroup + Sex + 
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
-write.csv(aic_df, file = "ALHcode/AIC/bodysize~runtiminggroup/AICresults_bodysize~RunTimingGroup.csv", row.names = FALSE)
+write.csv(aic_df, file = "ALHcode/AIC/bodysize_runtiminggroup/AICresults_bodysize~RunTimingGroup.csv", row.names = FALSE)
 
 #Now I have the model selection, best model, model weights, etc-- I can now figure out parameter estimates for model 12 (the best model, lowest AIC for bodysize)
 # Identify the best model (based on the lowest AIC weight)
@@ -218,7 +218,7 @@ param_df <- data.frame(
 print(param_df)
 
 # Save the results to a CSV for your manuscript
-write.csv(param_df, file = "ALHcode/AIC/bodysize~runtiminggroup/bodysize~runtiminggroup_model12_ParamEstimates.csv", row.names = FALSE)
+write.csv(param_df, file = "ALHcode/AIC/bodysize_runtiminggroup/bodysize~runtiminggroup_model12_ParamEstimates.csv", row.names = FALSE)
 
 
 
@@ -338,11 +338,22 @@ myaicc2 <- aictab(scModels, modnames = mynames2)
 print(myaicc2) #so model 3 is the best for size corrected bodymass
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc2)
-aic_df$ModelName <- c("sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup", "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Year", "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", "sizecorrected_bodymass_residuals ~ Collection_Location", "sizecorrected_bodymass_residuals ~ Collection_Location + Year", "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex", "sizecorrected_bodymass_residuals ~ Collection_Location + Sex + Year + Sex:Year","sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex + Year", "sizecorrected_bodymass_residuals ~ Collection_Location + Sex", "sizecorrected_bodymass_residuals ~ Collection_Location + Sex + Year", "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", "sizecorrected_bodymass_residuals ~ 1")
+aic_df$ModelName <- c("sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup", 
+                      "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Year", 
+                      "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", 
+                      "sizecorrected_bodymass_residuals ~ Collection_Location", 
+                      "sizecorrected_bodymass_residuals ~ Collection_Location + Year", 
+                      "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex", 
+                      "sizecorrected_bodymass_residuals ~ Collection_Location + Sex + Year + Sex:Year",
+                      "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Sex + Year", 
+                      "sizecorrected_bodymass_residuals ~ Collection_Location + Sex", 
+                      "sizecorrected_bodymass_residuals ~ Collection_Location + Sex + Year", 
+                      "sizecorrected_bodymass_residuals ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", 
+                      "sizecorrected_bodymass_residuals ~ 1")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
-write.csv(aic_df, file = "ALHcode/AIC/AICresults_SizeCorrectedBodyMass~RunTimingGroup.csv", row.names = FALSE)
+write.csv(aic_df, file = "ALHcode/AIC/scbodymass_runtiminggroup/AICresults_SizeCorrectedBodyMass~RunTimingGroup.csv", row.names = FALSE)
 
 
 
@@ -427,10 +438,21 @@ myaicc3 <- aictab(edModels, modnames = mynames3)
 print(myaicc3) #so model 10 is the best, followed closely by model 3 for energy density as response variable
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc3)
-aic_df$ModelName <- c("EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location", "EnergyDensity_mJ.kg_1 ~ Collection_Location + Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex", "EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex + Year", "EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex + Year + Sex:Year", "EnergyDensity_mJ.kg_1 ~ 1")
+aic_df$ModelName <- c("EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + Year", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + Year", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex + Year", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex + Year + Sex:Year", 
+                      "EnergyDensity_mJ.kg_1 ~ 1")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
-write.csv(aic_df, file = "ALHcode/AIC/AICresults_EnergyDensity~RunTimingGroup.csv", row.names = FALSE)
+write.csv(aic_df, file = "ALHcode/AIC/energydensity_runtiminggroup/AICresults_EnergyDensity~RunTimingGroup.csv", row.names = FALSE)
 
 
 
@@ -481,10 +503,21 @@ myaicc4 <- aictab(teModels, modnames = mynames4)
 print(myaicc4)
 
 aic_df <- as.data.frame(myaicc4)
-aic_df$ModelName <- c("TotalEnergy ~ Collection_Location + RunTimingGroup + Sex + Year", "TotalEnergy ~ Collection_Location + RunTimingGroup + Sex", "TotalEnergy ~ Collection_Location + Sex", "TotalEnergy ~ Collection_Location + Sex + Year", "TotalEnergy ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", "TotalEnergy ~ Collection_Location + Sex + Year + Sex:Year", "TotalEnergy ~ Collection_Location + RunTimingGroup + Year", "TotalEnergy ~ Collection_Location + RunTimingGroup", "TotalEnergy ~ Collection_Location", "TotalEnergy ~ Collection_Location + Year", "TotalEnergy ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", "TotalEnergy ~ 1")
+aic_df$ModelName <- c("TotalEnergy ~ Collection_Location + RunTimingGroup + Sex + Year", 
+                      "TotalEnergy ~ Collection_Location + RunTimingGroup + Sex", 
+                      "TotalEnergy ~ Collection_Location + Sex", 
+                      "TotalEnergy ~ Collection_Location + Sex + Year", 
+                      "TotalEnergy ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", 
+                      "TotalEnergy ~ Collection_Location + Sex + Year + Sex:Year", 
+                      "TotalEnergy ~ Collection_Location + RunTimingGroup + Year", 
+                      "TotalEnergy ~ Collection_Location + RunTimingGroup", 
+                      "TotalEnergy ~ Collection_Location", 
+                      "TotalEnergy ~ Collection_Location + Year", 
+                      "TotalEnergy ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", 
+                      "TotalEnergy ~ 1")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
-write.csv(aic_df, file = "ALHcode/AIC/AICresults_TotalEnergy~RunTimingGroup.csv", row.names = FALSE)
+write.csv(aic_df, file = "ALHcode/AIC/totalenergy_runtiminggroup/AICresults_TotalEnergy~RunTimingGroup.csv", row.names = FALSE)
 
 
 
@@ -582,7 +615,7 @@ aic_df$ModelName <- c("Gonad_Wt~Collection_Location + EnergyDensity_mJ.kg_1 + Se
                       "Gonad_Wt~Collection_Location + bodysize_pc*Year")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
-write.csv(aic_df, file = "ALHcode/AIC/AICresults_GonadMass~RunTimingGroup.csv", row.names = FALSE)
+write.csv(aic_df, file = "ALHcode/AIC/gonadmass_runtiminggroup/AICresults_GonadMass~RunTimingGroup.csv", row.names = FALSE)
 
 
 
