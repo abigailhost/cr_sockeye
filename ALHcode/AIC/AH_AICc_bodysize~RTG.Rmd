@@ -40,7 +40,7 @@ write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")
 ```
 
 
-### Calculating PC Score for body size
+### Checking for NAs for PC score
 ```{r}
 lowerriver_bodycomp_all <- "lowerriver_bodycomp_all.csv"
 lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
@@ -50,28 +50,65 @@ any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
 any(is.na(lowerriver_bodycomp_all$Fish_Ht))
 any(is.na(lowerriver_bodycomp_all$Fish_Grth)) #Na's present, will need to omit them for PC score
 lowerriver_bodycomp_all[is.na(lowerriver_bodycomp_all$Fish_Grth), ] #row 64 has NA, remove for PC
+```
 
-lowerriver_bodycomp_all_pc <- lowerriver_bodycomp_all[-64,] #new dataframe with no NA's for bodysize metrics
-      # length1 vs girth, length2 v girth, height v girth-- best R2 value and estimate girth for missing value
 
-bc_pca1 <- princomp(lowerriver_bodycomp_all_pc[,c(12,14,16,19)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
+### Estimate Girth Values for NA rows
+```{r}
+ggplot(lowerriver_bodycomp_all, aes(x=Fish_Leng_1, y = Fish_Grth)) + 
+  geom_point() #length relationship to girth
 
+girth_leng_lm <- lm(Fish_Grth ~ Fish_Leng_1, data = lowerriver_bodycomp_all)
+summary(girth_leng_lm) # Adjusted R-squared:  0.3044 
+
+compare_pca1 <- princomp(lowerriver_bodycomp_all[,c(12,14,16)], cor=T, scores=T, covmat = NULL) #pc of lengths and height, no girth
+summary(compare_pca1, loadings=T, cutoff=0.0001) #summary of PC analysis
+screeplot(compare_pca1, type=c('lines'))
+compare_pc <- compare_pca1$scores[,1]
+lowerriver_bodycomp_pc_ForGirthEstimates <- cbind(lowerriver_bodycomp_all, compare_pc) #dataframe for estimate girth value via bodysize PC score
+
+girth_pc_lm <- lm(Fish_Grth ~ compare_pc, data = lowerriver_bodycomp_pc_ForGirthEstimates)
+summary(girth_pc_lm) # Adjusted R-squared:  0.3862 , so PC score has higher r-squared value for predicting girth
+
+predicted_values <- predict(girth_pc_lm, newdata = lowerriver_bodycomp_pc_ForGirthEstimates) # Make predictions for the entire dataset (including missing Fish_Grth values)
+
+lowerriver_bodycomp_pc_ForGirthEstimates$Predicted_Fish_Grth <- predicted_values # Add these predictions back to your dataset
+
+lowerriver_bodycomp_pc_ForGirthEstimates$Fish_Grth[is.na(lowerriver_bodycomp_pc_ForGirthEstimates$Fish_Grth)] <- predicted_values[is.na(lowerriver_bodycomp_pc_ForGirthEstimates$Fish_Grth)] # Replace missing Fish_Grth values with the predicted values
+#the NA is replaced with 30.06182
+
+#plot the original data and the predicted values to see how well the model fits
+ggplot(lowerriver_bodycomp_pc_ForGirthEstimates, aes(x = compare_pc, y = Fish_Grth)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Grth, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Fish Growth",
+       x = "Comparison PC",
+       y = "Fish Growth") +
+  theme_minimal() 
+
+###### Now, back to using lowerriver_bodycomp_all #######
+lowerriver_bodycomp_all$Fish_Grth[is.na(lowerriver_bodycomp_all$Fish_Grth)] <- 30.06182
+any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
+any(is.na(lowerriver_bodycomp_all$Fish_Ht))
+any(is.na(lowerriver_bodycomp_all$Fish_Grth)) # no longer an NA present
+```
+
+```{r}
+# NOT NEEDED ANYMORE w/ PREVIOUS CHUNK
+######### lowerriver_bodycomp_all_pc <- lowerriver_bodycomp_all[-64,] #new dataframe with no NA's for bodysize metrics
+
+bc_pca1 <- princomp(lowerriver_bodycomp_all[,c(12,14,16,19)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
 summary(bc_pca1, loadings=T, cutoff=0.0001) #summary of PC analysis
 bc_pca1$scores
 screeplot(bc_pca1, type=c('lines'))
 bodysize_pc <- bc_pca1$scores[,1]
 
 #combine dataframe with column for body size PC scores
-lowerriver_bodycomp_pc_new <- cbind(lowerriver_bodycomp_all_pc, bodysize_pc) 
+lowerriver_bodycomp_pc <- cbind(lowerriver_bodycomp_all, bodysize_pc) 
 
 #Now, run AIC again but PC1 scores are the response variable / numeric
-write.csv(lowerriver_bodycomp_pc_new, "lowerriver_bodycomp_PCscores.csv")
-
-#### CHECK DIRECTION OF PC SCORE ###
-library(ggplot2)
-ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc)) +
-  geom_point()
-#so direction of PC score is positive, can check with other variables
+write.csv(lowerriver_bodycomp_pc, "lowerriver_bodycomp_PCscores.csv")
 ```
 
 
@@ -81,6 +118,12 @@ lowerriver_bodycomp_PCscores <- "lowerriver_bodycomp_PCscores.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
 DataSet<-read.csv(lowerriver_bodycomp_PCscores)[,-1]
+
+#### CHECK DIRECTION OF PC SCORE ###
+library(ggplot2)
+ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc)) +
+  geom_point()
+#so direction of PC score is positive, can check with other variables
 
 # View DataSet.
 head(DataSet)
@@ -151,7 +194,6 @@ write.csv(aic_df, file = "bodysize_runtiminggroup/AICresults_bodysize~RunTimingG
 ```
 ### Parameter Estimates of best model
 ```{r}
-
 # Identify the best model (based on the lowest AIC weight)
 str(aic_df)
 print(aic_df$AICcWt)
@@ -215,6 +257,7 @@ coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
 coefs_df$CI_Upper <- avg_confint[, 2]  # Add upper bound of confidence intervals
 print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
 
+write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
 ```
 
 ### Visualizing Results from body size~RunTimingGroup Model 12
