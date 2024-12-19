@@ -1,0 +1,13 @@
+﻿Candidate Models,Fineness~RunTimingGroup
+1,Fineness~1
+2,Fineness~CollectionLocation
+3,Fineness~CollectionLocation + RunTimingGroup
+4,Fineness~CollectionLocation + Sex
+5,Fineness~CollectionLocation + Year
+6,Fineness~CollectionLocation + RunTimingGroup + Sex
+7,Fineness~CollectionLocation + RunTimingGroup + Year
+8,Fineness~CollectionLocation + Sex + Year
+9,Fineness~CollectionLocation + RunTimingGroup + Sex + RunTimingGroup*Sex
+10,Fineness~CollectionLocation + RunTimingGroup + Year + RunTimingGroup*Year
+11,Fineness~CollectionLocation + Sex + Year + Sex*Year
+12,Fineness~CollectionLocation + RunTimingGroup + Sex + Year

@@ -1,0 +1,200 @@
+---
+title: "AH_AICc_fineness~RTG"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
+```
+
+#' =====================================================
+#' AICc code for fineness~RunTimingGroup models
+#' =====================================================
+
+### Loading Data
+```{r}
+library(AICcmodavg)
+library(lubridate)
+
+#data loading
+bc19 <- read.csv("bodycomp_2019.csv")
+bc20 <- read.csv("bodycomp_2020.csv")
+bc21 <- read.csv("bodycomp_2021.csv")
+#need to bind all together for total body comp dataset, lower river only
+
+bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
+write.csv(bc_LR_total, "lowerriver_bodycomp_all.csv")
+lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
+#all data is loaded now
+
+#need to add year to dataset
+lowerriver_bodycomp_all$Collection_Date <- as.Date(lowerriver_bodycomp_all$Collection_Date)
+
+# Create a new column 'year' from the collection_date
+lowerriver_bodycomp_all$Year <- year(lowerriver_bodycomp_all$Collection_Date)
+
+write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")
+
+```
+
+
+### Checking for NAs for PC score
+```{r}
+lowerriver_bodycomp_all <- "lowerriver_bodycomp_all.csv"
+lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
+
+#checking NA
+any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
+any(is.na(lowerriver_bodycomp_all$Fish_Ht))
+any(is.na(lowerriver_bodycomp_all$Fish_Grth)) #Na's present, will need to omit them for PC score
+lowerriver_bodycomp_all[is.na(lowerriver_bodycomp_all$Fish_Grth), ] #row 64 has NA, remove for PC
+```
+
+### Estimate Girth Values for NA rows
+```{r}
+ggplot(lowerriver_bodycomp_all, aes(x=Fish_Leng_1, y = Fish_Grth)) + 
+  geom_point() #length relationship to girth
+
+girth_leng_lm <- lm(Fish_Grth ~ Fish_Leng_1, data = lowerriver_bodycomp_all)
+summary(girth_leng_lm) # Adjusted R-squared:  0.3044 
+
+compare_pca1 <- princomp(lowerriver_bodycomp_all[,c(12,14,16)], cor=T, scores=T, covmat = NULL) #pc of lengths and height, no girth
+summary(compare_pca1, loadings=T, cutoff=0.0001) #summary of PC analysis
+screeplot(compare_pca1, type=c('lines'))
+compare_pc <- compare_pca1$scores[,1]
+lowerriver_bodycomp_pc_ForGirthEstimates <- cbind(lowerriver_bodycomp_all, compare_pc) #dataframe for estimate girth value via bodysize PC score
+
+girth_pc_lm <- lm(Fish_Grth ~ compare_pc, data = lowerriver_bodycomp_pc_ForGirthEstimates)
+summary(girth_pc_lm) # Adjusted R-squared:  0.3862 , so PC score has higher r-squared value for predicting girth
+
+predicted_values <- predict(girth_pc_lm, newdata = lowerriver_bodycomp_pc_ForGirthEstimates) # Make predictions for the entire dataset (including missing Fish_Grth values)
+
+lowerriver_bodycomp_pc_ForGirthEstimates$Predicted_Fish_Grth <- predicted_values # Add these predictions back to your dataset
+
+lowerriver_bodycomp_pc_ForGirthEstimates$Fish_Grth[is.na(lowerriver_bodycomp_pc_ForGirthEstimates$Fish_Grth)] <- predicted_values[is.na(lowerriver_bodycomp_pc_ForGirthEstimates$Fish_Grth)] # Replace missing Fish_Grth values with the predicted values
+#the NA is replaced with 30.06182
+
+#plot the original data and the predicted values to see how well the model fits
+ggplot(lowerriver_bodycomp_pc_ForGirthEstimates, aes(x = compare_pc, y = Fish_Grth)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Grth, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Fish Growth",
+       x = "Comparison PC",
+       y = "Fish Growth") +
+  theme_minimal() 
+
+###### Now, back to using lowerriver_bodycomp_all #######
+lowerriver_bodycomp_all$Fish_Grth[is.na(lowerriver_bodycomp_all$Fish_Grth)] <- 30.06182
+any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
+any(is.na(lowerriver_bodycomp_all$Fish_Ht))
+any(is.na(lowerriver_bodycomp_all$Fish_Grth)) # no longer an NA present
+```
+
+### Adding Fineness Ratio for lowerriver_bodycomp_all
+```{r}
+### Fineness Ratio = A fish's "fineness ratio" refers to the ratio of its body length to its maximum cross-sectional diameter
+
+#fineness ratio 1 : fish length / fish height ** this is the way reported by literature / pictures
+
+#calculating fineness ratio 1
+lowerriver_bodycomp_all$fineness_1 <- (lowerriver_bodycomp_all$Fish_Leng_1+lowerriver_bodycomp_all$Fish_Leng_2) / (lowerriver_bodycomp_all$Fish_Ht)
+
+str(lowerriver_bodycomp_all$fineness_1) #fineness_1 is numeric
+mean(lowerriver_bodycomp_all$fineness_1) #4.15, where fineness ratios between 2 and 6 result in a decrease of the drag produced by the fish, and species with a fineness ratio of 4.5 have an optimum swimming capacity 
+
+#create new data file that includes fineness data in the dataset for models
+write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_fineness.csv") 
+```
+
+### Import Data for models
+```{r}
+rm(list = ls())
+lowerriver_bodycomp_fineness <- "lowerriver_bodycomp_fineness.csv"
+
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(lowerriver_bodycomp_fineness)[,-1]
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet)
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location) 
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+```
+
+### Making Models for fineness~RunTimingGroup
+```{r}
+# Models for reference
+fineness_RTG_modelset <- "fineness_runtiminggroup/fineness~RunTimingGroup_modelset.csv"
+
+ModelSet<-read.csv(fineness_RTG_modelset)
+
+model1 <- lm(fineness_1~1, data=DataSet)
+model2 <- lm(fineness_1~Collection_Location, data = DataSet)
+model3 <- lm(fineness_1~Collection_Location + RunTimingGroup, data = DataSet)
+model4 <- lm(fineness_1~Collection_Location + Sex, data = DataSet)
+model5 <- lm(fineness_1~Collection_Location + Year, data = DataSet)
+model6 <- lm(fineness_1~Collection_Location + RunTimingGroup + Sex, data = DataSet)
+model7 <- lm(fineness_1~Collection_Location + RunTimingGroup + Year, data = DataSet)
+model8 <- lm(fineness_1~Collection_Location + Sex + Year, data = DataSet)
+model9 <- lm(fineness_1~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+model10 <- lm(fineness_1~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
+model11 <- lm(fineness_1~Collection_Location + Sex + Year + Sex:Year, data = DataSet)
+model12 <- lm(fineness_1~Collection_Location + RunTimingGroup + Sex + Year, data = DataSet)
+```
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:12), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1) #Model 3 has the lowest AIC score, fineness_1~Collection_Location + RunTimingGroup
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("fineness_1~Collection_Location + RunTimingGroup",
+                      "fineness_1~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex",
+                      "fineness_1~Collection_Location + RunTimingGroup + Year",
+                      "fineness_1~Collection_Location + RunTimingGroup + Sex",
+                      "fineness_1~Collection_Location + RunTimingGroup + Sex + Year",
+                      "fineness_1~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year",
+                      "fineness_1~Collection_Location + Year",
+                      "fineness_1~Collection_Location",
+                      "fineness_1~Collection_Location + Sex + Year",
+                      "fineness_1~Collection_Location + Sex",
+                      "fineness_1~Collection_Location + Sex + Year + Sex:Year",
+                      "fineness_1~1")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "fineness_runtiminggroup/AICresults_fineness~RunTimingGroup.csv", row.names = FALSE)
+
+```
+
+### Visualizing this model selection
+```{r}
+# best model again, is model 3: fineness_1 ~ collection_location + RTG
+
+ggplot(DataSet, aes(x = RunTimingGroup, y = fineness_1, fill = RunTimingGroup)) +
+  geom_boxplot() +  # Create the boxplot
+  theme_minimal() +
+  labs(title = "Boxplot of Fineness_1 by RunTimingGroup",
+       x = "RunTimingGroup",
+       y = "Fineness_1") +
+  theme(legend.position = "top")
+
+```
