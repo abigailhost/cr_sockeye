@@ -35,6 +35,10 @@ lowerriver_bodycomp_all$Collection_Date <- as.Date(lowerriver_bodycomp_all$Colle
 # Create a new column 'year' from the collection_date
 lowerriver_bodycomp_all$Year <- year(lowerriver_bodycomp_all$Collection_Date)
 
+#replace blank cell in Sex with NA 
+lowerriver_bodycomp_all$Sex[lowerriver_bodycomp_all$Sex == ""] <- NA
+str(lowerriver_bodycomp_all)
+
 write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")
 ```
 
@@ -61,6 +65,20 @@ str(DataSet)
 
 ```
 
+### Removing NAs that will mess up levels / model weight
+```{r}
+#checking NA values in factors
+any(is.na(DataSet$Collection_Location))
+any(is.na(DataSet$RunTimingGroup))
+any(is.na(DataSet$Year))
+any(is.na(DataSet$Sex))
+DataSet[is.na(DataSet$Sex), ] #row 115 has no sex value, eliminate it for models
+DataSet <- DataSet[-115,]
+any(is.na(DataSet$Sex))
+
+str(DataSet)
+```
+
 ### Making Models for bodysize_pc~RunTimingGroup
 ```{r}
 # Models for reference
@@ -81,7 +99,6 @@ edModel9 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Se
 edModel10 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
 edModel11 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + Sex + Year + Sex:Year, data = DataSet)
 edModel12 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + Year, data = DataSet)
-
 ```
 
 ### AICc Model Selection
@@ -99,8 +116,8 @@ print(myaicc3) #so model 10 is the best, followed closely by model 3 for energy 
 aic_df <- as.data.frame(myaicc3)
 aic_df$ModelName <- c("EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year", 
                       "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup", 
-                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year", 
                       "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex", 
+                      "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year", 
                       "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", 
                       "EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Sex + Year", 
                       "EnergyDensity_mJ.kg_1 ~ Collection_Location", 
@@ -115,21 +132,72 @@ write.csv(aic_df, file = "energydensity_runtiminggroup/AICresults_EnergyDensity~
 
 ```
 
+### Parameter Estimates of best model
+```{r}
+# Identify the best model (based on the lowest AIC weight)
+str(aic_df)
+print(aic_df$AICcWt)
 
+# Find the index of the best model (the one with the highest AIC weight)
+best_model_index <- which.max(aic_df$AICcWt)
+print(best_model_index)
 
+best_model_name <- aic_df$ModelName[best_model_index]
+best_model_aic_weight <- aic_df$AICcWt[best_model_index]
+print(paste("Best model is:", best_model_name))
+print(paste("AIC weight of the best model:", best_model_aic_weight)) #so model 10 is the best model -- EnergyDensity_mJ.kg_1 ~ Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year"
 
+best_model_summary <- summary(edModel10) #Extract the best model and its summary
+print(best_model_summary)
 
+# Extract coefficients (parameter estimates) and standard errors
+param_estimates <- best_model_summary$coefficients[, 1]  # Estimate
+std_errors <- best_model_summary$coefficients[, 2]       # Standard Error
+t_values <- best_model_summary$coefficients[, 3]          # t-values
+p_values <- best_model_summary$coefficients[, 4]          # p-values
 
+# Calculate 95% Confidence Intervals
+conf_intervals <- confint(edModel10) # Default is 95% CI , make sure to specify Model# from best model
+conf_intervals <- conf_intervals[complete.cases(conf_intervals), ]
 
+# ombine all the information into a data frame
+param_df <- data.frame(
+  Parameter = rownames(best_model_summary$coefficients),
+  Estimate = param_estimates,
+  Std_Error = std_errors,
+  t_value = t_values,
+  p_value = p_values,
+  CI_Lower = conf_intervals[, 1],
+  CI_Upper = conf_intervals[, 2]
+)
 
+# Print the table
+print(param_df)
 
+# Save the results to a CSV for your manuscript
+write.csv(param_df, file = "energydensity_runtiminggroup/energydensity~runtiminggroup_model10_ParamEstimates.csv", row.names = FALSE)
 
+```
 
+### Model Averaging, with MuMIn
+```{r}
+install.packages("MuMIn")
+library(MuMIn)
 
+# Create a model selection table (this will give you AIC, AIC weights, etc.)
+model_weights <- myaicc3$AICcWt ##Get the AIC weights from the AIC table
+model_avg <- model.avg(edModels, weights = model_weights)
+summary(model_avg)
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
 
+# Convert the coefficients into a tidy data frame
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
+coefs_df$CI_Upper <- avg_confint[, 2]  # Add upper bound of confidence intervals
+print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
 
-
-
-
-
+write.csv(coefs_df, file = "energydensity_runtiminggroup/energydensity~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
+```
 
