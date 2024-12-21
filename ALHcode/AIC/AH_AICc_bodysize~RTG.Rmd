@@ -141,6 +141,7 @@ DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
 DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
 str(DataSet)
+
 ```
 
 ### Removing NAs that will mess up levels / model weight
@@ -176,7 +177,9 @@ model9 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Sex + RunTimingG
 model10 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
 model11 <- lm(bodysize_pc~Collection_Location + Sex + Year + Sex:Year, data = DataSet)
 model12 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Sex + Year, data = DataSet)
+
 ```
+
 
 ### AICc Model Selection
 ```{r}
@@ -257,7 +260,7 @@ write.csv(param_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_mode
 
 ```
 
-### Model Averaging, if needed
+### Model Averaging
 ```{r}
 install.packages("MuMIn")
 library(MuMIn)

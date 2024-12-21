@@ -107,6 +107,9 @@ mean(lowerriver_bodycomp_all$fineness_1) #4.15, where fineness ratios between 2 
 
 #create new data file that includes fineness data in the dataset for models
 write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_fineness.csv") 
+
+
+#technically, I think you can also do fish length / fish width (the cross sectional diameter)-- I could do this but a lot of points would need to be estimated for width.
 ```
 
 ### Import Data for models
