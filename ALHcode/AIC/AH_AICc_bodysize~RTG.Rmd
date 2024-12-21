@@ -158,7 +158,7 @@ any(is.na(DataSet$Sex))
 ```
 
 
-### Making Models for bodysize_pc~RunTimingGroup
+### Making Models for bodysize_pc~RunTimingGroup, includes collection location
 ```{r}
 # Models for reference
 bodysize_RTG_modelset <- "bodysize_runtiminggroup/bodysize~RunTimingGroup_modelset.csv"
@@ -282,8 +282,103 @@ print(coefs_df) #Model Averaging Coefficients for AIC model selection approach w
 write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
 ```
 
-### Visualizing Results from body size~RunTimingGroup Model 12
 
+### Messing with Collection_Location
+```{r}
+#Linear regression between bodysize_pc and collection_location
+bodysize_collectionlocation_lm <- lm(DataSet$bodysize_pc ~ DataSet$Collection_Location)
+
+#residuals of the linear regression
+bodysize_collectionlocation_resid <- residuals(bodysize_collectionlocation_lm)
+plot(bodysize_collectionlocation_resid, DataSet$bodysize_pc)
+
+#turning residuals into dataframe
+bodysize_ColLoc <- as.data.frame(bodysize_collectionlocation_resid)
+DataSet <- cbind(DataSet, bodysize_ColLoc) #now has new column where body size pc is a variable but its already accounted for collection_location
+
+
+```
+
+### Making Models for bodysize_ColLoc~RunTimingGroup, no collection location
+```{r}
+# Models for reference
+bodysize_RTG_modelset <- "bodysize_runtiminggroup/bodysize~RunTimingGroup_modelset.csv"
+
+ModelSet<-read.csv(bodysize_RTG_modelset)
+
+model1a <- lm(bodysize_collectionlocation_resid~1, data=DataSet)
+model2a <- lm(bodysize_collectionlocation_resid~RunTimingGroup, data = DataSet)
+model3a <- lm(bodysize_collectionlocation_resid~Sex, data = DataSet)
+model4a <- lm(bodysize_collectionlocation_resid~Year, data = DataSet)
+model5a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Sex, data = DataSet)
+model6a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Year, data = DataSet)
+model7a <- lm(bodysize_collectionlocation_resid~Sex + Year, data = DataSet)
+model8a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+model9a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
+model10a <- lm(bodysize_collectionlocation_resid~Sex + Year + Sex:Year, data = DataSet)
+model11a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Sex + Year, data = DataSet)
+
+```
+
+### AICc Model Selection, models without Collection Location
+```{r}
+AIC(model1a, model2a, model3a, model4a, model5a, model6a, model7a, model8a, model9a, model10a, model11a)
+
+#table of AIC results
+mynames2 <- paste("model", as.character(1:11), sep = "")
+models2 <- list(model1a, model2a, model3a, model4a, model5a, model6a, model7a, model8a, model9a, model10a, model11a)
+
+# Generate AIC table
+myaicc2 <- aictab(models2, modnames = mynames2)
+print(myaicc2) #model 5 has the lowest AICc score followed by the global model (model 11)
+# Convert AIC table to a data frame for easier manipulation
+aic_df2 <- as.data.frame(myaicc2)
+aic_df2$ModelName <- c("bodysize_collectionlocation_resid~RunTimingGroup + Sex",
+                      "bodysize_collectionlocation_resid~RunTimingGroup + Sex + Year",
+                      "bodysize_collectionlocation_resid~RunTimingGroup + Sex + RunTimingGroup:Sex",
+                      "bodysize_collectionlocation_resid~Sex",
+                      "bodysize_collectionlocation_resid~Sex + Year",
+                      "bodysize_collectionlocation_resid~Sex + Year + Sex:Year",
+                      "bodysize_collectionlocation_resid~RunTimingGroup",
+                      "bodysize_collectionlocation_resid~RunTimingGroup + Year",
+                      "bodysize_collectionlocation_resid~1",
+                      "bodysize_collectionlocation_resid~Year",
+                      "bodysize_collectionlocation_resid~RunTimingGroup + Year + RunTimingGroup:Year")
+colnames(aic_df2)[colnames(aic_df2) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df2, file = "bodysize_runtiminggroup/AICresults_BodySizeCollectionLocationResiduals~RunTimingGroup.csv", row.names = FALSE)
+
+```
+
+
+### Model Averaging for body size models that already account for collection_location
+```{r}
+library(MuMIn)
+
+# Create a model selection table (this will give you AIC, AIC weights, etc.)
+model_weights2 <- myaicc2$AICcWt ##Get the AIC weights from the AIC table
+model_avg2 <- model.avg(models2, weights = model_weights2)
+summary(model_avg2)
+avg_coefs2 <- coef(model_avg2)
+avg_confint2 <- confint(model_avg2)
+
+# Convert the coefficients into a tidy data frame
+coefs_df2 <- as.data.frame(avg_coefs2)
+colnames(coefs_df2) <- "Avg_Coef"
+coefs_df2$CI_Lower <- avg_confint2[, 1]  # Add lower bound of confidence intervals
+coefs_df2$CI_Upper <- avg_confint2[, 2]  # Add upper bound of confidence intervals
+print(coefs_df2) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
+
+write.csv(coefs_df2, file = "bodysize_runtiminggroup/BodySizeCollectionLocationResiduals~RunTimingGroup_models_CoefEstimates.csv", row.names = TRUE)
+```
+
+
+
+
+
+
+### Visualizing Results from body size~RunTimingGroup Model 12
 ```{r}
 #  Model 12
 # bodysize_pc ~ Collection_Location + RunTimingGroup + Sex + Year
