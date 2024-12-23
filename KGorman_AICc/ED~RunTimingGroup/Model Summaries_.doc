@@ -1,0 +1,247 @@
+[1] "MODEL 1"
+[1] "EnergyPDry_1~1"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.0021 -0.8825  0.1351  0.8755  2.7782 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  8.40897    0.09691   86.77   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.297 on 178 degrees of freedom
+
+[1] "-------------------------------------------------------------------"
+[1] "MODEL 2"
+[1] "EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.5506 -0.5427 -0.0033  0.6068  3.4117 
+
+Coefficients:
+                       Estimate Std. Error t value Pr(>|t|)    
+(Intercept)           1.041e+01  2.007e-01  51.852  < 2e-16 ***
+CollLoc_Distance.m   -1.760e-05  1.964e-06  -8.963 4.68e-16 ***
+RunTimingGroupLate   -9.748e-01  1.797e-01  -5.425 1.91e-07 ***
+RunTimingGroupMiddle -1.705e-01  1.691e-01  -1.008    0.315    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.9263 on 175 degrees of freedom
+Multiple R-squared:  0.4981,	Adjusted R-squared:  0.4895 
+F-statistic:  57.9 on 3 and 175 DF,  p-value: < 2.2e-16
+
+[1] "-------------------------------------------------------------------"
+[1] "MODEL 3"
+[1] "EnergyPDry_1~CollLoc_Distance.m + Collection_Year"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.5038 -0.5455 -0.0753  0.6307  3.3243 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          1.173e+01  3.844e-01  30.511  < 2e-16 ***
+CollLoc_Distance.m  -3.110e-05  2.832e-06 -10.982  < 2e-16 ***
+Collection_Year2020 -1.840e-01  2.061e-01  -0.893    0.373    
+Collection_Year2021 -1.193e+00  2.618e-01  -4.558 9.65e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.9302 on 175 degrees of freedom
+Multiple R-squared:  0.4939,	Adjusted R-squared:  0.4853 
+F-statistic: 56.94 on 3 and 175 DF,  p-value: < 2.2e-16
+
+[1] "-------------------------------------------------------------------"
+[1] "MODEL 4"
+[1] "EnergyPDry_1~CollLoc_Distance.m + Sex"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-2.88618 -0.64124  0.00229  0.67834  3.08988 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)         1.044e+01  2.112e-01   49.43   <2e-16 ***
+CollLoc_Distance.m -2.169e-05  1.980e-06  -10.95   <2e-16 ***
+SexM               -7.510e-02  1.503e-01   -0.50    0.618    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.005 on 176 degrees of freedom
+Multiple R-squared:  0.4058,	Adjusted R-squared:  0.399 
+F-statistic:  60.1 on 2 and 176 DF,  p-value: < 2.2e-16
+
+[1] "-------------------------------------------------------------------"
+[1] "MODEL 5"
+[1] "EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup + Sex"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.5782 -0.5649  0.0189  0.6125  3.4380 
+
+Coefficients:
+                       Estimate Std. Error t value Pr(>|t|)    
+(Intercept)           1.043e+01  2.134e-01  48.894  < 2e-16 ***
+CollLoc_Distance.m   -1.761e-05  1.969e-06  -8.945 5.40e-16 ***
+RunTimingGroupLate   -9.732e-01  1.802e-01  -5.401 2.15e-07 ***
+RunTimingGroupMiddle -1.705e-01  1.695e-01  -1.006    0.316    
+SexM                 -5.476e-02  1.389e-01  -0.394    0.694    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.9286 on 174 degrees of freedom
+Multiple R-squared:  0.4986,	Adjusted R-squared:  0.4871 
+F-statistic: 43.26 on 4 and 174 DF,  p-value: < 2.2e-16
+
+[1] "-------------------------------------------------------------------"
+[1] "MODEL 6"
+[1] "EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup + Collection_Year"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.2122 -0.5613  0.0107  0.6077  3.3243 
+
+Coefficients:
+                       Estimate Std. Error t value Pr(>|t|)    
+(Intercept)           1.104e+01  4.196e-01  26.320  < 2e-16 ***
+CollLoc_Distance.m   -2.329e-05  3.298e-06  -7.061 3.85e-11 ***
+RunTimingGroupLate   -8.000e-01  1.905e-01  -4.200 4.26e-05 ***
+RunTimingGroupMiddle -1.705e-01  1.624e-01  -1.050   0.2953    
+Collection_Year2020   1.272e-01  2.109e-01   0.603   0.5473    
+Collection_Year2021  -6.439e-01  2.832e-01  -2.273   0.0242 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.8897 on 173 degrees of freedom
+Multiple R-squared:  0.5424,	Adjusted R-squared:  0.5292 
+F-statistic: 41.01 on 5 and 173 DF,  p-value: < 2.2e-16
+
+[1] "-------------------------------------------------------------------"
+[1] "MODEL 7"
+[1] "EnergyPDry_1~CollLoc_Distance.m + Collection_Year + Sex"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.4735 -0.5179 -0.0439  0.6170  3.3540 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          1.176e+01  3.906e-01  30.097  < 2e-16 ***
+CollLoc_Distance.m  -3.108e-05  2.838e-06 -10.949  < 2e-16 ***
+Collection_Year2020 -1.827e-01  2.066e-01  -0.884    0.378    
+Collection_Year2021 -1.191e+00  2.624e-01  -4.538 1.05e-05 ***
+SexM                -6.271e-02  1.394e-01  -0.450    0.653    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.9323 on 174 degrees of freedom
+Multiple R-squared:  0.4945,	Adjusted R-squared:  0.4829 
+F-statistic: 42.56 on 4 and 174 DF,  p-value: < 2.2e-16
+
+[1] "-------------------------------------------------------------------"
+[1] "MODEL 8"
+[1] "EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup + Sex + RunTimingGroup*Sex"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.5922 -0.5865  0.0346  0.6369  3.3246 
+
+Coefficients:
+                            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                1.053e+01  2.344e-01  44.926  < 2e-16 ***
+CollLoc_Distance.m        -1.758e-05  1.971e-06  -8.917 6.85e-16 ***
+RunTimingGroupLate        -1.199e+00  2.518e-01  -4.763 4.04e-06 ***
+RunTimingGroupMiddle      -2.566e-01  2.400e-01  -1.069    0.286    
+SexM                      -2.567e-01  2.400e-01  -1.070    0.286    
+RunTimingGroupLate:SexM    4.381e-01  3.411e-01   1.284    0.201    
+RunTimingGroupMiddle:SexM  1.723e-01  3.394e-01   0.508    0.612    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.9295 on 172 degrees of freedom
+Multiple R-squared:  0.5034,	Adjusted R-squared:  0.4861 
+F-statistic: 29.06 on 6 and 172 DF,  p-value: < 2.2e-16
+
+[1] "-------------------------------------------------------------------"
+[1] "MODEL 9"
+[1] "EnergyPDry_1~CollLoc_Distance.m + Collection_Year + Sex + Collection_Year*Sex"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.3022 -0.5916 -0.0296  0.6611  3.2415 
+
+Coefficients:
+                           Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               1.170e+01  4.021e-01  29.109  < 2e-16 ***
+CollLoc_Distance.m       -3.115e-05  2.828e-06 -11.015  < 2e-16 ***
+Collection_Year2020      -2.460e-01  2.693e-01  -0.913  0.36243    
+Collection_Year2021      -9.524e-01  3.131e-01  -3.042  0.00272 ** 
+SexM                      5.791e-02  2.398e-01   0.242  0.80944    
+Collection_Year2020:SexM  1.169e-01  3.406e-01   0.343  0.73180    
+Collection_Year2021:SexM -4.750e-01  3.392e-01  -1.401  0.16316    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.9286 on 172 degrees of freedom
+Multiple R-squared:  0.5043,	Adjusted R-squared:  0.487 
+F-statistic: 29.17 on 6 and 172 DF,  p-value: < 2.2e-16
+
+[1] "-------------------------------------------------------------------"
+[1] "MODEL 10"
+[1] "EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup + Collection_Year + Sex"
+
+Call:
+lm(formula = as.formula(ModelSet[i]), data = DataSet)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.2387 -0.5747  0.0292  0.6244  3.3490 
+
+Coefficients:
+                       Estimate Std. Error t value Pr(>|t|)    
+(Intercept)           1.107e+01  4.257e-01  26.004  < 2e-16 ***
+CollLoc_Distance.m   -2.329e-05  3.306e-06  -7.044 4.31e-11 ***
+RunTimingGroupLate   -7.987e-01  1.910e-01  -4.182 4.59e-05 ***
+RunTimingGroupMiddle -1.705e-01  1.628e-01  -1.047   0.2965    
+Collection_Year2020   1.277e-01  2.114e-01   0.604   0.5468    
+Collection_Year2021  -6.430e-01  2.839e-01  -2.265   0.0248 *  
+SexM                 -5.208e-02  1.334e-01  -0.390   0.6967    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.8919 on 172 degrees of freedom
+Multiple R-squared:  0.5428,	Adjusted R-squared:  0.5268 
+F-statistic: 34.03 on 6 and 172 DF,  p-value: < 2.2e-16
+
+[1] "-------------------------------------------------------------------"

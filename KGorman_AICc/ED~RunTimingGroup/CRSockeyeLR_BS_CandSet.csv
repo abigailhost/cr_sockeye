@@ -1,0 +1,11 @@
+Model
+EnergyPDry_1~1
+EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup
+EnergyPDry_1~CollLoc_Distance.m + Collection_Year
+EnergyPDry_1~CollLoc_Distance.m + Sex
+EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup + Sex
+EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup + Collection_Year
+EnergyPDry_1~CollLoc_Distance.m + Collection_Year + Sex
+EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup + Sex + RunTimingGroup*Sex
+EnergyPDry_1~CollLoc_Distance.m + Collection_Year + Sex + Collection_Year*Sex
+EnergyPDry_1~CollLoc_Distance.m + RunTimingGroup + Collection_Year + Sex
