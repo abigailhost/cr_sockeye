@@ -1,0 +1,11 @@
+Model
+Mod2.PC1~1
+Mod2.PC1~CollLoc_Distance.m + RunTimingGroup
+Mod2.PC1~CollLoc_Distance.m + Collection_Year
+Mod2.PC1~CollLoc_Distance.m + Sex
+Mod2.PC1~CollLoc_Distance.m + RunTimingGroup + Sex
+Mod2.PC1~CollLoc_Distance.m + RunTimingGroup + Collection_Year
+Mod2.PC1~CollLoc_Distance.m + Collection_Year + Sex
+Mod2.PC1~CollLoc_Distance.m + RunTimingGroup + Sex + RunTimingGroup*Sex
+Mod2.PC1~CollLoc_Distance.m + Collection_Year + Sex + Collection_Year*Sex
+Mod2.PC1~CollLoc_Distance.m + RunTimingGroup + Collection_Year + Sex
