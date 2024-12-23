@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE
 ```{r}
 library(AICcmodavg)
 library(lubridate)
+library(ggplot2)
 
 #data loading
 bc19 <- read.csv("bodycomp_2019.csv")
@@ -43,11 +44,20 @@ write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")
 
 ```
 
-
 ### Checking for NAs for PC score
 ```{r}
+rm(list = ls())
 lowerriver_bodycomp_all <- "lowerriver_bodycomp_all.csv"
 lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
+
+### Removing NAs that will mess up levels / model weight
+any(is.na(lowerriver_bodycomp_all$Collection_Location))
+any(is.na(lowerriver_bodycomp_all$RunTimingGroup))
+any(is.na(lowerriver_bodycomp_all$Year))
+any(is.na(lowerriver_bodycomp_all$Sex))
+lowerriver_bodycomp_all[is.na(lowerriver_bodycomp_all$Sex), ] #row 115 has no sex value, eliminate it for models
+lowerriver_bodycomp_all <- lowerriver_bodycomp_all[-115,] #excludes row missing sex file
+any(is.na(lowerriver_bodycomp_all$Sex))
 
 #checking NA
 any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
@@ -65,24 +75,33 @@ ggplot(lowerriver_bodycomp_all, aes(x=Fish_Leng_1, y = Fish_Grth)) +
 girth_leng_lm <- lm(Fish_Grth ~ Fish_Leng_1, data = lowerriver_bodycomp_all)
 summary(girth_leng_lm) # Adjusted R-squared:  0.3044 
 
-compare_pca1 <- princomp(lowerriver_bodycomp_all[,c(12,14,16)], cor=T, scores=T, covmat = NULL) #pc of lengths and height, no girth
-summary(compare_pca1, loadings=T, cutoff=0.0001) #summary of PC analysis
-screeplot(compare_pca1, type=c('lines'))
-compare_pc <- compare_pca1$scores[,1]
-lowerriver_bodycomp_pc_ForGirthEstimates <- cbind(lowerriver_bodycomp_all, compare_pc) #dataframe for estimate girth value via bodysize PC score
+# Subset the data for female F fish only
+allfemale_lowerriver_bodycomp <- lowerriver_bodycomp_all[lowerriver_bodycomp_all$Sex == "F", ]
 
-girth_pc_lm <- lm(Fish_Grth ~ compare_pc, data = lowerriver_bodycomp_pc_ForGirthEstimates)
-summary(girth_pc_lm) # Adjusted R-squared:  0.3862 , so PC score has higher r-squared value for predicting girth
+# Perform PCA on the subset of female F fish
+pca_model_allF <- princomp(allfemale_lowerriver_bodycomp[,c(12,14,16)], cor=T, scores=T, covmat = NULL)
 
-predicted_values <- predict(girth_pc_lm, newdata = lowerriver_bodycomp_pc_ForGirthEstimates) # Make predictions for the entire dataset (including missing Fish_Grth values)
+summary(pca_model_allF, loadings=T, cutoff=0.001) #summary of PC analysis
 
-lowerriver_bodycomp_pc_ForGirthEstimates$Predicted_Fish_Grth <- predicted_values # Add these predictions back to your dataset
+# Create a new dataframe with PCA scores for the female F fish subset
+allfemale_lowerriver_bodycomp <- cbind(allfemale_lowerriver_bodycomp, pca_model_allF$scores[, 1])  # First principal component
 
-lowerriver_bodycomp_pc_ForGirthEstimates$Fish_Grth[is.na(lowerriver_bodycomp_pc_ForGirthEstimates$Fish_Grth)] <- predicted_values[is.na(lowerriver_bodycomp_pc_ForGirthEstimates$Fish_Grth)] # Replace missing Fish_Grth values with the predicted values
-#the NA is replaced with 30.06182
+# Create the linear model for predicting Fish_Grth based on the first principal component
+girth_pc_lm <- lm(Fish_Grth ~ pca_model_allF$scores[, 1], data = allfemale_lowerriver_bodycomp)
+
+# View the summary of the linear model
+summary(girth_pc_lm)
+plot(girth_pc_lm)
+
+
+predicted_values <- predict(girth_pc_lm, newdata = allfemale_lowerriver_bodycomp)
+
+allfemale_lowerriver_bodycomp$Predicted_Fish_Grth <- predicted_values # Add these predictions back to your dataset
+
+### the predicted value for row 64 when all female fish is Fish_Grth = 30.00935
 
 #plot the original data and the predicted values to see how well the model fits
-ggplot(lowerriver_bodycomp_pc_ForGirthEstimates, aes(x = compare_pc, y = Fish_Grth)) +
+ggplot(allfemale_lowerriver_bodycomp, aes(x = Predicted_Fish_Grth, y = Fish_Grth)) +
   geom_point(aes(color = "Observed")) +
   geom_point(aes(y = Predicted_Fish_Grth, color = "Predicted")) +
   scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
@@ -92,7 +111,7 @@ ggplot(lowerriver_bodycomp_pc_ForGirthEstimates, aes(x = compare_pc, y = Fish_Gr
   theme_minimal() 
 
 ###### Now, back to using lowerriver_bodycomp_all #######
-lowerriver_bodycomp_all$Fish_Grth[is.na(lowerriver_bodycomp_all$Fish_Grth)] <- 30.06182
+lowerriver_bodycomp_all$Fish_Grth[is.na(lowerriver_bodycomp_all$Fish_Grth)] <- 30.00935
 any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
 any(is.na(lowerriver_bodycomp_all$Fish_Ht))
 any(is.na(lowerriver_bodycomp_all$Fish_Grth)) # no longer an NA present
@@ -118,10 +137,11 @@ write.csv(lowerriver_bodycomp_pc, "lowerriver_bodycomp_PCscores.csv")
 
 ### Import Data for models
 ```{r}
+rm(list = ls())
 lowerriver_bodycomp_PCscores <- "lowerriver_bodycomp_PCscores.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
-DataSet<-read.csv(lowerriver_bodycomp_PCscores)[,-1]
+DataSet<-read.csv(lowerriver_bodycomp_PCscores)[,-1] #79 variables, 179 observations b/c one row with NA sex is removed
 
 #### CHECK DIRECTION OF PC SCORE ###
 library(ggplot2)
@@ -136,24 +156,11 @@ nrow(DataSet)
 str(DataSet)
 
 #make response variables factors
-DataSet$Collection_Location <- as.factor(DataSet$Collection_Location) 
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
 DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
 DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
-str(DataSet)
-
-```
-
-### Removing NAs that will mess up levels / model weight
-```{r}
-#checking NA values in factors
-any(is.na(DataSet$Collection_Location))
-any(is.na(DataSet$RunTimingGroup))
-any(is.na(DataSet$Year))
-any(is.na(DataSet$Sex))
-DataSet[is.na(DataSet$Sex), ] #row 115 has no sex value, eliminate it for models
-DataSet <- DataSet[-115,]
-any(is.na(DataSet$Sex))
+str(DataSet) #collection_rivermile_m is numeric
 
 ```
 
@@ -166,46 +173,44 @@ bodysize_RTG_modelset <- "bodysize_runtiminggroup/bodysize~RunTimingGroup_models
 ModelSet<-read.csv(bodysize_RTG_modelset)
 
 model1 <- lm(bodysize_pc~1, data=DataSet)
-model2 <- lm(bodysize_pc~Collection_Location, data = DataSet)
-model3 <- lm(bodysize_pc~Collection_Location + RunTimingGroup, data = DataSet)
-model4 <- lm(bodysize_pc~Collection_Location + Sex, data = DataSet)
-model5 <- lm(bodysize_pc~Collection_Location + Year, data = DataSet)
-model6 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Sex, data = DataSet)
-model7 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Year, data = DataSet)
-model8 <- lm(bodysize_pc~Collection_Location + Sex + Year, data = DataSet)
-model9 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
-model10 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
-model11 <- lm(bodysize_pc~Collection_Location + Sex + Year + Sex:Year, data = DataSet)
-model12 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Sex + Year, data = DataSet)
+# model2 <- lm(bodysize_pc~Collection_Location, data = DataSet) , not using anymore
+model2 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup, data = DataSet)
+model3 <- lm(bodysize_pc~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(bodysize_pc~Collection_RiverMile_m + Year, data = DataSet)
+model5 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+model6 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
+model7 <- lm(bodysize_pc~Collection_RiverMile_m + Sex + Year, data = DataSet)
+model8 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+# model10 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet) ,   not using anymore
+model9 <- lm(bodysize_pc~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
 
 ```
 
 
 ### AICc Model Selection
 ```{r}
-AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12)
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
 #table of AIC results
-mynames1 <- paste("model", as.character(1:12), sep = "")
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12)
+mynames1 <- paste("model", as.character(1:10), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
 # Generate AIC table
 myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("bodysize_pc~Collection_Location + RunTimingGroup + Sex + Year",
-                      "bodysize_pc~Collection_Location + RunTimingGroup + Sex",
-                      "bodysize_pc~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex", 
-                      "bodysize_pc~Collection_Location + Sex", 
-                      "bodysize_pc~Collection_Location + Sex + Year",
-                      "bodysize_pc~Collection_Location + Sex + Year + Sex:Year", 
-                      "bodysize_pc~Collection_Location + RunTimingGroup + Year",
-                      "bodysize_pc~Collection_Location + RunTimingGroup", 
+aic_df$ModelName <- c("bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex",
+                      "bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + Year",
+                      "bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex", 
+                      "bodysize_pc~Collection_RiverMile_m + Sex", 
+                      "bodysize_pc~Collection_RiverMile_m + Sex + Year",
+                      "bodysize_pc~Collection_RiverMile_m + Sex + Year + Sex:Year", 
+                      "bodysize_pc~Collection_RiverMile_m + RunTimingGroup",
+                      "bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Year", 
                       "bodysize_pc~1", 
-                      "bodysize_pc~Collection_Location", 
-                      "bodysize_pc~Collection_Location + Year", 
-                      "bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year")
+                      "bodysize_pc~Collection_RiverMile_m + Year")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
@@ -213,74 +218,85 @@ write.csv(aic_df, file = "bodysize_runtiminggroup/AICresults_bodysize~RunTimingG
 
 ```
 
-### Parameter Estimates of best model
-```{r}
-# Identify the best model (based on the lowest AIC weight)
-str(aic_df)
-print(aic_df$AICcWt)
-
-# Find the index of the best model (the one with the highest AIC weight)
-best_model_index <- which.max(aic_df$AICcWt)
-print(best_model_index)
-
-best_model_name <- aic_df$ModelName[best_model_index]
-best_model_aic_weight <- aic_df$AICcWt[best_model_index]
-print(paste("Best model is:", best_model_name))
-print(paste("AIC weight of the best model:", best_model_aic_weight)) #so model 12 is the best model
-
-best_model_summary <- summary(model12) #Extract the best model and its summary
-print(best_model_summary)
-
-# Extract coefficients (parameter estimates) and standard errors
-param_estimates <- best_model_summary$coefficients[, 1]  # Estimate
-std_errors <- best_model_summary$coefficients[, 2]       # Standard Error
-t_values <- best_model_summary$coefficients[, 3]          # t-values
-p_values <- best_model_summary$coefficients[, 4]          # p-values
-
-# Calculate 95% Confidence Intervals
-conf_intervals <- confint(model12)# Default is 95% CI
-conf_intervals <- conf_intervals[complete.cases(conf_intervals), ]
-
-# ombine all the information into a data frame
-param_df <- data.frame(
-  Parameter = rownames(best_model_summary$coefficients),
-  Estimate = param_estimates,
-  Std_Error = std_errors,
-  t_value = t_values,
-  p_value = p_values,
-  CI_Lower = conf_intervals[, 1],
-  CI_Upper = conf_intervals[, 2]
-)
-
-# Print the table
-print(param_df)
-
-# Save the results to a CSV for your manuscript
-write.csv(param_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_model12_ParamEstimates.csv", row.names = FALSE)
-
-```
-
 ### Model Averaging
 ```{r}
-install.packages("MuMIn")
 library(MuMIn)
 
-# Create a model selection table (this will give you AIC, AIC weights, etc.)
+ # Create a model selection table (this will give you AIC, AIC weights, etc.)
 model_weights <- myaicc1$AICcWt ##Get the AIC weights from the AIC table
 model_avg <- model.avg(models, weights = model_weights)
 summary(model_avg)
 avg_coefs <- coef(model_avg)
 avg_confint <- confint(model_avg)
+avg_se <- sqrt(diag(vcov(model_avg)))
 
 # Convert the coefficients into a tidy data frame
 coefs_df <- as.data.frame(avg_coefs)
 colnames(coefs_df) <- "Avg_Coef"
 coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
-coefs_df$CI_Upper <- avg_confint[, 2]  # Add upper bound of confidence intervals
+coefs_df$CI_Upper <- avg_confint[, 2] # Add upper bound of confidence intervals
+coefs_df$SE <- avg_se
 print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
 
 write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
 ```
+
+### Visualizing Results from body size~RunTimingGroup Model 5
+```{r}
+#  Model 5
+# bodysize_pc ~ Collection_RiverMile_m + RunTimingGroup + Sex
+library(dplyr)
+
+DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
+                               levels = c("Early",
+                                          "Middle",
+                                          "Late"),
+                               labels = c("Early",
+                                          "Middle",
+                                          "Late"))
+
+#boxplot
+ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
+  geom_boxplot() +
+  labs(title = "Bodysize PC by Run Timing Group and Sex",
+       x = "Run Timing Group",
+       y = "Bodysize PC",
+       color = "Sex") +
+  theme_minimal()
+
+#violin plot
+ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
+  geom_violin() +
+  labs(title = "Bodysize PC by Run Timing Group and Sex",
+       x = "Run Timing Group",
+       y = "Bodysize PC",
+       fill = "Sex") +
+  theme_minimal()
+
+#interaction plot
+ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, color = Sex)) +
+  geom_point() + 
+  geom_smooth(method = "lm", aes(group = Sex), se = TRUE) +  # Add regression lines for each 'Sex' group
+  labs(title = "Interaction Between Run Timing Group and Sex on Bodysize PC",
+       x = "Run Timing Group",
+       y = "Bodysize PC") +
+  theme_minimal()
+
+#bar plot can show the mean value of bodysize_pc for each combination of RunTimingGroup and Sex, providing an overall comparison of group means.
+ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
+  stat_summary(fun = "mean", geom = "bar", position = "dodge") +
+  labs(title = "Mean Bodysize PC by Run Timing Group and Sex",
+       x = "Run Timing Group",
+       y = "Mean Bodysize PC",
+       fill = "Sex") +
+  theme_minimal()
+```
+
+
+
+
+
+
 
 
 ### Messing with Collection_Location
@@ -371,36 +387,4 @@ coefs_df2$CI_Upper <- avg_confint2[, 2]  # Add upper bound of confidence interva
 print(coefs_df2) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
 
 write.csv(coefs_df2, file = "bodysize_runtiminggroup/BodySizeCollectionLocationResiduals~RunTimingGroup_models_CoefEstimates.csv", row.names = TRUE)
-```
-
-
-
-
-
-
-### Visualizing Results from body size~RunTimingGroup Model 12
-```{r}
-#  Model 12
-# bodysize_pc ~ Collection_Location + RunTimingGroup + Sex + Year
-library(dplyr)
-
-DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
-                               levels = c("Early",
-                                          "Middle",
-                                          "Late"),
-                               labels = c("Early",
-                                          "Middle",
-                                          "Late"))
-
-ggplot(data=DataSet[-(114),], aes(x = Collection_Location, y = bodysize_pc, fill = Sex)) +
-  geom_boxplot() +
-  labs(title = "Body Size by Collection Location and Sex") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
-ggplot(DataSet, aes(x = Year, y = bodysize_pc, fill = RunTimingGroup)) +
-  geom_boxplot() +
-  labs(title = "Body Size by Run Timing Group and Year") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 ```
