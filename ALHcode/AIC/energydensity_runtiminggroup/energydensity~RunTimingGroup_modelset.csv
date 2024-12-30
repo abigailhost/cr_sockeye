@@ -1,13 +1,11 @@
-﻿Candidate Models,ED~RunTimingGroup
-1,ED~1
-2,ED~CollectionLocation
-3,ED~CollectionLocation + RunTimingGroup
-4,ED~CollectionLocation + Sex
-5,ED~CollectionLocation + Year
-6,ED~CollectionLocation + RunTimingGroup + Sex
-7,ED~CollectionLocation + RunTimingGroup + Year
-8,ED~CollectionLocation + Sex + Year
-9,ED~CollectionLocation + RunTimingGroup + Sex + RunTimingGroup*Sex
-10,ED~CollectionLocation + RunTimingGroup + Year + RunTimingGroup*Year
-11,ED~CollectionLocation + Sex + Year + Sex*Year
-12,ED~CollectionLocation + RunTimingGroup + Sex + Year
+Model
+ED~1
+ED~Collection_RiverMile_m + RunTimingGroup
+ED~Collection_RiverMile_m + Sex
+ED~Collection_RiverMile_m + Year
+ED~Collection_RiverMile_m + RunTimingGroup + Sex
+ED~Collection_RiverMile_m + RunTimingGroup + Year
+ED~Collection_RiverMile_m + Sex + Year
+ED~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup*Sex
+ED~Collection_RiverMile_m + Sex + Year + Sex*Year
+ED~Collection_RiverMile_m + RunTimingGroup + Sex + Year

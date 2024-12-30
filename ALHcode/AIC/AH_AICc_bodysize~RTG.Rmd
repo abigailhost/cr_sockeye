@@ -15,7 +15,6 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE
 
 ### Loading Data
 ```{r}
-#test edit
 library(AICcmodavg)
 library(lubridate)
 library(ggplot2)
