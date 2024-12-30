@@ -1,0 +1,11 @@
+Model
+EnergyPDry_1~1
+EnergyPDry_1~Collection_RiverMile_m  + RunTimingGroup
+EnergyPDry_1~Collection_RiverMile_m + Sex
+EnergyPDry_1~Collection_RiverMile_m + Year
+EnergyPDry_1~Collection_RiverMile_m + RunTimingGroup + Sex
+EnergyPDry_1~Collection_RiverMile_m + RunTimingGroup + Year
+EnergyPDry_1~Collection_RiverMile_m + Sex + Year
+EnergyPDry_1~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup*Sex
+EnergyPDry_1~Collection_RiverMile_m + Sex + Year + Sex*Year
+EnergyPDry_1~Collection_RiverMile_m + RunTimingGroup + Sex + Year
