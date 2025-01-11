@@ -246,6 +246,7 @@ write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_mode
 #  Model 5
 # bodysize_pc ~ Collection_RiverMile_m + RunTimingGroup + Sex
 library(dplyr)
+summary(model5)
 
 DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
                                levels = c("Early",
@@ -292,8 +293,39 @@ ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
   theme_minimal()
 ```
 
+### FOR AMSS
+```{r}
+#Body size ~ RunTimingGroup + Sex , in order to address hypothesis 1 and hypothesis 3
+
+#Boxplot
+g <- ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  # Set color for Female and Male
+  labs(x = "Run Timing Group",
+       y = "Body Size PC Score",
+       fill = "Sex") +
+  theme_linedraw() +
+  theme(
+    axis.title = element_text(size = 26, face = "bold"),     # Increase axis title size
+    axis.text = element_text(size = 24),      # Increase axis text size
+    legend.title = element_text(size = 26, face = "bold"),   # Increase legend title size
+    legend.text = element_text(size = 24)     # Increase legend text size
+  ) 
+
+ggsave("AMSS_2025/AMSS body size ~ RTG + Sex Plot.png", plot=g, height=8, width=16, units="in")
 
 
+
+#Interaction Plot
+ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, color = Sex)) +
+  geom_point() + 
+  geom_smooth(method = "lm", aes(group = Sex), se = TRUE) +  # Add regression lines for each 'Sex' group
+  labs(title = "Interaction Between Run Timing Group and Sex on Bodysize PC",
+       x = "Run Timing Group",
+       y = "Bodysize PC") +
+  theme_minimal()
+
+```
 
 
 
