@@ -296,7 +296,8 @@ ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
 ### FOR AMSS
 ```{r}
 #Body size ~ RunTimingGroup + Sex , in order to address hypothesis 1 and hypothesis 3
-
+summary(model5)
+anova(model5)
 #Boxplot
 g <- ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
   geom_boxplot() +
