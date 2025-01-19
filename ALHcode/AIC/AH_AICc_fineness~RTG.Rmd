@@ -142,26 +142,57 @@ summary(wdth_pc_lm) #Adjusted R-squared:  0.418 , so length is better for the es
 
 
 
-        ###USE Fish_Ht to estimate###
-wdth_Ht_lm <- lm(Fish_Wdth ~ Fish_Ht, data = lowerriver_bodycomp_all)
-summary(wdth_Ht_lm)
-plot(wdth_Ht_lm)
-predicted_wdth_values <- predict(wdth_Ht_lm, newdata = lowerriver_bodycomp_all)
-lowerriver_bodycomp_all$Predicted_Fish_Wdth <- predicted_wdth_values
+### SO, Fish_Ht has the higheat r-squared value and should be used for the estimates, now need to separate F and M data for estimating Wdth
+allfemaleWdth_lowerriver_bodycomp <- lowerriver_bodycomp_all[lowerriver_bodycomp_all$Sex == "F", ] #subset of F from total data set
 
-ggplot(lowerriver_bodycomp_all, aes(x = Predicted_Fish_Wdth, y = Fish_Wdth)) +
+F_wdth_Ht_lm <- lm(Fish_Wdth ~ Fish_Ht, data = allfemaleWdth_lowerriver_bodycomp) #making linear regression
+summary(F_wdth_Ht_lm)
+plot(F_wdth_Ht_lm)
+predicted_F_wdth_values <- predict(F_wdth_Ht_lm, newdata = allfemaleWdth_lowerriver_bodycomp) #predicting width values from female subset data
+allfemaleWdth_lowerriver_bodycomp$Predicted_Fish_Wdth <- predicted_F_wdth_values
+
+ggplot(allfemaleWdth_lowerriver_bodycomp, aes(x = Predicted_Fish_Wdth, y = Fish_Wdth)) +
   geom_point(aes(color = "Observed")) +
   geom_point(aes(y = Predicted_Fish_Wdth, color = "Predicted")) +
   scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
-  labs(title = "Observed vs Predicted Fish Growth",
+  labs(title = "Observed vs Predicted Female Fish Growth",
        x = "Comparison PC",
        y = "Fish Growth") +
   theme_minimal() 
 
 # Replace NAs in Fish_Wdth with predicted values
-lowerriver_bodycomp_all$Fish_Wdth[is.na(lowerriver_bodycomp_all$Fish_Wdth)] <- lowerriver_bodycomp_all$Predicted_Fish_Wdth[is.na(lowerriver_bodycomp_all$Fish_Wdth)]
+allfemaleWdth_lowerriver_bodycomp$Fish_Wdth[is.na(allfemaleWdth_lowerriver_bodycomp$Fish_Wdth)] <- allfemaleWdth_lowerriver_bodycomp$Predicted_Fish_Wdth[is.na(allfemaleWdth_lowerriver_bodycomp$Fish_Wdth)]
+## so now, the female subset has predicted values replacing the NAs 
 
-# Now your missing values in Fish_Wdth have been replaced by predicted values
+
+
+
+#Now, same for the male data
+allmaleWdth_lowerriver_bodycomp <- lowerriver_bodycomp_all[lowerriver_bodycomp_all$Sex == "M", ] #subset of M from total data set
+
+M_wdth_Ht_lm <- lm(Fish_Wdth ~ Fish_Ht, data = allmaleWdth_lowerriver_bodycomp) #making linear regression
+summary(M_wdth_Ht_lm)
+plot(M_wdth_Ht_lm)
+predicted_M_wdth_values <- predict(M_wdth_Ht_lm, newdata = allmaleWdth_lowerriver_bodycomp) #predicting width values from male subset data
+allmaleWdth_lowerriver_bodycomp$Predicted_Fish_Wdth <- predicted_M_wdth_values
+
+ggplot(allmaleWdth_lowerriver_bodycomp, aes(x = Predicted_Fish_Wdth, y = Fish_Wdth)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Wdth, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Male Fish Growth",
+       x = "Comparison PC",
+       y = "Fish Growth") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Wdth with predicted values
+allmaleWdth_lowerriver_bodycomp$Fish_Wdth[is.na(allmaleWdth_lowerriver_bodycomp$Fish_Wdth)] <- allmaleWdth_lowerriver_bodycomp$Predicted_Fish_Wdth[is.na(allmaleWdth_lowerriver_bodycomp$Fish_Wdth)]
+## so now, the male subset has predicted values replacing the NAs 
+
+### Now, combine the two data sets back into one, called lowerriver_bodycomp_all ###
+lowerriver_bodycomp_all <- rbind(allfemaleWdth_lowerriver_bodycomp, allmaleWdth_lowerriver_bodycomp)
+
+
 
 #check NAs
 any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
@@ -218,6 +249,9 @@ DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
 str(DataSet)
 
+mean(DataSet$fineness_1)
+mean(DataSet$fineness_2)
+
 ```
 
 ### Making Models for fineness_1~RunTimingGroup
@@ -273,8 +307,56 @@ write.csv(aic_df, file = "fineness_runtiminggroup/AICresults_fineness1~RunTiming
 
 ### Visualizing this model selection
 ```{r}
-# best model again, is model 9: fineness_1~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex
+# best model again, is model 8: fineness_1~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex
 
+DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
+                               levels = c("Early",
+                                          "Middle",
+                                          "Late"),
+                               labels = c("Early",
+                                          "Middle",
+                                          "Late"))
+DataSet$Sex <- factor(DataSet$Sex,
+                               levels = c("F",
+                                          "M"),
+                               labels = c("Female",
+                                          "Male"))
+# early = "#5E4FA2"
+# middle = "#FF7F00" 
+#late = "#A6CEE3"
+
+#interaction plot
+ggplot(DataSet[-(11),], aes(x = RunTimingGroup, y = fineness_1, color = Sex, group = Sex)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Interaction Plot: RunTimingGroup by Sex")
+
+#facet plot ... eliminate row 11 because the Ht vs Ht_tape number is very different
+ggplot(DataSet[-(11),], aes(x = RunTimingGroup, y = fineness_1, fill = RunTimingGroup)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#5E4FA2", "#FF7F00", "#A6CEE3")) +
+  facet_grid( ~ Sex) +
+  xlab("Run Timing Group") + 
+  ylab("Fineness Ratio") +
+  theme_gray()
+
+
+install.packages("effects")
+library(effects)
+
+# Fit the model
+model <- lm(fineness_2 ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+
+# Plot effects for RunTimingGroup, Sex, and Year
+effect_run_timing <- effect("RunTimingGroup", model)
+plot(effect_run_timing, main = "Effect of Run Timing Group on Fineness Ratio")
+
+effect_sex <- effect("Sex", model)
+plot(effect_sex, main = "Effect of Sex on Fineness Ratio")
+
+effect_year <- effect("Year", model)
+plot(effect_year, main = "Effect of Year on Fineness Ratio")
 
 ```
 
@@ -314,8 +396,8 @@ print(myaicc2) #Model 10 has the lowest AIC score, "fineness_2~Collection_Locati
 aic_df2 <- as.data.frame(myaicc2)
 aic_df2$ModelName <- c("fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex + Year",
                       "fineness_2~Collection_RiverMile_m + RunTimingGroup + Year",
-                      "fineness_2~Collection_RiverMile_m + Sex + Year",
                       "fineness_2~Collection_RiverMile_m + Sex + Year + Sex:Year",
+                      "fineness_2~Collection_RiverMile_m + Sex + Year",
                       "fineness_2~Collection_RiverMile_m + Year",
                       "fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex",
                       "fineness_2~Collection_RiverMile_m + RunTimingGroup",
@@ -333,9 +415,57 @@ write.csv(aic_df2, file = "fineness_runtiminggroup/AICresults_fineness2~RunTimin
 ```{r}
 #best model from above is the global model, model 10 = fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex + Year
 
+DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
+                               levels = c("Early",
+                                          "Middle",
+                                          "Late"),
+                               labels = c("Early",
+                                          "Middle",
+                                          "Late"))
+DataSet$Sex <- factor(DataSet$Sex,
+                               levels = c("M",
+                                          "F"),
+                               labels = c("Male",
+                                          "Female"))
+# early = "#5E4FA2"
+# middle = "#FF7F00" 
+#late = "#A6CEE3"
+
 
 ### Since this is body size, Collection_rivermile_m should not need to be accounted for as fish don't change size drastically in river
 
+ggplot(DataSet, aes(x = RunTimingGroup, y = fineness_2, fill = RunTimingGroup)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#5E4FA2", "#FF7F00", "#A6CEE3")) +
+  facet_grid(Sex ~ Year) +
+  xlab("Run Timing Group") + 
+  ylab("Fineness Ratio") +
+  theme_gray() #this figure accounts for RTG, Sex, and Year like the global model does
 
+
+ggplot(DataSet, aes(x = RunTimingGroup, y = fineness_2, fill = RunTimingGroup)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#5E4FA2", "#FF7F00", "#A6CEE3")) +
+  facet_grid( ~ Sex) +
+  xlab("Run Timing Group") + 
+  ylab("Fineness Ratio") +
+  theme_gray()
+
+
+install.packages("effects")
+library(effects)
+
+# Fit the model
+model <- lm(fineness_2 ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+
+# Plot effects for RunTimingGroup, Sex, and Year
+effect_run_timing <- effect("RunTimingGroup", model)
+plot(effect_run_timing, main = "Effect of Run Timing Group on Fineness Ratio")
+
+effect_sex <- effect("Sex", model)
+plot(effect_sex, main = "Effect of Sex on Fineness Ratio")
+
+effect_year <- effect("Year", model)
+plot(effect_year, main = "Effect of Year on Fineness Ratio")
 
 ```

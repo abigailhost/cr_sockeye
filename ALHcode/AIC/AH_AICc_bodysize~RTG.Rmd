@@ -241,6 +241,7 @@ print(coefs_df) #Model Averaging Coefficients for AIC model selection approach w
 write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
 ```
 
+
 ### Visualizing Results from body size~RunTimingGroup Model 5
 ```{r}
 #  Model 5
