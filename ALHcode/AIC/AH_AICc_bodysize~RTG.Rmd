@@ -330,6 +330,8 @@ ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, color = Sex)) +
   theme_minimal()
 
 
+
+# Figure that displays parameter estimates + CI for each parameter in teh model set
 paramestimates_body <- "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates.csv"
 
 estimates_body<-read.csv(paramestimates_body)
@@ -355,8 +357,8 @@ ggplot(estimates_body, aes(x = Avg_Coef, y = X)) +
   labs(x = "Parameter Estimate", y = "Parameter") +
   geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
   theme_minimal() +
-  theme(axis.title = element_text(size = 26), 
-        axis.text = element_text(size = 26))
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
 
 g2 <- ggplot(estimates_body, aes(x = Avg_Coef, y = X)) + 
   geom_point(size = 3) +  # For the coefficient estimate as dots
