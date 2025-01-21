@@ -178,12 +178,14 @@ model2 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup, data = DataSet
 model3 <- lm(bodysize_pc~Collection_RiverMile_m + Sex, data = DataSet)
 model4 <- lm(bodysize_pc~Collection_RiverMile_m + Year, data = DataSet)
 model5 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+summary(model5)
 model6 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
 model7 <- lm(bodysize_pc~Collection_RiverMile_m + Sex + Year, data = DataSet)
 model8 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
 # model10 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet) ,   not using anymore
 model9 <- lm(bodysize_pc~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
 model10 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+summary(model10)
 
 ```
 
@@ -327,98 +329,51 @@ ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, color = Sex)) +
        y = "Bodysize PC") +
   theme_minimal()
 
-```
+
+paramestimates_body <- "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates.csv"
+
+estimates_body<-read.csv(paramestimates_body)
+str(estimates_body)
+
+levels(factor(estimates_body$X))
+estimates_body$X <- factor(estimates_body$X, 
+                           levels = rev(c("(Intercept)", 
+                                      "Collection_RiverMile_m",
+                                      "RunTimingGroupMiddle", 
+                                      "RunTimingGroupLate", 
+                                      "SexM",
+                                      "Year2020",
+                                      "Year2021",
+                                      "RunTimingGroupMiddle:SexM",
+                                      "RunTimingGroupLate:SexM",
+                                      "SexM:Year2020",
+                                       "SexM:Year2021")))
+
+ggplot(estimates_body, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 26), 
+        axis.text = element_text(size = 26))
+
+g2 <- ggplot(estimates_body, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(
+    axis.title = element_text(size = 24, face = "bold", color = "black"),  # Axis titles in black
+    axis.text = element_text(size = 24, face = "bold", color = "black"),   # Axis text in black
+    plot.title = element_text(color = "black"),                            # Title in black (if you add a title)
+    plot.subtitle = element_text(color = "black")                         # Subtitle in black (if you add a subtitle)
+  )
+
+ggsave("AMSS_2025/AMSS Body Size Parameter Estimates.png", plot=g2, height=6, width=12, units="in")
 
 
-
-
-
-### Messing with Collection_Location
-```{r}
-#Linear regression between bodysize_pc and collection_location
-bodysize_collectionlocation_lm <- lm(DataSet$bodysize_pc ~ DataSet$Collection_Location)
-
-#residuals of the linear regression
-bodysize_collectionlocation_resid <- residuals(bodysize_collectionlocation_lm)
-plot(bodysize_collectionlocation_resid, DataSet$bodysize_pc)
-
-#turning residuals into dataframe
-bodysize_ColLoc <- as.data.frame(bodysize_collectionlocation_resid)
-DataSet <- cbind(DataSet, bodysize_ColLoc) #now has new column where body size pc is a variable but its already accounted for collection_location
-
-
-```
-
-### Making Models for bodysize_ColLoc~RunTimingGroup, no collection location
-```{r}
-# Models for reference
-bodysize_RTG_modelset <- "bodysize_runtiminggroup/bodysize~RunTimingGroup_modelset.csv"
-
-ModelSet<-read.csv(bodysize_RTG_modelset)
-
-model1a <- lm(bodysize_collectionlocation_resid~1, data=DataSet)
-model2a <- lm(bodysize_collectionlocation_resid~RunTimingGroup, data = DataSet)
-model3a <- lm(bodysize_collectionlocation_resid~Sex, data = DataSet)
-model4a <- lm(bodysize_collectionlocation_resid~Year, data = DataSet)
-model5a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Sex, data = DataSet)
-model6a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Year, data = DataSet)
-model7a <- lm(bodysize_collectionlocation_resid~Sex + Year, data = DataSet)
-model8a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
-model9a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
-model10a <- lm(bodysize_collectionlocation_resid~Sex + Year + Sex:Year, data = DataSet)
-model11a <- lm(bodysize_collectionlocation_resid~RunTimingGroup + Sex + Year, data = DataSet)
-
-```
-
-### AICc Model Selection, models without Collection Location
-```{r}
-AIC(model1a, model2a, model3a, model4a, model5a, model6a, model7a, model8a, model9a, model10a, model11a)
-
-#table of AIC results
-mynames2 <- paste("model", as.character(1:11), sep = "")
-models2 <- list(model1a, model2a, model3a, model4a, model5a, model6a, model7a, model8a, model9a, model10a, model11a)
-
-# Generate AIC table
-myaicc2 <- aictab(models2, modnames = mynames2)
-print(myaicc2) #model 5 has the lowest AICc score followed by the global model (model 11)
-# Convert AIC table to a data frame for easier manipulation
-aic_df2 <- as.data.frame(myaicc2)
-aic_df2$ModelName <- c("bodysize_collectionlocation_resid~RunTimingGroup + Sex",
-                      "bodysize_collectionlocation_resid~RunTimingGroup + Sex + Year",
-                      "bodysize_collectionlocation_resid~RunTimingGroup + Sex + RunTimingGroup:Sex",
-                      "bodysize_collectionlocation_resid~Sex",
-                      "bodysize_collectionlocation_resid~Sex + Year",
-                      "bodysize_collectionlocation_resid~Sex + Year + Sex:Year",
-                      "bodysize_collectionlocation_resid~RunTimingGroup",
-                      "bodysize_collectionlocation_resid~RunTimingGroup + Year",
-                      "bodysize_collectionlocation_resid~1",
-                      "bodysize_collectionlocation_resid~Year",
-                      "bodysize_collectionlocation_resid~RunTimingGroup + Year + RunTimingGroup:Year")
-colnames(aic_df2)[colnames(aic_df2) == "Modnames"] <- "Model #"
-
-# Write the data frame to a CSV file
-write.csv(aic_df2, file = "bodysize_runtiminggroup/AICresults_BodySizeCollectionLocationResiduals~RunTimingGroup.csv", row.names = FALSE)
 
 ```
 
-
-### Model Averaging for body size models that already account for collection_location
-```{r}
-library(MuMIn)
-
-# Create a model selection table (this will give you AIC, AIC weights, etc.)
-model_weights2 <- myaicc2$AICcWt ##Get the AIC weights from the AIC table
-model_avg2 <- model.avg(models2, weights = model_weights2)
-summary(model_avg2)
-avg_coefs2 <- coef(model_avg2)
-avg_confint2 <- confint(model_avg2)
-
-# Convert the coefficients into a tidy data frame
-coefs_df2 <- as.data.frame(avg_coefs2)
-colnames(coefs_df2) <- "Avg_Coef"
-coefs_df2$CI_Lower <- avg_confint2[, 1]  # Add lower bound of confidence intervals
-coefs_df2$CI_Upper <- avg_confint2[, 2]  # Add upper bound of confidence intervals
-print(coefs_df2) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
-
-write.csv(coefs_df2, file = "bodysize_runtiminggroup/BodySizeCollectionLocationResiduals~RunTimingGroup_models_CoefEstimates.csv", row.names = TRUE)
-```
