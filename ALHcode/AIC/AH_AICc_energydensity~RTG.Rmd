@@ -424,21 +424,6 @@ ggplot(estimates_energy, aes(x = Avg_Coef, y = X)) +
   theme(axis.title = element_text(size = 24), 
         axis.text = element_text(size = 24))
 
-g1 <- ggplot(estimates_energy, aes(x = Avg_Coef, y = X)) + 
-  geom_point(size = 3) +  # For the coefficient estimate as dots
-  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
-  labs(x = "Parameter Estimate", y = "Parameter") +
-  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
-  theme_minimal() +
-  theme(
-    axis.title = element_text(size = 24, face = "bold", color = "black"),  # Axis titles in black
-    axis.text = element_text(size = 24, face = "bold", color = "black"),   # Axis text in black
-    plot.title = element_text(color = "black"),                            # Title in black (if you add a title)
-    plot.subtitle = element_text(color = "black")                         # Subtitle in black (if you add a subtitle)
-  )
-
-ggsave("AMSS_2025/AMSS Energy Content Parameter Estimates.png", plot=g1, height=8, width=12, units="in")
-
 
 # The above figure works, but it is also an option to pull the outlier (intercept) value out so that the others can be free along the x axis, so facet the two figures together-- Code for that is below.
 library(ggplot2)
@@ -451,7 +436,12 @@ library(patchwork)
 outlier_threshold <- 10  # Adjust this threshold as needed
 
 # Split the data into two groups: "Outlier" (Intercept) and "Others"
-estimates_energy_split <- estimates_energy %>%
+# Filter out 'Collection_RiverMile_m' for both groups
+estimates_energy_filtered <- estimates_energy %>%
+  filter(X != "Collection_RiverMile_m")
+
+# Split the data into two groups: "Outlier" (Intercept) and "Others"
+estimates_energy_split <- estimates_energy_filtered %>%
   mutate(group = case_when(
     X == "(Intercept)" ~ "Intercept",  # Group with intercept
     TRUE ~ "Others"  # Group with all other parameters
@@ -481,8 +471,9 @@ plot_intercept <- ggplot(estimates_energy_split %>% filter(group == "Intercept")
     strip.text = element_blank()  # Remove facet labels
   )
 
-final_plot <- (plot_others / plot_intercept) + 
-  plot_layout(heights = c(3, 1)) +   # Adjust the heights ratio here
+# Combine both plots using patchwork
+final_plot <- (plot_intercept / plot_others) + 
+  plot_layout(heights = c(1, 4)) +   # Adjust the heights ratio here
   theme(
     axis.title.x = element_text(size = 24, face = "bold", color = "black") 
   ) +
@@ -493,6 +484,7 @@ final_plot <- (plot_others / plot_intercept) +
 # Display the final plot
 final_plot
 ggsave("AMSS_2025/AMSS Energy Content Parameter Estimates_2.png", plot=final_plot, height=8, width=12, units="in")
+
 
 ```
 
