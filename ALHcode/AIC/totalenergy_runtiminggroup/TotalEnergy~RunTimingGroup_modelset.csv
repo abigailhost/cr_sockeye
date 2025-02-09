@@ -1,0 +1,11 @@
+Model
+TotalEnergy~1
+TotalEnergy~Collection_RiverMile_m + RunTimingGroup 
+TotalEnergy~Collection_RiverMile_m  + Sex
+TotalEnergy~Collection_RiverMile_m + Year 
+TotalEnergy~Collection_RiverMile_m + RunTimingGroup + Sex
+TotalEnergy~Collection_RiverMile_m + RunTimingGroup + Year
+TotalEnergy~Collection_RiverMile_m + Sex + Year
+TotalEnergy~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup*Sex
+TotalEnergy~Collection_RiverMile_m + Sex + Year + Sex*Year
+TotalEnergy~Collection_RiverMile_m + RunTimingGroup + Sex + Year

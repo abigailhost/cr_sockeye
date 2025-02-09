@@ -1,8 +1,8 @@
 Model
 scBodyMass~1
-scBodyMass~Collection_RiverMile_m + RunTimingGroup
-scBodyMass~Collection_RiverMile_m + Sex
-scBodyMass~Collection_RiverMile_m + Year
+scBodyMass~Collection_RiverMile_m + RunTimingGroup 
+scBodyMass~Collection_RiverMile_m  + Sex
+scBodyMass~Collection_RiverMile_m + Year 
 scBodyMass~Collection_RiverMile_m + RunTimingGroup + Sex
 scBodyMass~Collection_RiverMile_m + RunTimingGroup + Year
 scBodyMass~Collection_RiverMile_m + Sex + Year
