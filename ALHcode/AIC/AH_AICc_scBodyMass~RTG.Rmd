@@ -5,26 +5,283 @@ date: "`r Sys.Date()`"
 output: word_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
 ```
 
-## R Markdown
+#' =====================================================
+#' AICc code for size corrected body mass~RunTimingGroup models
+#' =====================================================
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### Loading Data
+```{r}
+rm(list = ls())
+library(AICcmodavg)
+library(lubridate)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#data loading
+bc19 <- read.csv("bodycomp_2019.csv")
+bc20 <- read.csv("bodycomp_2020.csv")
+bc21 <- read.csv("bodycomp_2021.csv")
+#need to bind all together for total body comp dataset, lower river only
 
-```{r cars}
-summary(cars)
+bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
+write.csv(bc_LR_total, "lowerriver_bodycomp_all.csv")
+lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
+#all data is loaded now
+
+#need to add year to dataset
+lowerriver_bodycomp_all$Collection_Date <- as.Date(lowerriver_bodycomp_all$Collection_Date)
+
+# Create a new column 'year' from the collection_date
+lowerriver_bodycomp_all$Year <- year(lowerriver_bodycomp_all$Collection_Date)
+
+#replace blank cell in Sex with NA 
+lowerriver_bodycomp_all$Sex[lowerriver_bodycomp_all$Sex == ""] <- NA
+str(lowerriver_bodycomp_all)
+
+write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")
+
 ```
 
-## Including Plots
+### Import Data for models, check for NAs and eliminate as needed
+```{r}
+rm(list = ls())
+lowerriver_bodycomp_all<- "lowerriver_bodycomp_all.csv"
 
-You can also embed plots, for example:
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(lowerriver_bodycomp_all)[,-1]
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+### Removing NAs that will mess up levels / model weight
+any(is.na(DataSet$Collection_Location))
+any(is.na(DataSet$RunTimingGroup))
+any(is.na(DataSet$Year))
+any(is.na(DataSet$Sex))
+DataSet[is.na(DataSet$Sex), ] #row 115 has no sex value, eliminate it for models
+DataSet <- DataSet[-115,] #excludes row missing sex file
+any(is.na(DataSet$Sex))
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet)
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location) 
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+### Calculating Size-Corrected Body Mass in DataSet 
+```{r}
+### Size corrected body mass should be the residuals of linear regression between weight ~ total fish length ###
+DataSet$Fish_Leng_Total <- DataSet$Fish_Leng_1 + DataSet$Fish_Leng_2
+sizecorrected_bodymass_lm <- lm(DataSet$Fish_Wt ~ DataSet$Fish_Leng_Total) #linear regression for size corrected body mass
+sizecorrected_bodymass_residuals <- residuals(sizecorrected_bodymass_lm) #residuals for regression
+plot(sizecorrected_bodymass_residuals, DataSet$Fish_Leng_Total)
+sizecorrected_bodymass <- as.data.frame(sizecorrected_bodymass_residuals)
+DataSet <- cbind(DataSet, sizecorrected_bodymass) #adds the residuals to data set as a variable
+
+write.csv(DataSet, "lowerriver_bodycomp_SizeCorrectedBodyMass.csv")
+```
+
+### Reload data for model sets now that size corrected body mass has been calculated
+```{r}
+rm(list = ls())
+lowerriver_bodycomp_all<- "lowerriver_bodycomp_SizeCorrectedBodyMass.csv"
+
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(lowerriver_bodycomp_all)[,-1]
+
+### Removing NAs that will mess up levels / model weight
+any(is.na(DataSet$Collection_Location))
+any(is.na(DataSet$RunTimingGroup))
+any(is.na(DataSet$Year))
+any(is.na(DataSet$Sex))
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet)
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location) 
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+```
+
+### Making Models for energydensity~RunTimingGroup
+```{r}
+# Models for reference
+scBodyMass_RTG_modelset <- "scbodymass_runtiminggroup/SizeCorrectedBodyMass~RunTimingGroup_modelset.csv"
+
+ModelSet<-read.csv(scBodyMass_RTG_modelset)
+
+#models
+scbmModel1 <- lm(sizecorrected_bodymass_residuals ~ 1, data = DataSet)
+ # not using anymore: scbmModel2 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location, data = DataSet)
+scbmModel2 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet)
+scbmModel3 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex, data = DataSet)
+scbmModel4 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Year, data = DataSet)
+scbmModel5 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+scbmModel6 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
+scbmModel7 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
+scbmModel8 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+# not using anymore: scbmModel10 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_RiverMile_m + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
+scbmModel9 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+scbmModel10 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+```
+
+### AICc Model Selection
+```{r}
+AIC(scbmModel1, scbmModel2, scbmModel3, scbmModel4, scbmModel5, scbmModel6, scbmModel7, scbmModel8, scbmModel9, scbmModel10)
+
+scbmModels <- list(scbmModel1, scbmModel2, scbmModel3, scbmModel4, scbmModel5, scbmModel6, scbmModel7, scbmModel8, scbmModel9, scbmModel10)
+
+# Generate AIC table
+mynames_scbm <- paste("model", as.character(1:10), sep = "")
+scbm_aicc <- aictab(scbmModels, modnames = mynames_scbm)
+print(scbm_aicc) #so model 2 is preferred (lowest AIC score) followed by model 8 and then model 5
+
+# Convert AIC table to a data frame for easier manipulation
+SCBMaic_df <- as.data.frame(scbm_aicc)
+SCBMaic_df$ModelName <- c("sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup",
+                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
+                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex",
+                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Year",
+                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex",
+                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Year",
+                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
+                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year",
+                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year",
+                      "sizecorrected_bodymass_residuals ~ 1")
+colnames(SCBMaic_df)[colnames(SCBMaic_df) == "Modnames"] <- "Model #"
+
+write.csv(SCBMaic_df, file = "scbodymass_runtiminggroup/AICresults_SizeCorrectedBodyMass~RunTimingGroup.csv", row.names = FALSE)
+
+```
+
+### Model Averaging
+```{r}
+library(MuMIn)
+
+ # Create a model selection table (this will give you AIC, AIC weights, etc.)
+model_weights <- scbm_aicc$AICcWt ##Get the AIC weights from the AIC table
+model_avg <- model.avg(scbmModels, weights = model_weights)
+summary(model_avg)
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
+avg_se <- sqrt(diag(vcov(model_avg)))
+
+# Convert the coefficients into a tidy data frame
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
+coefs_df$CI_Upper <- avg_confint[, 2] # Add upper bound of confidence intervals
+coefs_df$SE <- avg_se
+print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
+
+write.csv(coefs_df, file = "scbodymass_runtiminggroup/SizeCorrectedBodyMass~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
+```
+
+### Figure that displays parameter estimates + CI for each parameter in the model set
+```{r}
+paramestimates_scbm <- "scbodymass_runtiminggroup/SizeCorrectedBodyMass~runtiminggroup_models_CoefEstimates.csv"
+
+estimates_scbm<-read.csv(paramestimates_scbm)
+str(estimates_scbm)
+
+levels(factor(estimates_scbm$X))
+estimates_scbm$X <- factor(estimates_scbm$X, 
+                           levels = rev(c("(Intercept)", 
+                                      "Collection_RiverMile_m",
+                                      "RunTimingGroupMiddle", 
+                                      "RunTimingGroupLate", 
+                                      "SexM",
+                                      "Year2020",
+                                      "Year2021",
+                                      "RunTimingGroupMiddle:SexM",
+                                      "RunTimingGroupLate:SexM",
+                                      "SexM:Year2020",
+                                       "SexM:Year2021")))
+
+
+library(ggplot2)
+ggplot(estimates_scbm, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
+
+library(dplyr)
+estimates_scbm_filtered <- estimates_scbm %>%
+  filter(X != "Collection_RiverMile_m") #filter out collection river mile, as it is not necessary for the estimates
+
+scbm_plot <- ggplot(estimates_scbm_filtered, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
+
+ggsave("scbodymass_runtiminggroup/SizeCorrectedBodyMass_ParamEstimates_Plot.png", plot=scbm_plot, height=8, width=12, units="in")
+```
+
+### Visualizing top selected models from AIC 
+```{r}
+DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
+                               levels = c("Early",
+                                          "Middle",
+                                          "Late"),
+                               labels = c("Early",
+                                          "Middle",
+                                          "Late"))
+### Model 2 ###
+    # sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup
+ggplot(DataSet, aes(x = RunTimingGroup, y = sizecorrected_bodymass_residuals)) +
+  geom_boxplot() +
+  labs(title = "Body Mass Residuals by Run Timing Group",
+       x = "Run Timing Group", y = "Size Corrected Body Mass Residuals")
+
+ggplot(DataSet, aes(x = sizecorrected_bodymass_residuals, fill = RunTimingGroup)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density of Body Mass Residuals by Run Timing Group",
+       x = "Size Corrected Body Mass Residuals", y = "Density") +
+  theme_minimal()
+
+
+### Model 8 ### (Can also be visualized for Model 5 which is the same, minus the interaction term)
+    # sizecorrected_bodymass_residuals ~ RunTimingGroup + Sex + RunTimingGroup:Sex
+ggplot(DataSet, aes(x = interaction(RunTimingGroup, Sex), y = sizecorrected_bodymass_residuals, fill = Sex)) +
+  geom_boxplot() +
+  labs(title = "Body Mass Residuals by Run Timing Group and Sex",
+       x = "Run Timing Group & Sex", y = "Size Corrected Body Mass Residuals") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(DataSet, aes(x = RunTimingGroup, y = sizecorrected_bodymass_residuals, fill = RunTimingGroup)) +
+  geom_boxplot() +
+  facet_wrap(~ Sex) +
+  labs(title = "Body Mass Residuals by Run Timing Group and Sex",
+       x = "Run Timing Group", y = "Size Corrected Body Mass Residuals")
+
+ggplot(DataSet, aes(x = RunTimingGroup, y = sizecorrected_bodymass_residuals, color = Sex)) +
+  geom_point() +
+  geom_smooth(method = "lm", aes(group = Sex), se = FALSE) +
+  labs(title = "Interaction between Run Timing Group and Sex on Body Mass Residuals",
+       x = "Run Timing Group", y = "Size Corrected Body Mass Residuals")
+
+
+```
