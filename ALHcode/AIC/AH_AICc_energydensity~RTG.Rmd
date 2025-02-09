@@ -2,7 +2,9 @@
 title: "AH_AICc_energydensity~RTG"
 author: "Abby Host"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include = FALSE}
@@ -17,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE
 ```{r}
 rm(list = ls())
 library(AICcmodavg)
+library(ggplot2)
 library(lubridate)
 
 #data loading
@@ -76,7 +79,7 @@ str(DataSet)
 
 ```
 
-### Making Models for bodysize_pc~RunTimingGroup
+### Making Models for energydensity~RunTimingGroup
 ```{r}
 # Models for reference
 energydensity_RTG_modelset <- "energydensity_runtiminggroup/energydensity~RunTimingGroup_modelset.csv"
