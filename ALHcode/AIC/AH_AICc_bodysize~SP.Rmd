@@ -23,21 +23,57 @@ library(ggplot2)
 bc19 <- read.csv("bodycomp_2019.csv")
 bc20 <- read.csv("bodycomp_2020.csv")
 bc21 <- read.csv("bodycomp_2021.csv")
-#need to bind all together for total body comp dataset, lower river only
+#need to bind all together for total body comp dataset, Upper River river only
 
-bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
-write.csv(bc_LR_total, "lowerriver_bodycomp_all.csv")
-lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
+bc_UR_total <- rbind(bc19[61:172,], bc20[61:120,], bc21[61:180,])
+write.csv(bc_UR_total, "upperriver_bodycomp_all.csv")
+upperriver_bodycomp_all<-read.csv("upperriver_bodycomp_all.csv")[,-1]
 #all data is loaded now
 
 #need to add year to dataset
-lowerriver_bodycomp_all$Collection_Date <- as.Date(lowerriver_bodycomp_all$Collection_Date)
+str(upperriver_bodycomp_all)
+upperriver_bodycomp_all$Collection_Date <- as.Date(upperriver_bodycomp_all$Collection_Date)
 
 # Create a new column 'year' from the collection_date
-lowerriver_bodycomp_all$Year <- year(lowerriver_bodycomp_all$Collection_Date)
+upperriver_bodycomp_all$Year <- year(upperriver_bodycomp_all$Collection_Date)
+str(upperriver_bodycomp_all)
 
 #replace blank cell in Sex with NA 
-lowerriver_bodycomp_all$Sex[lowerriver_bodycomp_all$Sex == ""] <- NA
-str(lowerriver_bodycomp_all)
+upperriver_bodycomp_all$Sex[upperriver_bodycomp_all$Sex == ""] <- NA
+str(upperriver_bodycomp_all)
 
-write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")
+write.csv(upperriver_bodycomp_all, "upperriver_bodycomp_all.csv")
+```
+
+### Checking for NAs for PC score 
+```{r}
+rm(list = ls())
+upperriver_bodycomp_all <- "upperriver_bodycomp_all.csv"
+upperriver_bodycomp_all<-read.csv("upperriver_bodycomp_all.csv")[,-1]
+
+##### For the Upper River Data, I want to elimiate Power Creek Cordova, Eyak Weir Cordova, Bone Creek, and Copper Lake data points as they don't apply to my spawning populations of interest ####
+library(dplyr)
+
+# Assuming your data frame is named df, use filter() to exclude the specific collection locations
+upperriver_bodycomp_all <- upperriver_bodycomp_all %>%
+  filter(!Collection_Location %in% c("Power Creek Cordova", "Eyak Weir Cordova", "Copper Lake", "Bone Creek"))
+
+
+### Now, need to remove NAs that will mess up levels / model weight
+any(is.na(upperriver_bodycomp_all$Collection_Location))
+any(is.na(upperriver_bodycomp_all$Year))
+any(is.na(upperriver_bodycomp_all$Sex))
+upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Sex), ] #row 129 and 152 has no sex value, eliminate it for models
+upperriver_bodycomp_all <- upperriver_bodycomp_all[-c(129,152),] #excludes row missing sex file
+any(is.na(upperriver_bodycomp_all$Sex))
+
+#checking NA
+any(is.na(upperriver_bodycomp_all$Fish_Leng_1))
+upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Leng_1), ]
+any(is.na(upperriver_bodycomp_all$Fish_Leng_2))
+upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Leng_2), ]
+any(is.na(upperriver_bodycomp_all$Fish_Ht))
+any(is.na(upperriver_bodycomp_all$Fish_Grth)) 
+upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Grth), ] 
+## NAs present in each of these variables, will need to estimate for values before PC score can be run
+```
