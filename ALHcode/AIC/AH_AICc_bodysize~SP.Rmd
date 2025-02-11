@@ -1,0 +1,43 @@
+---
+title: "AH_AICc_bodysize~SP"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
+```
+
+#' =====================================================
+#' AICc code for BodySizePC_1~SpawningPopulation models
+#' =====================================================
+
+### Loading Data
+```{r}
+library(AICcmodavg)
+library(lubridate)
+library(ggplot2)
+
+#data loading
+bc19 <- read.csv("bodycomp_2019.csv")
+bc20 <- read.csv("bodycomp_2020.csv")
+bc21 <- read.csv("bodycomp_2021.csv")
+#need to bind all together for total body comp dataset, lower river only
+
+bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
+write.csv(bc_LR_total, "lowerriver_bodycomp_all.csv")
+lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
+#all data is loaded now
+
+#need to add year to dataset
+lowerriver_bodycomp_all$Collection_Date <- as.Date(lowerriver_bodycomp_all$Collection_Date)
+
+# Create a new column 'year' from the collection_date
+lowerriver_bodycomp_all$Year <- year(lowerriver_bodycomp_all$Collection_Date)
+
+#replace blank cell in Sex with NA 
+lowerriver_bodycomp_all$Sex[lowerriver_bodycomp_all$Sex == ""] <- NA
+str(lowerriver_bodycomp_all)
+
+write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")

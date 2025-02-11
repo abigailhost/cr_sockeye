@@ -96,6 +96,7 @@ teModel2 <- lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup, data = Dat
 teModel3 <- lm(TotalEnergy ~ Collection_RiverMile_m + Sex, data = DataSet)
 teModel4 <- lm(TotalEnergy ~ Collection_RiverMile_m + Year, data = DataSet)
 teModel5 <- lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+summary(teModel5)
 teModel6 <- lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
 teModel7 <- lm(TotalEnergy ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
 teModel8 <- lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
