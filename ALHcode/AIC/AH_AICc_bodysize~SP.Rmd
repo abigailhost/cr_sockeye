@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE
 
 ### Loading Data
 ```{r}
+rm(list = ls())
 library(AICcmodavg)
 library(lubridate)
 library(ggplot2)
@@ -64,7 +65,7 @@ any(is.na(upperriver_bodycomp_all$Collection_Location))
 any(is.na(upperriver_bodycomp_all$Year))
 any(is.na(upperriver_bodycomp_all$Sex))
 upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Sex), ] #row 129 and 152 has no sex value, eliminate it for models
-upperriver_bodycomp_all <- upperriver_bodycomp_all[-c(129,152),] #excludes row missing sex file
+upperriver_bodycomp_all <- upperriver_bodycomp_all[-c(88,111),] #excludes row missing sex file
 any(is.na(upperriver_bodycomp_all$Sex))
 
 #checking NA
@@ -73,7 +74,60 @@ upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Leng_1), ]
 any(is.na(upperriver_bodycomp_all$Fish_Leng_2))
 upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Leng_2), ]
 any(is.na(upperriver_bodycomp_all$Fish_Ht))
+upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Ht), ]
 any(is.na(upperriver_bodycomp_all$Fish_Grth)) 
 upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Grth), ] 
-## NAs present in each of these variables, will need to estimate for values before PC score can be run
+## NAs present in each of these variables, will need to estimate for values before PC score can be run to quantify body size of these samples
+```
+
+
+### Estimate length_1 Values for NA rows
+```{r}
+ggplot(upperriver_bodycomp_all, aes(x=Fish_Grth, y = Fish_Leng_1)) + 
+  geom_point() #length relationship to girth
+
+girth_leng_lm <- lm(Fish_Leng_1 ~ Fish_Grth, data = upperriver_bodycomp_all)
+summary(girth_leng_lm) # Adjusted R-squared:  0.4019
+
+
+# Subset the data for female F fish only
+allF_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "F", ]
+
+# Perform PCA on the subset of female F fish
+pca_model_allF <- princomp(allfemale_lowerriver_bodycomp[,c(12,14,16)], cor=T, scores=T, covmat = NULL)
+
+summary(pca_model_allF, loadings=T, cutoff=0.001) #summary of PC analysis
+
+# Create a new dataframe with PCA scores for the female F fish subset
+allfemale_lowerriver_bodycomp <- cbind(allfemale_lowerriver_bodycomp, pca_model_allF$scores[, 1])  # First principal component
+
+# Create the linear model for predicting Fish_Grth based on the first principal component
+girth_pc_lm <- lm(Fish_Grth ~ pca_model_allF$scores[, 1], data = allfemale_lowerriver_bodycomp)
+
+# View the summary of the linear model
+summary(girth_pc_lm)
+plot(girth_pc_lm)
+
+
+predicted_values <- predict(girth_pc_lm, newdata = allfemale_lowerriver_bodycomp)
+
+allfemale_lowerriver_bodycomp$Predicted_Fish_Grth <- predicted_values # Add these predictions back to your dataset
+
+### the predicted value for row 64 when all female fish is Fish_Grth = 30.00935
+
+#plot the original data and the predicted values to see how well the model fits
+ggplot(allfemale_lowerriver_bodycomp, aes(x = Predicted_Fish_Grth, y = Fish_Grth)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Grth, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Fish Growth",
+       x = "Comparison PC",
+       y = "Fish Growth") +
+  theme_minimal() 
+
+###### Now, back to using lowerriver_bodycomp_all #######
+lowerriver_bodycomp_all$Fish_Grth[is.na(lowerriver_bodycomp_all$Fish_Grth)] <- 30.00935
+any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
+any(is.na(lowerriver_bodycomp_all$Fish_Ht))
+any(is.na(lowerriver_bodycomp_all$Fish_Grth)) # no longer an NA present
 ```

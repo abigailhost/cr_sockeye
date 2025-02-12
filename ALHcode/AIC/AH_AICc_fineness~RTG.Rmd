@@ -209,14 +209,14 @@ any(is.na(lowerriver_bodycomp_all$Fish_Grth))# no longer an NA present
 #fineness ratio 1 : fish length / fish height ** this is the way reported by literature / pictures
 
 #calculating fineness ratio 1
-lowerriver_bodycomp_all$fineness_1 <- (lowerriver_bodycomp_all$Fish_Leng_1+lowerriver_bodycomp_all$Fish_Leng_2) / (lowerriver_bodycomp_all$Fish_Ht)
+lowerriver_bodycomp_all$fineness_1 <- (lowerriver_bodycomp_all$Fish_Leng_1) / (lowerriver_bodycomp_all$Fish_Ht)
 
 str(lowerriver_bodycomp_all$fineness_1) #fineness_1 is numeric
 mean(lowerriver_bodycomp_all$fineness_1) #4.15, where fineness ratios between 2 and 6 result in a decrease of the drag produced by the fish, and species with a fineness ratio of 4.5 have an optimum swimming capacity 
 
 
 #Fineness Ratio 2: fish length / fish width *** "body length to its maximum cross-sectional diameter" ***
-lowerriver_bodycomp_all$fineness_2 <- (lowerriver_bodycomp_all$Fish_Leng_1+lowerriver_bodycomp_all$Fish_Leng_2) / (lowerriver_bodycomp_all$Fish_Wdth)
+lowerriver_bodycomp_all$fineness_2 <- (lowerriver_bodycomp_all$Fish_Leng_1) / (lowerriver_bodycomp_all$Fish_Wdth)
 
 str(lowerriver_bodycomp_all$fineness_2) #fineness_1 is numeric
 mean(lowerriver_bodycomp_all$fineness_2) #7.786 is the average here
@@ -227,6 +227,9 @@ write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_fineness.csv")
 
 #technically, I think you can also do fish length / fish width (the cross sectional diameter)-- I could do this but a lot of points would need to be estimated for width.
 ```
+
+
+#### Males and Females split up 
 
 ### Import Data for models
 ```{r}
