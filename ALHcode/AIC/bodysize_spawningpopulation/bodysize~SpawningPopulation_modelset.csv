@@ -1,0 +1,12 @@
+﻿Model
+Body Size~1
+Body Size~SpawnStatus + Collection_Location
+Body Size~SpawnStatus + Sex
+Body Size~SpawnStatus + Year
+Body Size~SpawnStatus + Collection_Location + Sex
+Body Size~SpawnStatus + Collection_Location + Year
+Body Size~SpawnStatus + Sex + Year
+Body Size~SpawnStatus + Collection_Location + Sex + Collection_Location*Sex
+Body Size~SpawnStatus + Collection_Location + Year + Collection_Location*Year
+Body Size~SpawnStatus + Sex + Year + Sex*Year
+Body Size~SpawnStatus + Collection_Location + Sex + Year

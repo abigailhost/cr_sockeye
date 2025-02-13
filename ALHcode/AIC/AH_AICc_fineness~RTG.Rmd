@@ -206,30 +206,34 @@ any(is.na(lowerriver_bodycomp_all$Fish_Grth))# no longer an NA present
 ```{r}
 ### Fineness Ratio = A fish's "fineness ratio" refers to the ratio of its body length to its maximum cross-sectional diameter
 
-#fineness ratio 1 : fish length / fish height ** this is the way reported by literature / pictures
-
-#calculating fineness ratio 1
-lowerriver_bodycomp_all$fineness_1 <- (lowerriver_bodycomp_all$Fish_Leng_1) / (lowerriver_bodycomp_all$Fish_Ht)
-
-str(lowerriver_bodycomp_all$fineness_1) #fineness_1 is numeric
-mean(lowerriver_bodycomp_all$fineness_1) #4.15, where fineness ratios between 2 and 6 result in a decrease of the drag produced by the fish, and species with a fineness ratio of 4.5 have an optimum swimming capacity 
-
-
 #Fineness Ratio 2: fish length / fish width *** "body length to its maximum cross-sectional diameter" ***
-lowerriver_bodycomp_all$fineness_2 <- (lowerriver_bodycomp_all$Fish_Leng_1) / (lowerriver_bodycomp_all$Fish_Wdth)
+# lowerriver_bodycomp_all$fineness_2 <- (lowerriver_bodycomp_all$Fish_Leng_1) / (lowerriver_bodycomp_all$Fish_Wdth)
 
-str(lowerriver_bodycomp_all$fineness_2) #fineness_1 is numeric
-mean(lowerriver_bodycomp_all$fineness_2) #7.786 is the average here
-
-#create new data file that includes fineness data in the dataset for models
-write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_fineness.csv") 
+# str(lowerriver_bodycomp_all$fineness_2) #fineness_1 is numeric
+# mean(lowerriver_bodycomp_all$fineness_2) #7.786 is the average here
 
 
-#technically, I think you can also do fish length / fish width (the cross sectional diameter)-- I could do this but a lot of points would need to be estimated for width.
+#Need to calculate fineness according to sex
+library(dplyr)
+# Fineness Ratio 2: fish length / fish width, dependent on sex
+lowerriver_bodycomp_all <- lowerriver_bodycomp_all %>%
+  group_by(Sex) %>%
+  mutate(fineness = Fish_Leng_1 / Fish_Wdth)
+
+str(lowerriver_bodycomp_all$fineness) #fineness_2 is numeric
+
+# View the mean fineness ratio by sex
+mean_fineness <- lowerriver_bodycomp_all %>%
+  group_by(Sex) %>%
+  summarise(mean_fineness = mean(fineness, na.rm = TRUE))
+
+print(mean_fineness)
+
+# Create new data file that includes fineness data in the dataset for models
+write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_fineness.csv")
+
+
 ```
-
-
-#### Males and Females split up 
 
 ### Import Data for models
 ```{r}
@@ -252,30 +256,29 @@ DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
 str(DataSet)
 
-mean(DataSet$fineness_1)
-mean(DataSet$fineness_2)
+mean(DataSet$fineness)
 
 ```
 
-### Making Models for fineness_1~RunTimingGroup
+### Making Models for fineness~RunTimingGroup
 ```{r}
 # Models for reference
 fineness_RTG_modelset <- "fineness_runtiminggroup/fineness~RunTimingGroup_modelset.csv"
 
 ModelSet<-read.csv(fineness_RTG_modelset) #eliminate model 2 and model 10 from the list
 
-model1 <- lm(fineness_1~1, data=DataSet)
+model1 <- lm(fineness~1, data=DataSet)
 # model2 <- lm(fineness_1~Collection_RiverMile_m, data = DataSet)
-model2 <- lm(fineness_1~Collection_RiverMile_m + RunTimingGroup, data = DataSet)
-model3 <- lm(fineness_1~Collection_RiverMile_m + Sex, data = DataSet)
-model4 <- lm(fineness_1~Collection_RiverMile_m + Year, data = DataSet)
-model5 <- lm(fineness_1~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
-model6 <- lm(fineness_1~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
-model7 <- lm(fineness_1~Collection_RiverMile_m + Sex + Year, data = DataSet)
-model8 <- lm(fineness_1~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+model2 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup, data = DataSet)
+model3 <- lm(fineness~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(fineness~Collection_RiverMile_m + Year, data = DataSet)
+model5 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+model6 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
+model7 <- lm(fineness~Collection_RiverMile_m + Sex + Year, data = DataSet)
+model8 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
 # model10 <- lm(fineness_1~Collection_RiverMile_m + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
-model9 <- lm(fineness_1~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(fineness_1~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+model9 <- lm(fineness~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
 ```
 
 ### AICc Model Selection
@@ -288,187 +291,95 @@ models <- list(model1, model2, model3, model4, model5, model6, model7, model8, m
 
 # Generate AIC table
 myaicc1 <- aictab(models, modnames = mynames1)
-print(myaicc1) #Model 8 has the lowest AIC score, fineness_1~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex
+print(myaicc1) #Model 6 has the lowest AIC score, followed by model 10
+
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("fineness_1~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
-                      "fineness_1~Collection_RiverMile_m + RunTimingGroup",
-                      "fineness_1~Collection_RiverMile_m + RunTimingGroup + Sex",
-                      "fineness_1~Collection_RiverMile_m + RunTimingGroup + year",
-                      "fineness_1~Collection_RiverMile_m + RunTimingGroup + Sex + Year",
-                      "fineness_1~Collection_RiverMile_m + Year",
-                      "fineness_1~Collection_RiverMile_m + Sex",
-                      "fineness_1~Collection_RiverMile_m + Sex + Year",
-                      "fineness_1~Collection_RiverMile_m + Sex + Year + Sex:Year",
-                      "fineness_1~1")
+aic_df$ModelName <- c("fineness~Collection_RiverMile_m + RunTimingGroup + Year",
+                      "fineness~Collection_RiverMile_m + RunTimingGroup + Sex + Year",
+                      "fineness~Collection_RiverMile_m + Year",
+                      "fineness~Collection_RiverMile_m + Sex + Year + Sex:Year",
+                      "fineness~Collection_RiverMile_m + Sex + Year",
+                      "fineness~Collection_RiverMile_m + RunTimingGroup",
+                      "fineness~Collection_RiverMile_m + RunTimingGroup + Sex",
+                      "fineness~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
+                      "fineness~Collection_RiverMile_m + Sex",
+                      "fineness~1")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
-write.csv(aic_df, file = "fineness_runtiminggroup/AICresults_fineness1~RunTimingGroup.csv", row.names = FALSE)
+write.csv(aic_df, file = "fineness_runtiminggroup/AICresults_fineness~RunTimingGroup.csv", row.names = FALSE)
 
 ```
 
-### Visualizing this model selection
+### Model Averaging
 ```{r}
-# best model again, is model 8: fineness_1~Collection_Location + RunTimingGroup + Sex + RunTimingGroup:Sex
+library(MuMIn)
 
-DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
-                               levels = c("Early",
-                                          "Middle",
-                                          "Late"),
-                               labels = c("Early",
-                                          "Middle",
-                                          "Late"))
-DataSet$Sex <- factor(DataSet$Sex,
-                               levels = c("F",
-                                          "M"),
-                               labels = c("Female",
-                                          "Male"))
-# early = "#5E4FA2"
-# middle = "#FF7F00" 
-#late = "#A6CEE3"
+ # Create a model selection table (this will give you AIC, AIC weights, etc.)
+model_weights <- myaicc1$AICcWt ##Get the AIC weights from the AIC table
+model_avg <- model.avg(models, weights = model_weights)
+summary(model_avg)
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
+avg_se <- sqrt(diag(vcov(model_avg)))
 
-#interaction plot
-ggplot(DataSet[-(11),], aes(x = RunTimingGroup, y = fineness_1, color = Sex, group = Sex)) +
-  geom_line() +
-  geom_point() +
+# Convert the coefficients into a tidy data frame
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
+coefs_df$CI_Upper <- avg_confint[, 2] # Add upper bound of confidence intervals
+coefs_df$SE <- avg_se
+print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
+
+write.csv(coefs_df, file = "fineness_runtiminggroup/fineness~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
+```
+
+
+### Figure that displays parameter estimates + CI for each parameter in the model set
+```{r}
+paramestimates_fineness <- "fineness_runtiminggroup/fineness~runtiminggroup_models_CoefEstimates.csv"
+
+estimates_fineness<-read.csv(paramestimates_fineness)
+str(estimates_fineness)
+
+levels(factor(estimates_fineness$X))
+estimates_fineness$X <- factor(estimates_fineness$X, 
+                           levels = rev(c("(Intercept)", 
+                                      "Collection_RiverMile_m",
+                                      "RunTimingGroupMiddle", 
+                                      "RunTimingGroupLate", 
+                                      "SexM",
+                                      "Year2020",
+                                      "Year2021",
+                                      "RunTimingGroupMiddle:SexM",
+                                      "RunTimingGroupLate:SexM",
+                                      "SexM:Year2020",
+                                       "SexM:Year2021")))
+
+
+library(ggplot2)
+ggplot(estimates_fineness, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
   theme_minimal() +
-  labs(title = "Interaction Plot: RunTimingGroup by Sex")
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
 
-#facet plot ... eliminate row 11 because the Ht vs Ht_tape number is very different
-ggplot(DataSet[-(11),], aes(x = RunTimingGroup, y = fineness_1, fill = RunTimingGroup)) +
-  geom_boxplot() +
-  scale_fill_manual(values = c("#5E4FA2", "#FF7F00", "#A6CEE3")) +
-  facet_grid( ~ Sex) +
-  xlab("Run Timing Group") + 
-  ylab("Fineness Ratio") +
-  theme_gray()
+library(dplyr)
+estimates_fineness_filtered <- estimates_fineness %>%
+  filter(X != "Collection_RiverMile_m") #filter out collection river mile, as it is not necessary for the estimates
 
+fineness_plot <- ggplot(estimates_fineness_filtered, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
 
-install.packages("effects")
-library(effects)
-
-# Fit the model
-model <- lm(fineness_2 ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
-
-# Plot effects for RunTimingGroup, Sex, and Year
-effect_run_timing <- effect("RunTimingGroup", model)
-plot(effect_run_timing, main = "Effect of Run Timing Group on Fineness Ratio")
-
-effect_sex <- effect("Sex", model)
-plot(effect_sex, main = "Effect of Sex on Fineness Ratio")
-
-effect_year <- effect("Year", model)
-plot(effect_year, main = "Effect of Year on Fineness Ratio")
-
-```
-
-### Making Models for fineness_2~RunTimingGroup
-```{r}
-# Models for reference
-fineness_RTG_modelset <- "fineness_runtiminggroup/fineness~RunTimingGroup_modelset.csv"
-
-ModelSet<-read.csv(fineness_RTG_modelset)
-
-f2_model1 <- lm(fineness_2~1, data=DataSet)
-# model2 <- lm(fineness_1~Collection_RiverMile_m, data = DataSet)
-f2_model2 <- lm(fineness_2~Collection_RiverMile_m + RunTimingGroup, data = DataSet)
-f2_model3 <- lm(fineness_2~Collection_RiverMile_m + Sex, data = DataSet)
-f2_model4 <- lm(fineness_2~Collection_RiverMile_m + Year, data = DataSet)
-f2_model5 <- lm(fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
-f2_model6 <- lm(fineness_2~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
-f2_model7 <- lm(fineness_2~Collection_RiverMile_m + Sex + Year, data = DataSet)
-f2_model8 <- lm(fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
-# model10 <- lm(fineness_1~Collection_RiverMile_m + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
-f2_model9 <- lm(fineness_2~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
-f2_model10 <- lm(fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
-```
-
-### AICc Model Selection
-```{r}
-AIC(f2_model1, f2_model2, f2_model3, f2_model4, f2_model5, f2_model6, f2_model7, f2_model8, f2_model9, f2_model10)
-
-#table of AIC results
-mynames2 <- paste("model", as.character(1:10), sep = "")
-models2 <- list(f2_model1, f2_model2, f2_model3, f2_model4, f2_model5, f2_model6, f2_model7, f2_model8, f2_model9, f2_model10)
-
-# Generate AIC table
-myaicc2 <- aictab(models2, modnames = mynames2)
-print(myaicc2) #Model 10 has the lowest AIC score, "fineness_2~Collection_Location + RunTimingGroup + Sex + Year"
-# Convert AIC table to a data frame for easier manipulation
-aic_df2 <- as.data.frame(myaicc2)
-aic_df2$ModelName <- c("fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex + Year",
-                      "fineness_2~Collection_RiverMile_m + RunTimingGroup + Year",
-                      "fineness_2~Collection_RiverMile_m + Sex + Year + Sex:Year",
-                      "fineness_2~Collection_RiverMile_m + Sex + Year",
-                      "fineness_2~Collection_RiverMile_m + Year",
-                      "fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex",
-                      "fineness_2~Collection_RiverMile_m + RunTimingGroup",
-                      "fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
-                      "fineness_2~Collection_RiverMile_m + Sex",
-                      "fineness_2~1")
-colnames(aic_df2)[colnames(aic_df2) == "Modnames"] <- "Model #"
-
-# Write the data frame to a CSV file
-write.csv(aic_df2, file = "fineness_runtiminggroup/AICresults_fineness2~RunTimingGroup.csv", row.names = FALSE)
-
-```
-
-### Visualizing fineness_2 relationships for AMSS
-```{r}
-#best model from above is the global model, model 10 = fineness_2~Collection_RiverMile_m + RunTimingGroup + Sex + Year
-
-DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
-                               levels = c("Early",
-                                          "Middle",
-                                          "Late"),
-                               labels = c("Early",
-                                          "Middle",
-                                          "Late"))
-DataSet$Sex <- factor(DataSet$Sex,
-                               levels = c("M",
-                                          "F"),
-                               labels = c("Male",
-                                          "Female"))
-# early = "#5E4FA2"
-# middle = "#FF7F00" 
-#late = "#A6CEE3"
-
-
-### Since this is body size, Collection_rivermile_m should not need to be accounted for as fish don't change size drastically in river
-
-ggplot(DataSet, aes(x = RunTimingGroup, y = fineness_2, fill = RunTimingGroup)) +
-  geom_boxplot() +
-  scale_fill_manual(values = c("#5E4FA2", "#FF7F00", "#A6CEE3")) +
-  facet_grid(Sex ~ Year) +
-  xlab("Run Timing Group") + 
-  ylab("Fineness Ratio") +
-  theme_gray() #this figure accounts for RTG, Sex, and Year like the global model does
-
-
-ggplot(DataSet, aes(x = RunTimingGroup, y = fineness_2, fill = RunTimingGroup)) +
-  geom_boxplot() +
-  scale_fill_manual(values = c("#5E4FA2", "#FF7F00", "#A6CEE3")) +
-  facet_grid( ~ Sex) +
-  xlab("Run Timing Group") + 
-  ylab("Fineness Ratio") +
-  theme_gray()
-
-
-install.packages("effects")
-library(effects)
-
-# Fit the model
-model <- lm(fineness_2 ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
-
-# Plot effects for RunTimingGroup, Sex, and Year
-effect_run_timing <- effect("RunTimingGroup", model)
-plot(effect_run_timing, main = "Effect of Run Timing Group on Fineness Ratio")
-
-effect_sex <- effect("Sex", model)
-plot(effect_sex, main = "Effect of Sex on Fineness Ratio")
-
-effect_year <- effect("Year", model)
-plot(effect_year, main = "Effect of Year on Fineness Ratio")
-
+ggsave("fineness_runtiminggroup/Fineness_ParamEstimates_Plot.png", plot=fineness_plot, height=8, width=12, units="in")
 ```

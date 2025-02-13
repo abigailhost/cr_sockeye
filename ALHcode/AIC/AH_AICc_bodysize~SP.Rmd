@@ -77,57 +77,491 @@ any(is.na(upperriver_bodycomp_all$Fish_Ht))
 upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Ht), ]
 any(is.na(upperriver_bodycomp_all$Fish_Grth)) 
 upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Grth), ] 
+any(is.na(upperriver_bodycomp_all$Fish_Wdth)) 
+upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Wdth), ] 
 ## NAs present in each of these variables, will need to estimate for values before PC score can be run to quantify body size of these samples
 ```
 
 
 ### Estimate length_1 Values for NA rows
 ```{r}
-ggplot(upperriver_bodycomp_all, aes(x=Fish_Grth, y = Fish_Leng_1)) + 
-  geom_point() #length relationship to girth
-
-girth_leng_lm <- lm(Fish_Leng_1 ~ Fish_Grth, data = upperriver_bodycomp_all)
-summary(girth_leng_lm) # Adjusted R-squared:  0.4019
+#Determine best metric for estimating NAs for Leng_1
+summary(lm(Fish_Leng_1 ~ Fish_Leng_2, data = upperriver_bodycomp_all)) #R = 0.06
+summary(lm(Fish_Leng_1 ~ Fish_Ht, data = upperriver_bodycomp_all)) #R = 0.3118
+summary(lm(Fish_Leng_1 ~ Fish_Wt, data = upperriver_bodycomp_all)) #R = 0.6648
+summary(lm(Fish_Leng_1 ~ Fish_Grth, data = upperriver_bodycomp_all)) # Adjusted R-squared:  0.4019
 
 
 # Subset the data for female F fish only
 allF_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "F", ]
 
-# Perform PCA on the subset of female F fish
-pca_model_allF <- princomp(allfemale_lowerriver_bodycomp[,c(12,14,16)], cor=T, scores=T, covmat = NULL)
-
-summary(pca_model_allF, loadings=T, cutoff=0.001) #summary of PC analysis
-
-# Create a new dataframe with PCA scores for the female F fish subset
-allfemale_lowerriver_bodycomp <- cbind(allfemale_lowerriver_bodycomp, pca_model_allF$scores[, 1])  # First principal component
-
-# Create the linear model for predicting Fish_Grth based on the first principal component
-girth_pc_lm <- lm(Fish_Grth ~ pca_model_allF$scores[, 1], data = allfemale_lowerriver_bodycomp)
-
-# View the summary of the linear model
-summary(girth_pc_lm)
-plot(girth_pc_lm)
+summary(lm(Fish_Leng_1 ~ Fish_Grth, data = allF_upperriver_bodycomp_all))
+leng1_F_lm <- lm(Fish_Leng_1 ~ Fish_Wt, data = allF_upperriver_bodycomp_all)
+summary(leng1_F_lm) # R squared  0.3204 
+plot(leng1_F_lm)
 
 
-predicted_values <- predict(girth_pc_lm, newdata = allfemale_lowerriver_bodycomp)
+predicted_values_lengF <- predict(leng1_F_lm, newdata = allF_upperriver_bodycomp_all)
 
-allfemale_lowerriver_bodycomp$Predicted_Fish_Grth <- predicted_values # Add these predictions back to your dataset
+allF_upperriver_bodycomp_all$Predicted_Fish_Leng_1 <- predicted_values_lengF # Add these predictions back to your dataset
 
-### the predicted value for row 64 when all female fish is Fish_Grth = 30.00935
 
-#plot the original data and the predicted values to see how well the model fits
-ggplot(allfemale_lowerriver_bodycomp, aes(x = Predicted_Fish_Grth, y = Fish_Grth)) +
+ggplot(allF_upperriver_bodycomp_all, aes(x = Predicted_Fish_Leng_1, y = Fish_Leng_1)) +
   geom_point(aes(color = "Observed")) +
-  geom_point(aes(y = Predicted_Fish_Grth, color = "Predicted")) +
+  geom_point(aes(y = Predicted_Fish_Leng_1, color = "Predicted")) +
   scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
-  labs(title = "Observed vs Predicted Fish Growth",
+  labs(title = "Observed vs Predicted Female Fish",
+       x = "Predicted Fish Length",
+       y = "Fish Length") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Leng_1 with predicted values
+allF_upperriver_bodycomp_all$Fish_Leng_1[is.na(allF_upperriver_bodycomp_all$Fish_Leng_1)] <- allF_upperriver_bodycomp_all$Predicted_Fish_Leng_1[is.na(allF_upperriver_bodycomp_all$Fish_Leng_1)]
+## so now, the female subset has predicted values replacing the NAs for Leng_1
+
+
+#Now, same for the male data
+allM_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "M", ] #subset of M from total data set
+
+leng1_M_lm <- lm(Fish_Leng_1 ~ Fish_Wt, data = allM_upperriver_bodycomp_all) #making linear regression
+summary(leng1_M_lm) # R squared is 0.6244 
+plot(leng1_M_lm)
+predicted_values_lengM <- predict(leng1_M_lm, newdata = allM_upperriver_bodycomp_all) #predicting width values from male subset data
+allM_upperriver_bodycomp_all$Predicted_Fish_Leng_1 <- predicted_values_lengM
+
+ggplot(allM_upperriver_bodycomp_all, aes(x = Predicted_Fish_Leng_1, y = Fish_Leng_1)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Leng_1, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Male Fish Length 1",
        x = "Comparison PC",
        y = "Fish Growth") +
   theme_minimal() 
 
-###### Now, back to using lowerriver_bodycomp_all #######
-lowerriver_bodycomp_all$Fish_Grth[is.na(lowerriver_bodycomp_all$Fish_Grth)] <- 30.00935
-any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
-any(is.na(lowerriver_bodycomp_all$Fish_Ht))
-any(is.na(lowerriver_bodycomp_all$Fish_Grth)) # no longer an NA present
+# Replace NAs in Fish_Leng_1 with predicted values
+allM_upperriver_bodycomp_all$Fish_Leng_1[is.na(allM_upperriver_bodycomp_all$Fish_Leng_1)] <- allM_upperriver_bodycomp_all$Predicted_Fish_Leng_1[is.na(allM_upperriver_bodycomp_all$Fish_Leng_1)]
+## so now, the male subset has predicted values replacing the NAs 
+
+### Now, combine the two data sets back into one, called lowerriver_bodycomp_all ###
+upperriver_bodycomp_all <- rbind(allF_upperriver_bodycomp_all, allM_upperriver_bodycomp_all)
+
+#Check Leng_1 NAs
+any(is.na(upperriver_bodycomp_all$Fish_Leng_1)) #FALSE
+```
+
+
+### Estimate Girth Values for NA rows
+```{r}
+#Determine best metric for estimating NAs for Girth
+summary(lm(Fish_Grth ~ Fish_Leng_1, data = upperriver_bodycomp_all)) # R = 0.3945 
+summary(lm(Fish_Grth ~ Fish_Ht, data = upperriver_bodycomp_all)) #R = 0.8015 
+summary(lm(Fish_Grth ~ Fish_Wt, data = upperriver_bodycomp_all)) #R = 0.7929 
+summary(lm(Fish_Grth ~ Fish_Leng_2, data = upperriver_bodycomp_all)) # Adjusted R-squared = 0.09902 
+
+# Subset the data for female F fish only
+allF_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "F", ]
+
+summary(lm(Fish_Grth ~ Fish_Ht, data = allF_upperriver_bodycomp_all)) #R = 0.6379 
+summary(lm(Fish_Grth ~ Fish_Wt, data = allF_upperriver_bodycomp_all)) #R =  0.6993 
+
+grth_F_lm <- lm(Fish_Grth ~ Fish_Wt, data = allF_upperriver_bodycomp_all)
+summary(grth_F_lm) # R squared  0.7 
+plot(grth_F_lm)
+
+
+predicted_values_grthF <- predict(grth_F_lm, newdata = allF_upperriver_bodycomp_all)
+
+allF_upperriver_bodycomp_all$Predicted_Fish_Grth <- predicted_values_grthF # Add these predictions back to your dataset
+
+
+ggplot(allF_upperriver_bodycomp_all, aes(x = Predicted_Fish_Grth, y = Fish_Grth)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Grth, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Female Fish",
+       x = "Predicted Fish Girth",
+       y = "Fish Girth") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Grth with predicted values
+allF_upperriver_bodycomp_all$Fish_Grth[is.na(allF_upperriver_bodycomp_all$Fish_Grth)] <- allF_upperriver_bodycomp_all$Predicted_Fish_Grth[is.na(allF_upperriver_bodycomp_all$Fish_Grth)]
+## so now, the female subset has predicted values replacing the NAs for Grth
+
+
+#Now, same for the male data
+allM_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "M", ] #subset of M from total data set
+
+grth_M_lm <- lm(Fish_Grth ~ Fish_Wt, data = allM_upperriver_bodycomp_all) #making linear regression
+summary(grth_M_lm) # R squared is 0.669
+plot(grth_M_lm)
+predicted_values_grthM <- predict(grth_M_lm, newdata = allM_upperriver_bodycomp_all) #predicting width values from male subset data
+allM_upperriver_bodycomp_all$Predicted_Fish_Grth <- predicted_values_grthM
+
+ggplot(allM_upperriver_bodycomp_all, aes(x = Predicted_Fish_Grth, y = Fish_Grth)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Grth, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Male Fish Girth",
+       x = "Predicted Fish Girth",
+       y = "Fish Girth") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Wdth with predicted values
+allM_upperriver_bodycomp_all$Fish_Grth[is.na(allM_upperriver_bodycomp_all$Fish_Grth)] <- allM_upperriver_bodycomp_all$Predicted_Fish_Grth[is.na(allM_upperriver_bodycomp_all$Fish_Grth)]
+## so now, the male subset has predicted values replacing the NAs 
+
+### Now, combine the two data sets back into one, called lowerriver_bodycomp_all ###
+upperriver_bodycomp_all <- rbind(allF_upperriver_bodycomp_all, allM_upperriver_bodycomp_all)
+
+#Check Leng_1 NAs
+any(is.na(upperriver_bodycomp_all$Fish_Leng_1)) #FALSE
+any(is.na(upperriver_bodycomp_all$Fish_Grth)) #FALSE
+
+```
+
+### Estimate Height Values for NA rows
+```{r}
+#Determine best metric for estimating NAs for Height
+summary(lm(Fish_Ht ~ Fish_Leng_1, data = upperriver_bodycomp_all)) # R = 0.3118 
+summary(lm(Fish_Ht ~ Fish_Grth, data = upperriver_bodycomp_all)) #R = 0.7962 
+summary(lm(Fish_Ht ~ Fish_Wt, data = upperriver_bodycomp_all)) #R = 0.639
+summary(lm(Fish_Ht ~ Fish_Leng_2, data = upperriver_bodycomp_all)) # Adjusted R-squared = 0.113 
+
+# Subset the data for female F fish only
+allF_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "F", ]
+
+summary(lm(Fish_Ht ~ Fish_Grth, data = allF_upperriver_bodycomp_all)) #R = 0.6354 
+
+
+Ht_F_lm <- lm(Fish_Ht ~ Fish_Grth, data = allF_upperriver_bodycomp_all)
+summary(Ht_F_lm) # R squared  0.64
+plot(Ht_F_lm)
+
+
+predicted_values_HtF <- predict(Ht_F_lm, newdata = allF_upperriver_bodycomp_all)
+
+allF_upperriver_bodycomp_all$Predicted_Fish_Ht <- predicted_values_HtF # Add these predictions back to your dataset
+
+
+ggplot(allF_upperriver_bodycomp_all, aes(x = Predicted_Fish_Ht, y = Fish_Ht)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Ht, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Female Fish Height",
+       x = "Predicted Fish Height",
+       y = "Fish Height") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Grth with predicted values
+allF_upperriver_bodycomp_all$Fish_Ht[is.na(allF_upperriver_bodycomp_all$Fish_Ht)] <- allF_upperriver_bodycomp_all$Predicted_Fish_Ht[is.na(allF_upperriver_bodycomp_all$Fish_Ht)]
+## so now, the female subset has predicted values replacing the NAs for Grth
+
+
+#Now, same for the male data
+allM_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "M", ] #subset of M from total data set
+
+Ht_M_lm <- lm(Fish_Ht ~ Fish_Grth, data = allM_upperriver_bodycomp_all) #making linear regression
+summary(Ht_M_lm) # R squared is 0.7112 
+plot(Ht_M_lm)
+predicted_values_HtM <- predict(Ht_M_lm, newdata = allM_upperriver_bodycomp_all) #predicting width values from male subset data
+allM_upperriver_bodycomp_all$Predicted_Fish_Ht <- predicted_values_HtM
+
+ggplot(allM_upperriver_bodycomp_all, aes(x = Predicted_Fish_Ht, y = Fish_Ht)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Ht, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Male Fish Height",
+       x = "Predicted Fish Height",
+       y = "Fish Height") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Wdth with predicted values
+allM_upperriver_bodycomp_all$Fish_Ht[is.na(allM_upperriver_bodycomp_all$Fish_Ht)] <- allM_upperriver_bodycomp_all$Predicted_Fish_Ht[is.na(allM_upperriver_bodycomp_all$Fish_Ht)]
+## so now, the male subset has predicted values replacing the NAs 
+
+### Now, combine the two data sets back into one, called lowerriver_bodycomp_all ###
+upperriver_bodycomp_all <- rbind(allF_upperriver_bodycomp_all, allM_upperriver_bodycomp_all)
+
+#Check Leng_1 NAs
+any(is.na(upperriver_bodycomp_all$Fish_Leng_1)) #FALSE
+any(is.na(upperriver_bodycomp_all$Fish_Grth)) #FALSE
+any(is.na(upperriver_bodycomp_all$Fish_Ht)) #FALSE
+
+```
+
+### Estimate Length_2 Values for NA rows
+```{r}
+#Determine best metric for estimating NAs for Leng_2
+summary(lm(Fish_Leng_2 ~ Fish_Leng_1, data = upperriver_bodycomp_all)) # R =  0.05932 
+summary(lm(Fish_Leng_2 ~ Fish_Grth, data = upperriver_bodycomp_all)) #R = 0.1022 
+summary(lm(Fish_Leng_2 ~ Fish_Wt, data = upperriver_bodycomp_all)) #R =  0.09534
+summary(lm(Fish_Leng_2 ~ Fish_Ht, data = upperriver_bodycomp_all)) # Adjusted R-squared =  0.113 
+
+any(is.na(upperriver_bodycomp_all$Fish_Leng_2))
+upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Leng_2), ]
+
+####female subset
+# allF_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "F", ]
+
+# pca_leng2 <- princomp(allF_upperriver_bodycomp_all[,c(12,16,19)], cor=T, scores=T, covmat = NULL)
+# summary(pca_leng2, loadings=T, cutoff=0.001) #summary of PC analysis
+
+#### Create a new dataframe with PCA scores for the female F fish subset
+# allF_upperriver_bodycomp_all <- cbind(allF_upperriver_bodycomp_all, pca_leng2$scores[, 1])  # First principal component
+
+### Create the linear model for predicting Fish_Grth based on the first principal component
+# leng2_F_lm <- lm(Fish_Leng_2 ~ pca_leng2$scores[, 1], data = allF_upperriver_bodycomp_all)
+# summary(leng2_F_lm)
+
+
+# predicted_values_Leng2F <- predict(leng2_F_lm, newdata = allF_upperriver_bodycomp_all)
+
+# allF_upperriver_bodycomp_all$Predicted_Fish_Ht <- predicted_values_HtF # Add these predictions back to your dataset
+
+
+### ALL different regressions with leng_2 as response produce super low r^2 values == As of now, leaving leng_2 out of the body size metric for spawning population 
+
+```
+
+### Estimate Width Values for NA rows
+```{r}
+#Determine best metric for estimating NAs for Wdth
+
+allF_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "F", ]
+summary(lm(Fish_Wdth ~ Fish_Leng_1, data = allF_upperriver_bodycomp_all)) # R = 0.1972 
+summary(lm(Fish_Wdth ~ Fish_Grth, data = allF_upperriver_bodycomp_all)) #R = 0.4876
+summary(lm(Fish_Wdth ~ Fish_Wt, data = allF_upperriver_bodycomp_all)) #R =  0.5219 
+summary(lm(Fish_Wdth ~ Fish_Ht, data = allF_upperriver_bodycomp_all)) # Adjusted R-squared = 0.2658
+
+Wdth_F_lm <- lm(Fish_Wdth ~ Fish_Wt, data = allF_upperriver_bodycomp_all)
+summary(Wdth_F_lm) # R squared  0.64
+plot(Wdth_F_lm)
+
+
+predicted_values_WdthF <- predict(Wdth_F_lm, newdata = allF_upperriver_bodycomp_all)
+
+allF_upperriver_bodycomp_all$Predicted_Fish_Wdth <- predicted_values_WdthF # Add these predictions back to your dataset
+
+
+ggplot(allF_upperriver_bodycomp_all, aes(x = Predicted_Fish_Wdth, y = Fish_Wdth)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Wdth, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Female Fish Width",
+       x = "Predicted Fish Width",
+       y = "Fish Width") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Grth with predicted values
+allF_upperriver_bodycomp_all$Fish_Wdth[is.na(allF_upperriver_bodycomp_all$Fish_Wdth)] <- allF_upperriver_bodycomp_all$Predicted_Fish_Wdth[is.na(allF_upperriver_bodycomp_all$Fish_Wdth)]
+## so now, the female subset has predicted values replacing the NAs for Grth
+
+
+#Now, same for the male data
+allM_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "M", ] #subset of M from total data set
+
+Wdth_M_lm <- lm(Fish_Wdth ~ Fish_Wt, data = allM_upperriver_bodycomp_all) #making linear regression
+summary(Wdth_M_lm) # R squared is 0.1235
+plot(Wdth_M_lm)
+predicted_values_WdthM <- predict(Wdth_M_lm, newdata = allM_upperriver_bodycomp_all) #predicting width values from male subset data
+allM_upperriver_bodycomp_all$Predicted_Fish_Wdth <- predicted_values_WdthM
+
+ggplot(allM_upperriver_bodycomp_all, aes(x = Predicted_Fish_Wdth, y = Fish_Wdth)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Wdth, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Male Fish Width",
+       x = "Predicted Fish Width",
+       y = "Fish Width") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Wdth with predicted values
+allM_upperriver_bodycomp_all$Fish_Wdth[is.na(allM_upperriver_bodycomp_all$Fish_Wdth)] <- allM_upperriver_bodycomp_all$Predicted_Fish_Wdth[is.na(allM_upperriver_bodycomp_all$Fish_Wdth)]
+## so now, the male subset has predicted values replacing the NAs 
+
+### Now, combine the two data sets back into one, called lowerriver_bodycomp_all ###
+upperriver_bodycomp_all <- rbind(allF_upperriver_bodycomp_all, allM_upperriver_bodycomp_all)
+
+#Check Leng_1 NAs
+any(is.na(upperriver_bodycomp_all$Fish_Leng_1)) #FALSE
+any(is.na(upperriver_bodycomp_all$Fish_Grth)) #FALSE
+any(is.na(upperriver_bodycomp_all$Fish_Ht)) #FALSE
+any(is.na(upperriver_bodycomp_all$Fish_Wdth)) #FALSE
+```
+
+### Making body size metric via PC score of Leng_1, Fish_Ht, and Fish_Grth (potential to add Fish_Wdth)
+```{r}
+str(upperriver_bodycomp_all)
+
+## Comparing 2 versions of PC scores via linear regression for body size analysis ### 
+bc_pca1 <- princomp(upperriver_bodycomp_all[,c(12,16,19)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
+summary(lm(upperriver_bodycomp_all$Fish_Leng_1 ~ bc_pca1$scores[,1])) #R = 0.6382 
+
+bc_pca2 <- princomp(upperriver_bodycomp_all[,c(12,16,18,19)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
+summary(lm(upperriver_bodycomp_all$Fish_Leng_1 ~ bc_pca2$scores[,1])) # R = 0.6475
+
+
+summary(bc_pca2, loadings=T, cutoff=0.0001) #summary of PC analysis
+bc_pca2$scores
+screeplot(bc_pca2, type=c('lines'))
+bodysize_pc <- bc_pca2$scores[,1]
+
+#combine dataframe with column for body size PC scores
+upperriver_bodycomp_pc <- cbind(upperriver_bodycomp_all, bodysize_pc) 
+str(upperriver_bodycomp_pc)
+upperriver_bodycomp_pc <- upperriver_bodycomp_pc[,-(81:84)]
+str(upperriver_bodycomp_pc)
+
+#Now, run AIC again but PC1 scores are the response variable / numeric
+write.csv(upperriver_bodycomp_pc, "upperriver_bodycomp_PCscores.csv")
+```
+
+### Import Data for models
+```{r}
+rm(list = ls())
+upperriver_bodycomp_PCscores <- "upperriver_bodycomp_PCscores.csv"
+
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(upperriver_bodycomp_PCscores)[,-1] #81 variables, 246 observations b/c one row with NA sex is removed
+any(is.na(DataSet$Fish_Leng_1)) #FALSE
+any(is.na(DataSet$Fish_Grth)) #FALSE
+any(is.na(DataSet$Fish_Ht)) #FALSE
+any(is.na(DataSet$Fish_Wdth)) #FALSE
+
+any(is.na(DataSet$Collection_Location)) #FALSE
+any(is.na(DataSet$Year)) #FALSE
+any(is.na(DataSet$Sex)) #FALSE
+
+#### CHECK DIRECTION OF PC SCORE ###
+library(ggplot2)
+ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc)) +
+  geom_point()
+#so direction of PC score is positive, can check with other variables
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet)
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+levels(DataSet$Collection_Location) # 10 unique locations
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+DataSet$SpawnStatus <- as.factor(DataSet$SpawnStatus) #should be 4 levels
+str(DataSet)
+
+```
+
+### Making Models for bodysize_pc~SpawningPopulation, includes SpawnStatus
+```{r}
+# Models for reference
+bodysize_SP_modelset <- "bodysize_spawningpopulation/bodysize~SpawningPopulation_modelset.csv"
+
+ModelSet<-read.csv(bodysize_SP_modelset)
+
+model1 <- lm(bodysize_pc~1, data=DataSet)
+model2 <- lm(bodysize_pc~SpawnStatus + Collection_Location, data = DataSet)
+model3 <- lm(bodysize_pc~SpawnStatus + Sex, data = DataSet)
+model4 <- lm(bodysize_pc~SpawnStatus + Year, data = DataSet)
+model5 <- lm(bodysize_pc~SpawnStatus + Collection_Location + Sex, data = DataSet)
+model6 <- lm(bodysize_pc~SpawnStatus + Collection_Location + Year, data = DataSet)
+model7 <- lm(bodysize_pc~SpawnStatus + Sex + Year, data = DataSet)
+model8 <- lm(bodysize_pc~SpawnStatus + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
+model9 <- lm(bodysize_pc~SpawnStatus + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(bodysize_pc~SpawnStatus + Collection_Location + Sex + Year, data = DataSet)
+```
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:10), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("bodysize_pc~SpawnStatus + Sex + Year",
+                      "bodysize_pc~SpawnStatus + Sex + Year + Sex:Year",
+                      "bodysize_pc~SpawnStatus + Sex",
+                      "bodysize_pc~SpawnStatus + Collection_Location + Sex + Year",
+                      "bodysize_pc~SpawnStatus + Collection_Location + Sex",
+                      "bodysize_pc~SpawnStatus + Collection_Location + Sex + Collection_Location:Sex",
+                      "bodysize_pc~SpawnStatus + Year",
+                      "bodysize_pc~SpawnStatus + Collection_Location + Year",
+                      "bodysize_pc~SpawnStatus + Collection_Location",
+                      "bodysize_pc~1")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "bodysize_spawningpopulation/AICresults_bodysize~SpawningPopulation.csv", row.names = FALSE)
+
+```
+
+### Model Averaging
+```{r}
+library(MuMIn)
+
+ # Create a model selection table (this will give you AIC, AIC weights, etc.)
+model_weights <- myaicc1$AICcWt ##Get the AIC weights from the AIC table
+model_avg <- model.avg(models, weights = model_weights)
+summary(model_avg)
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
+avg_se <- sqrt(diag(vcov(model_avg)))
+
+# Convert the coefficients into a tidy data frame
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
+coefs_df$CI_Upper <- avg_confint[, 2] # Add upper bound of confidence intervals
+coefs_df$SE <- avg_se
+print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
+
+write.csv(coefs_df, file = "bodysize_spawningpopulation/bodysize~spawningpopulation_models_CoefEstimates.csv", row.names = TRUE)
+
+### Of Note, Klutina Lake only has data for 2021 (males and females) which might be causing the NA values-- Klutina River is only 1 point, should I remove?
+```
+
+### Figure that displays parameter estimates + CI for each parameter in the model set
+```{r}
+paramestimates_bodysize <- "bodysize_spawningpopulation/bodysize~spawningpopulation_models_CoefEstimates.csv"
+
+paramestimates_bodysize<-read.csv(paramestimates_bodysize)
+str(paramestimates_bodysize)
+
+levels(factor(paramestimates_bodysize$X))
+paramestimates_bodysize$X <- factor(paramestimates_bodysize$X, 
+                           levels = rev(factor(paramestimates_bodysize$X)))
+
+
+library(ggplot2)
+ggplot(paramestimates_bodysize, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
+
+library(dplyr)
+paramestimates_bodysize_filtered <- paramestimates_bodysize %>%
+  filter(!X %in% c("SpawnStatus0", "SpawnStatus1", "SpawnStatus2", "SpawnStatus3"))  # Filter out specific levels
+
+fineness_plot <- ggplot(paramestimates_bodysize_filtered, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
+
+ggsave("fineness_runtiminggroup/Fineness_ParamEstimates_Plot.png", plot=fineness_plot, height=8, width=12, units="in")
 ```
