@@ -132,19 +132,23 @@ print(ed_aicc) #so model 14 is preferred
 
 # Convert AIC table to a data frame for easier manipulation
 EDaic_df <- as.data.frame(ed_aicc)
-EDaic_df$ModelName <- c("EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + Sex",
-                        "EnergyPDry_1 ~ 1")
+EDaic_df$ModelName <- c("EnergyPDry_1~ SpawnStatus + Collection_Location + Collection_Region + Sex + Year",
+                        "EnergyPDry_1~ SpawnStatus + Collection_Location + Sex",
+                        "EnergyPDry_1~ SpawnStatus + Collection_Location + Year",
+                        "EnergyPDry_1~ SpawnStatus + Collection_Region + Year + Collection_Region:Year",
+                        "EnergyPDry_1~ SpawnStatus + Collection_Location",
+                        "EnergyPDry_1~ SpawnStatus + Collection_Region + Sex + Collection_Region:Sex",
+                        "EnergyPDry_1~SpawnStatus + Collection_Region + Year",
+                        "EnergyPDry_1~ SpawnStatus + Collection_Region + Sex",
+                        "EnergyPDry_1~ SpawnStatus + Collection_Region",
+                        "EnergyPDry_1~ SpawnStatus + Sex + Year",
+                        "EnergyPDry_1~SpawnStatus + Sex + Year + Sex:Year",
+                        "EnergyPDry_1~ SpawnStatus + Sex",
+                        "EnergyPDry_1~SpawnStatus + Year",
+                        "EnergyPDry_1~1")
 colnames(EDaic_df)[colnames(EDaic_df) == "Modnames"] <- "Model #"
 
-write.csv(EDaic_df, file = "energydensity_runtiminggroup/AICresults_EnergyPDry_1~RunTimingGroup.csv", row.names = FALSE)
+write.csv(EDaic_df, file = "energydensity_spawningpopulation/AICresults_EnergyPDry_1~SpawningPopulation.csv", row.names = FALSE)
 
 ```
 
@@ -157,6 +161,7 @@ model_weights <- ed_aicc$AICcWt ##Get the AIC weights from the AIC table
 model_avg <- model.avg(edModels, weights = model_weights)
 summary(model_avg)
 avg_coefs <- coef(model_avg)
+
 avg_confint <- confint(model_avg)
 avg_se <- sqrt(diag(vcov(model_avg)))
 
@@ -168,5 +173,7 @@ coefs_df$CI_Upper <- avg_confint[, 2] # Add upper bound of confidence intervals
 coefs_df$SE <- avg_se
 print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
 
-write.csv(coefs_df, file = "energydensity_runtiminggroup/EnergyPDry_1~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
+write.csv(coefs_df, file = "energydensity_spawningpopulation/EnergyPDry_1~spawningpopulation_models_CoefEstimates.csv", row.names = TRUE)
 ```
+
+
