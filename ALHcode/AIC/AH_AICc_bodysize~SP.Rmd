@@ -444,7 +444,7 @@ str(DataSet)
 
 #make response variables factors
 DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
-levels(DataSet$Collection_Location) # 10 unique locations
+levels(DataSet$Collection_Location) # 11 unique locations
 DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
 DataSet$Collection_Region <- as.factor(DataSet$Collection_Region)
@@ -468,6 +468,7 @@ model4 <- lm(bodysize_pc~SpawnStatus + Year, data = DataSet)
 model5 <- lm(bodysize_pc~ SpawnStatus + Collection_Region, data = DataSet)
 model6 <- lm(bodysize_pc~ SpawnStatus + Collection_Location + Sex, data = DataSet)
 model7 <- lm(bodysize_pc~ SpawnStatus + Collection_Region + Sex, data = DataSet)
+summary(model7)
 model8 <- lm(bodysize_pc~ SpawnStatus + Collection_Location + Year, data = DataSet)
 model9 <- lm(bodysize_pc~SpawnStatus + Collection_Region + Year, data = DataSet)
 model10 <- lm(bodysize_pc~ SpawnStatus + Sex + Year, data = DataSet)

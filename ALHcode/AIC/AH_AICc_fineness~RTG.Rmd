@@ -62,11 +62,12 @@ any(is.na(lowerriver_bodycomp_all$Sex))
 any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
 any(is.na(lowerriver_bodycomp_all$Fish_Ht))
 any(is.na(lowerriver_bodycomp_all$Fish_Grth)) #Na's present, will need to omit them for PC score
-lowerriver_bodycomp_all[is.na(lowerriver_bodycomp_all$Fish_Grth), ] #row 64 has NA
+lowerriver_bodycomp_all[is.na(lowerriver_bodycomp_all$Fish_Grth), ] #64
 ```
 
 ### Estimate Girth Values for NA rows
 ```{r}
+library(ggplot2)
 ggplot(lowerriver_bodycomp_all, aes(x=Fish_Leng_1, y = Fish_Grth)) + 
   geom_point() #length relationship to girth
 
@@ -138,7 +139,7 @@ lowerriver_bodycomp_wdth <- cbind(lowerriver_bodycomp_all, pca_model_wdth$scores
 
 # Create the linear model for predicting Fish_Grth based on the first principal component
 wdth_pc_lm <- lm(Fish_Wdth ~ pca_model_wdth$scores[, 1], data = lowerriver_bodycomp_wdth)
-summary(wdth_pc_lm) #Adjusted R-squared:  0.418 , so length is better for the estimates
+summary(wdth_pc_lm) #Adjusted R-squared:  0.418 
 
 
 
@@ -274,11 +275,13 @@ model3 <- lm(fineness~Collection_RiverMile_m + Sex, data = DataSet)
 model4 <- lm(fineness~Collection_RiverMile_m + Year, data = DataSet)
 model5 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
 model6 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
+summary(model6)
 model7 <- lm(fineness~Collection_RiverMile_m + Sex + Year, data = DataSet)
 model8 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
 # model10 <- lm(fineness_1~Collection_RiverMile_m + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
 model9 <- lm(fineness~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
 model10 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+summary(model10)
 ```
 
 ### AICc Model Selection
