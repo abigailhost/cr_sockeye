@@ -573,4 +573,6 @@ bodysize_plot <- ggplot(paramestimates_bodysize_filtered, aes(x = Avg_Coef, y = 
         axis.text = element_text(size = 24))
 
 ggsave("bodysize_spawningpopulation/BodySize_ParamEstimates_Plot.png", plot=bodysize_plot, height=12, width=12, units="in")
+
+
 ```
