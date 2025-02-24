@@ -265,8 +265,93 @@ DataSet$Sex<- as.factor(DataSet$Sex)
 DataSet$Collection_Region <- as.factor(DataSet$Collection_Region)
 levels(DataSet$Collection_Region) # 4 Levels
 DataSet$SpawnStatus <- as.factor(DataSet$SpawnStatus) #should be 4 levels
-str(DataSet)
+DataSet2 <- DataSet %>%
+  filter(Strontium_marked_Y.N != "NO READ")
+DataSet2$Strontium_marked_Y.N <- as.factor(DataSet2$Strontium_marked_Y.N)
+levels(DataSet2$Strontium_marked_Y.N) #Now only Y and N available
 
+
+                #### Strontium Analysis of Energy ######
+str(DataSet2)
+#first I want to determine which collection_location levels contain fish samples with both Y and N strontium markings for comparison of energyPdry_1
+locations_with_both <- DataSet2 %>%
+  group_by(Collection_Location) %>%
+  filter(any(Strontium_marked_Y.N == "Y") & any(Strontium_marked_Y.N == "N")) %>%
+  pull(Collection_Location) %>%
+  unique()
+
+# Filter dataset to keep only the locations with both "Y" and "N" levels
+strontium_data <- DataSet2 %>%
+  filter(Collection_Location %in% locations_with_both)
+
+#So all of this Y fish are in Gulkana or Fish creek with an exception of one return fish that was collected at Mentasta-- important to note! but for the sake of visualization, I am removing that fish
+strontium_data <- strontium_data %>%
+  filter(Collection_Location != "Mentasta")
+
+
+library(ggplot2)
+# Boxplot to compare EnergyPDry_1 between "Strontium Y" and "Strontium N" for each location
+g.stron1 <- ggplot(strontium_data, aes(x = Strontium_marked_Y.N, y = EnergyPDry_1, fill = Strontium_marked_Y.N)) +
+  geom_boxplot() +
+  facet_wrap(~ Collection_Location) +
+  theme_bw() +
+  labs(title = "The differences of energy content (mJ/kg) of strontium marked and non-marked sockeye collected from Gulkana Hatchery and Fish Creek, \nacross the 2019-2021 sampling season.",
+       x = "Strontium Level (Y/N)",
+       y = "Energy Content (mJ/kg)",
+       fill = "Presence of \nStrontium Mark") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+   theme(
+    plot.title = element_text(size = 22, face = "bold"),  # Title size
+    axis.title.x = element_text(size = 20),  # X-axis title size
+    axis.title.y = element_text(size = 20),  # Y-axis title size
+    axis.text.x = element_text(size = 20),   # X-axis tick labels size
+    axis.text.y = element_text(size = 20),   # Y-axis tick labels size
+    legend.title = element_text(size = 20),  # Legend title size
+    legend.text = element_text(size = 20), # Legend labels size
+    strip.text = element_text(size = 20, face = "bold") 
+  ) +
+  scale_fill_manual(values = c("Y" = "red", "N" = "blue"),
+                    labels = c("Y" = "Marked", "N" = "Non-Marked"))
+
+ggsave("energydensity_spawningpopulation/CopperRiverWS_EnergyStrontiumLocation.png", plot=g.stron1, height=16, width=20, units="in")
+
+
+
+
+#Now, I want to further visualize this by year (2019, 2020, 2021)
+# Boxplot comparing EnergyPDry_1 by Strontium Y/N and Year
+g.stron <- ggplot(strontium_data, aes(x = Strontium_marked_Y.N, y = EnergyPDry_1, fill = Strontium_marked_Y.N)) +
+  geom_boxplot() +
+  facet_grid(~ Year) + 
+  theme_bw() +
+  labs(title = "The energy content (mJ/kg) of strontium marked and non-marked sockeye from Gulkana Hatchery and Fish Creek \nduring the 2019-2021 sampling seasons.",
+       x = "Strontium Level (Y/N)",
+       y = "Energy (EnergyPDry_1)",
+       fill = "Presence of \nStrontium Mark") +  # Change legend title here
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(
+    plot.title = element_text(size = 22, face = "bold"),  # Title size
+    axis.title.x = element_text(size = 20),  # X-axis title size
+    axis.title.y = element_text(size = 20),  # Y-axis title size
+    axis.text.x = element_text(size = 20),   # X-axis tick labels size
+    axis.text.y = element_text(size = 20),   # Y-axis tick labels size
+    legend.title = element_text(size = 20),  # Legend title size
+    legend.text = element_text(size = 20), # Legend labels size
+    strip.text = element_text(size = 20, face = "bold") 
+  ) +
+  scale_fill_manual(values = c("Y" = "red", "N" = "blue"),
+                    labels = c("Y" = "Marked", "N" = "Non-Marked"))  # Change legend labels
+
+ggsave("energydensity_spawningpopulation/CopperRiverWS_EnergyStrontium.png", plot=g.stron, height=16, width=20, units="in")
+
+
+  
+
+
+
+
+
+                ##### Energy Analysis of Pre-Spawn Fish #####
 
 # use filter() to exclude the any partial/post/anomolous spawned fish
 DataSet_prespawn <- DataSet %>%
@@ -288,21 +373,35 @@ DataSet_prespawn$Collection_Location <- factor(DataSet_prespawn$Collection_Locat
 g1 <- ggplot(DataSet_prespawn, aes(x = Collection_Location, y = EnergyPDry_1)) +
   geom_boxplot(aes(fill = Collection_Location), alpha = 0.6) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Energy Content of Pre-Spawn Fish at different Spawning Population",
+  labs(title = "Differences of energy content (mJ/kg) of pre-spawn sockeye sampled from different spawning locations in the Copper River Basin \nduring the 2019-2021 sampling season",
        x = "Collection Location",
-       y = "Energy Content (mJ/kg)")
+       y = "Energy Content (mJ/kg)") + 
+   theme(
+    plot.title = element_text(size = 22, face = "bold"),  # Title size
+    axis.title.x = element_text(size = 20, face = "bold"),  # X-axis title size
+    axis.title.y = element_text(size = 20, face = "bold"),  # Y-axis title size
+    axis.text.x = element_text(size = 20),   # X-axis tick labels size
+    axis.text.y = element_text(size = 20),   # Y-axis tick labels size
+    legend.position = "none") # removes legend
 
 ggsave("energydensity_spawningpopulation/CopperRiverWS_EnergySP_prespawn.png", plot=g1, height=16, width=20, units="in")
 
-# Faceted boxplot by Year and Collection Location
+  # Faceted boxplot by Year and Collection Location
 g2 <- ggplot(DataSet_prespawn, aes(x = Collection_Location, y = EnergyPDry_1)) +
   geom_boxplot(aes(fill = Collection_Location), alpha = 0.6) +
   facet_wrap(~ Year) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Energy Content of Pre-Spawn fish across Spawning Population, separated by Year",
+  labs(title = "Differences of energy content (mJ/kg) of pre-spawn sockeye sampled from different spawning locations in the Copper River Basin \nand further separated by sampling year (2019-2021)",
        x = "Collection Location",
        y = "Energy Content (mJ/kg)") + 
-   guides(fill = "none")
+   guides(fill = "none") + 
+  theme(
+    plot.title = element_text(size = 22, face = "bold"),  # Title size
+    axis.title.x = element_text(size = 20, face = "bold"),  # X-axis title size
+    axis.title.y = element_text(size = 20, face = "bold"),  # Y-axis title size
+    axis.text.x = element_text(size = 20),   # X-axis tick labels size
+    axis.text.y = element_text(size = 20),
+    strip.text = element_text(size = 20, face = "bold"))
 
 ggsave("energydensity_spawningpopulation/CopperRiverWS_EnergyYearSP_prespawn.png", plot=g2, height=16, width=20, units="in")
 
@@ -313,14 +412,21 @@ data_summary <- DataSet_prespawn %>%
   summarise("Energy Content" = mean(EnergyPDry_1, na.rm = TRUE))
 
 g3 <- ggplot(data_summary, aes(x = Year, y = `Energy Content`, group = Collection_Location, color = Collection_Location)) +
-  geom_line() +
-  geom_point() +
-  labs(title = "Trends of Mean Energy Content of Pre-Spawn Fish across Year and Collection Location",
+  geom_line(size = 2) +
+  geom_point(size = 4) +
+  labs(title = "Trends of mean energy content (mJ/kg) of pre-spawn sockeye across sampling year (2019-2021) and collection location",
        x = "Year",
        y = "Mean Energy Content (mJ/kg)") +
-  theme_minimal()
+  theme(
+    plot.title = element_text(size = 22, face = "bold"),  # Title size
+    axis.title.x = element_text(size = 20, face = "bold"),  # X-axis title size
+    axis.title.y = element_text(size = 20, face = "bold"),  # Y-axis title size
+    axis.text.x = element_text(size = 20),   # X-axis tick labels size
+    axis.text.y = element_text(size = 20),
+    legend.title = element_text(size = 20, face = "bold"),
+    legend.text = element_text(size = 20))
 
-ggsave("energydensity_spawningpopulation/CopperRiverWS_MeanEnergyYearSP_prespawn.png", plot=g3, height=16, width=20, units="in")
+ggsave("energydensity_spawningpopulation/CopperRiverWS_MeanEnergyYearSP_prespawn.jpeg", plot=g3, height=16, width=20, units="in")
 
 
-```
+ ```
