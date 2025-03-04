@@ -244,59 +244,65 @@ print(coefs_df) #Model Averaging Coefficients for AIC model selection approach w
 
 write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
 ```
-
-
-### Visualizing Results from body size~RunTimingGroup Model 5
+#Parameter Likelihoods
 ```{r}
-#  Model 5
-# bodysize_pc ~ Collection_RiverMile_m + RunTimingGroup + Sex
-library(dplyr)
-summary(model5)
+models <- list(
+  lm(bodysize_pc~1, data=DataSet),
+  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup, data = DataSet),
+  lm(bodysize_pc~Collection_RiverMile_m + Sex, data = DataSet),
+  lm(bodysize_pc~Collection_RiverMile_m + Year, data = DataSet),
+  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet),
+  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet),
+  lm(bodysize_pc~Collection_RiverMile_m + Sex + Year, data = DataSet),
+  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet),
+  lm(bodysize_pc~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet),
+  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+)
 
-DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
-                               levels = c("Early",
-                                          "Middle",
-                                          "Late"),
-                               labels = c("Early",
-                                          "Middle",
-                                          "Late"))
+# Assign model names
+model_names <- paste0("Model_", seq_along(models))
 
-#boxplot
-ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
-  geom_boxplot() +
-  labs(title = "Bodysize PC by Run Timing Group and Sex",
-       x = "Run Timing Group",
-       y = "Bodysize PC",
-       color = "Sex") +
-  theme_minimal()
+# Compute AICc and model weights
+aic_table <- aictab(cand.set = models, modnames = model_names)
+weights <- aic_table$AICcWt  # Extract AICc weights
 
-#violin plot
-ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
-  geom_violin() +
-  labs(title = "Bodysize PC by Run Timing Group and Sex",
-       x = "Run Timing Group",
-       y = "Bodysize PC",
-       fill = "Sex") +
-  theme_minimal()
+# Extract model coefficients
+param_names <- unique(unlist(sapply(models, function(m) names(coef(m)))))
 
-#interaction plot
-ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, color = Sex)) +
-  geom_point() + 
-  geom_smooth(method = "lm", aes(group = Sex), se = TRUE) +  # Add regression lines for each 'Sex' group
-  labs(title = "Interaction Between Run Timing Group and Sex on Bodysize PC",
-       x = "Run Timing Group",
-       y = "Bodysize PC") +
-  theme_minimal()
+# Compute parameter likelihoods
+param_likelihoods <- sapply(param_names, function(param) {
+  # Identify models that include this parameter
+  models_with_param <- sapply(models, function(m) param %in% names(coef(m)))
+  
+  # Sum AICc weights for models that include this parameter
+  sum(weights[models_with_param])
+})
 
-#bar plot can show the mean value of bodysize_pc for each combination of RunTimingGroup and Sex, providing an overall comparison of group means.
-ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
-  stat_summary(fun = "mean", geom = "bar", position = "dodge") +
-  labs(title = "Mean Bodysize PC by Run Timing Group and Sex",
-       x = "Run Timing Group",
-       y = "Mean Bodysize PC",
-       fill = "Sex") +
-  theme_minimal()
+# Format output as a data frame
+param_likelihoods_df <- data.frame(Parameter = param_names, WeightedLikelihood = param_likelihoods)
+
+# Make sure that coefs_df has a column with the parameter names
+coefs_df$Parameter <- rownames(coefs_df)  # Add the parameter names to the dataframe
+coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "CI_Lower", "CI_Upper", "SE")]
+
+
+# Now, we will merge coefs_df with param_likelihoods_df by 'Parameter' to add the likelihoods
+coefs_df <- merge(coefs_df, param_likelihoods_df, by = "Parameter", all.x = TRUE)
+
+# Print the updated dataframe to see the result
+print(coefs_df)
+
+colnames(coefs_df)[colnames(coefs_df) == "WeightedLikelihood"] <- "ParamLikelihood"
+
+coefs_df <- coefs_df %>%
+  arrange(desc(ParamLikelihood)) #arrange dataframe in descending order according to ParamLikelihoods
+
+# Optionally, write the results to a CSV file
+write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
+
+
 ```
+
 
 ### FOR AMSS
 ```{r}

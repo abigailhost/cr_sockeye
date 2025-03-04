@@ -321,7 +321,7 @@ write.csv(aic_df, file = "fineness_runtiminggroup/AICresults_fineness~RunTimingG
 
 ### Model Averaging
 
-```{r}
+```{r, include = FALSE}
 library(MuMIn)
 
  # Create a model selection table (this will give you AIC, AIC weights, etc.)
@@ -345,7 +345,7 @@ write.csv(coefs_df, file = "fineness_runtiminggroup/fineness~runtiminggroup_mode
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 
-```{r}
+```{r, include = FALSE}
 paramestimates_fineness <- "fineness_runtiminggroup/fineness~runtiminggroup_models_CoefEstimates.csv"
 
 estimates_fineness<-read.csv(paramestimates_fineness)
@@ -407,6 +407,7 @@ ggplot(DataSet, aes(x = RunTimingGroup, y = fineness, fill = RunTimingGroup)) +
                color = "black", size = 4) +  # Add mean as a red point
   facet_grid(Sex ~ Year)
 #Shapes that are short and wide have a low fineness ratio, those that are long and narrow have high fineness ratios.
+
 
 
 
