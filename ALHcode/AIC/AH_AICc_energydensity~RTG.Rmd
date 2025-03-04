@@ -230,6 +230,7 @@ g <- ggplot(data = DataSet, aes(x = Year, y = ePdry_colrivmil_resid, fill = RunT
     legend.text = element_text(size = 24)     # Increase legend text size
   )
 
+
 ggsave("AMSS_2025/AMSS energy content ~ RTG + Year Plot.png", plot=g, height=8, width=15, units="in")
 
 
@@ -248,6 +249,22 @@ ggplot(data = DataSet, aes(x = RunTimingGroup, y = ePdry_colrivmil_resid, fill =
     legend.title = element_text(size = 26, face = "bold"),   # Increase legend title size
     legend.text = element_text(size = 24)     # Increase legend text size
   )  
+
+ggplot(data = DataSet, aes(x = RunTimingGroup, y = EnergyPDry_1, fill = Sex)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#1F78B4", "#E31A1C")) +  # Set color for Female and Male
+  labs(x = "Run Timing Group",
+       y = "Energy Content",
+       fill = "Sex") +
+  facet_wrap(~Year) +
+  theme_linedraw() +
+  theme(
+    axis.title = element_text(size = 26, face = "bold"),     # Increase axis title size
+    axis.text = element_text(size = 24),      # Increase axis text size
+    legend.title = element_text(size = 26, face = "bold"),   # Increase legend title size
+    legend.text = element_text(size = 24)     # Increase legend text size
+  ) 
+
 
 
 
