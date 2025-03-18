@@ -93,13 +93,11 @@ edModel3 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex, data = DataSet)
 edModel4 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + Year, data = DataSet)
 edModel5 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
 edModel6 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
-summary(edModel6)
 edModel7 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
 edModel8 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
 # not using anymore: edModel10 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_RiverMile_m + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
 edModel9 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
 edModel10 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
-summary(edModel10)
 ```
 
 
@@ -153,6 +151,65 @@ coefs_df$SE <- avg_se
 print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
 
 write.csv(coefs_df, file = "energydensity_runtiminggroup/EnergyPDry_1~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
+```
+
+### Parameter Likelihoods
+```{r}
+models <- list(
+  lm(EnergyPDry_1 ~ 1, data = DataSet),
+  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet),
+  lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex, data = DataSet),
+  lm(EnergyPDry_1 ~ Collection_RiverMile_m + Year, data = DataSet),
+  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet),
+  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet),
+  lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year, data = DataSet),
+  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet),
+  lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet),
+  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+  )
+
+# Assign model names
+model_names <- paste0("Model_", seq_along(models))
+
+# Compute AICc and model weights
+aic_table <- aictab(cand.set = models, modnames = model_names)
+weights <- aic_table$AICcWt  # Extract AICc weights
+
+# Extract model coefficients
+param_names <- unique(unlist(sapply(models, function(m) names(coef(m)))))
+
+# Compute parameter likelihoods
+param_likelihoods <- sapply(param_names, function(param) {
+  # Identify models that include this parameter
+  models_with_param <- sapply(models, function(m) param %in% names(coef(m)))
+  
+  # Sum AICc weights for models that include this parameter
+  sum(weights[models_with_param])
+})
+
+# Format output as a data frame
+param_likelihoods_df <- data.frame(Parameter = param_names, WeightedLikelihood = param_likelihoods)
+
+# Make sure that coefs_df has a column with the parameter names
+coefs_df$Parameter <- rownames(coefs_df)  # Add the parameter names to the dataframe
+coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "CI_Lower", "CI_Upper", "SE")]
+
+
+# Now, we will merge coefs_df with param_likelihoods_df by 'Parameter' to add the likelihoods
+coefs_df <- merge(coefs_df, param_likelihoods_df, by = "Parameter", all.x = TRUE)
+
+# Print the updated dataframe to see the result
+print(coefs_df)
+
+colnames(coefs_df)[colnames(coefs_df) == "WeightedLikelihood"] <- "ParamLikelihood"
+
+coefs_df <- coefs_df %>%
+  arrange(desc(ParamLikelihood)) #arrange dataframe in descending order according to ParamLikelihoods
+
+# Optionally, write the results to a CSV file
+write.csv(coefs_df, file = "energydensity_runtiminggroup/EnergyPDry_1~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
+
+
 ```
 
 
@@ -360,7 +417,6 @@ final_plot <- (plot_intercept / plot_others) +
 # Display the final plot
 final_plot
 ggsave("AMSS_2025/AMSS Energy Content Parameter Estimates_2.png", plot=final_plot, height=8, width=12, units="in")
-
 
 ```
 

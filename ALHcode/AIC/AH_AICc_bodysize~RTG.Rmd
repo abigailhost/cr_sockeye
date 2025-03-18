@@ -244,7 +244,7 @@ print(coefs_df) #Model Averaging Coefficients for AIC model selection approach w
 
 write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
 ```
-#Parameter Likelihoods
+### Parameter Likelihoods
 ```{r}
 models <- list(
   lm(bodysize_pc~1, data=DataSet),
