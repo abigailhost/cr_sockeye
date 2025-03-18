@@ -357,7 +357,7 @@ estimates_body$X <- factor(estimates_body$X,
                                       "RunTimingGroupMiddle:SexM",
                                       "RunTimingGroupLate:SexM",
                                       "SexM:Year2020",
-                                       "SexM:Year2021")))
+                                      "SexM:Year2021")))
 
 ggplot(estimates_body, aes(x = Avg_Coef, y = X)) + 
   geom_point(size = 3) +  # For the coefficient estimate as dots

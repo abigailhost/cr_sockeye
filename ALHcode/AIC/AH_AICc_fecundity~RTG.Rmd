@@ -53,7 +53,6 @@ nrow(DataSetF)
 str(DataSetF)
 
 #make response variables factors
-DataSetF$Collection_Location <- as.factor(DataSetF$Collection_Location)
 DataSetF$RunTimingGroup <- as.factor(DataSetF$RunTimingGroup)
 DataSetF$Year<- as.factor(DataSetF$Year)
 str(DataSetF) #collection_rivermile_m is numeric
@@ -67,26 +66,26 @@ fecundity_RTG_modelset <- "fecundity_runtiminggroup/fecundity~RunTimingGroup_mod
 ModelSet<-read.csv(fecundity_RTG_modelset)
 
 model1 <- lm(Fecun_num_by_wt1~1, data=DataSetF)
-model2 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc, data=DataSetF)
-model3 <- lm(Fecun_num_by_wt1~Collection_Location + EnergyPDry_1, data=DataSetF)
-model4 <- lm(Fecun_num_by_wt1~Collection_Location + RunTimingGroup, data=DataSetF)
-model5 <- lm(Fecun_num_by_wt1~Collection_Location + Year, data=DataSetF)
-model6 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc + EnergyPDry_1, data=DataSetF)
-model7 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc*EnergyPDry_1, data=DataSetF)
-model8 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc + RunTimingGroup, data=DataSetF)
-model9 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc*RunTimingGroup, data=DataSetF)
-model10 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc + Year, data=DataSetF)
-model11 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc*Year, data=DataSetF)
-model12 <- lm(Fecun_num_by_wt1~Collection_Location + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
-model13 <- lm(Fecun_num_by_wt1~Collection_Location + EnergyPDry_1*RunTimingGroup, data=DataSetF)
-model14 <- lm(Fecun_num_by_wt1~Collection_Location + EnergyPDry_1 + Year, data=DataSetF)
-model15 <- lm(Fecun_num_by_wt1~Collection_Location + EnergyPDry_1*Year, data=DataSetF)
-model16 <- lm(Fecun_num_by_wt1~Collection_Location + RunTimingGroup + Year, data=DataSetF)
-model17 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
-model18 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc + EnergyPDry_1 + Year, data=DataSetF)
-model19 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc + RunTimingGroup + Year, data=DataSetF)
-model20 <- lm(Fecun_num_by_wt1~Collection_Location +  EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
-model21 <- lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
+model2 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc, data=DataSetF)
+model3 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1, data=DataSetF)
+model4 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup, data=DataSetF)
+model5 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + Year, data=DataSetF)
+model6 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1, data=DataSetF)
+model7 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*EnergyPDry_1, data=DataSetF)
+model8 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup, data=DataSetF)
+model9 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*RunTimingGroup, data=DataSetF)
+model10 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Year, data=DataSetF)
+model11 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*Year, data=DataSetF)
+model12 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
+model13 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*RunTimingGroup, data=DataSetF)
+model14 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Year, data=DataSetF)
+model15 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*Year, data=DataSetF)
+model16 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup + Year, data=DataSetF)
+model17 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
+model18 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year, data=DataSetF)
+model19 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup + Year, data=DataSetF)
+model20 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m +  EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
+model21 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
 
 ```
 
@@ -103,30 +102,93 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("Fecun_num_by_wt1~Collection_Location + EnergyPDry_1",
-                      "Fecun_num_by_wt1~Collection_Location + EnergyPDry_1 + RunTimingGroup",
-                      "Fecun_num_by_wt1~Collection_Location + EnergyPDry_1 + Year",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc + EnergyPDry_1",
-                      "Fecun_num_by_wt1~Collection_Location +  EnergyPDry_1 + RunTimingGroup + Year",
-                      "lm(Fecun_num_by_wt1~Collection_Location + bodysize_pc + EnergyPDry_1 + Year",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc + EnergyPDry_1 + RunTimingGroup",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc*EnergyPDry_1",
-                      "Fecun_num_by_wt1~Collection_Location + Year",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc + Year",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year",
-                      "Fecun_num_by_wt1~Collection_Location + EnergyPDry_1*RunTimingGroup",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc",
-                      "Fecun_num_by_wt1~Collection_Location + EnergyPDry_1*Year",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc + RunTimingGroup + Year",
-                      "Fecun_num_by_wt1~Collection_Location + RunTimingGroup + Year",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc*Year",
-                      "Fecun_num_by_wt1~Collection_Location + RunTimingGroup",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc + RunTimingGroup",
-                      "Fecun_num_by_wt1~Collection_Location + bodysize_pc*RunTimingGroup",
+aic_df$ModelName <- c("Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + RunTimingGroup",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m +  EnergyPDry_1 + RunTimingGroup + Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*RunTimingGroup",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*EnergyPDry_1",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup + Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup + Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*Year",
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*RunTimingGroup",
                       "Fecun_num_by_wt1~1")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
 write.csv(aic_df, file = "fecundity_runtiminggroup/AICresults_fecundity~RunTimingGroup.csv", row.names = FALSE)
+
+```
+
+### Model Averaging
+```{r}
+library(MuMIn)
+
+ # Create a model selection table (this will give you AIC, AIC weights, etc.)
+model_weights <- myaicc1$AICcWt ##Get the AIC weights from the AIC table
+model_avg <- model.avg(models, weights = model_weights)
+summary(model_avg)
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
+avg_se <- sqrt(diag(vcov(model_avg)))
+
+# Convert the coefficients into a tidy data frame
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
+coefs_df$CI_Upper <- avg_confint[, 2] # Add upper bound of confidence intervals
+coefs_df$SE <- avg_se
+print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
+
+write.csv(coefs_df, file = "fecundity_runtiminggroup/fecundity~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
+```
+
+### Figure that displays parameter estimates + CI for each parameter in the model set
+```{r}
+paramestimates_fecundity <- "fecundity_runtiminggroup/fecundity~runtiminggroup_models_CoefEstimates.csv"
+
+paramestimates_fecundity<-read.csv(paramestimates_fecundity)
+str(paramestimates_fecundity)
+
+levels(factor(paramestimates_fecundity$X))
+paramestimates_fecundity$X <- factor(paramestimates_fecundity$X, 
+                           levels = rev(factor(paramestimates_fecundity$X)))
+
+
+library(ggplot2)
+ggplot(paramestimates_fecundity, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
+
+library(dplyr)
+paramestimates_fecundity_filtered <- paramestimates_fecundity %>%
+  filter(X != "Collection_RiverMile_m")
+
+fecundity_plot <- ggplot(paramestimates_fecundity_filtered, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
+
+ggsave("fecundity_runtiminggroup/Fecundity_ParamEstimates_Plot.png", plot=fecundity_plot, height=12, width=12, units="in")
+
 
 ```
