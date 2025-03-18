@@ -11,8 +11,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
 ```
 
-### Loading Data for AICc code for fineness\~RunTimingGroup models
-
+### Loading Data for AICc code for fineness~RunTimingGroup models
 ```{r, include = FALSE}
 rm(list = ls())
 library(AICcmodavg)
@@ -262,7 +261,33 @@ str(DataSet)
 mean(DataSet$fineness)
 
 ```
+### Calculating Means for Tables within results
+```{r}
+# Load dplyr library for data manipulation
+library(dplyr)
 
+# Calculate the mean fineness ratio by RunTimingGroup and Year
+mean_fineness_by_group_year <- DataSet %>%
+  group_by(RunTimingGroup, Year) %>%
+  summarise(mean_fineness = mean(fineness, na.rm = TRUE))
+
+# Print the results
+print(mean_fineness_by_group_year)
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+### Models are not necessary but code is still here if needed
 ### Making Models for fineness\~RunTimingGroup
 
 ```{r}
