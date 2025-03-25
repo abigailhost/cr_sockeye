@@ -129,15 +129,12 @@ ModelSet<-read.csv(scBodyMass_RTG_modelset)
 scbmModel1 <- lm(sizecorrected_bodymass_residuals ~ 1, data = DataSet)
  # not using anymore: scbmModel2 <- lm(sizecorrected_bodymass_residuals ~ Collection_Location, data = DataSet)
 scbmModel2 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet)
-summary(scbmModel2)
 scbmModel3 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex, data = DataSet)
 scbmModel4 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Year, data = DataSet)
 scbmModel5 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
-summary(scbmModel5)
 scbmModel6 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
 scbmModel7 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
 scbmModel8 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
-summary(scbmModel8)
 # not using anymore: scbmModel10 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_RiverMile_m + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
 scbmModel9 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
 scbmModel10 <- lm(sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
@@ -193,6 +190,54 @@ coefs_df$SE <- avg_se
 print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
 
 write.csv(coefs_df, file = "scbodymass_runtiminggroup/SizeCorrectedBodyMass~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
+```
+
+### Parameter Likelihoods
+```{r}
+models <- list(scbmModel1, scbmModel2, scbmModel3, scbmModel4, scbmModel5, scbmModel6, scbmModel7, scbmModel8, scbmModel9, scbmModel10)
+
+# Assign model names
+model_names <- paste0("Model_", seq_along(models))
+
+# Compute AICc and model weights
+aic_table <- aictab(cand.set = models, modnames = model_names)
+weights <- aic_table$AICcWt  # Extract AICc weights
+
+# Extract model coefficients
+param_names <- unique(unlist(sapply(models, function(m) names(coef(m)))))
+
+# Compute parameter likelihoods
+param_likelihoods <- sapply(param_names, function(param) {
+  # Identify models that include this parameter
+  models_with_param <- sapply(models, function(m) param %in% names(coef(m)))
+  
+  # Sum AICc weights for models that include this parameter
+  sum(weights[models_with_param])
+})
+
+# Format output as a data frame
+param_likelihoods_df <- data.frame(Parameter = param_names, WeightedLikelihood = param_likelihoods)
+
+# Make sure that coefs_df has a column with the parameter names
+coefs_df$Parameter <- rownames(coefs_df)  # Add the parameter names to the dataframe
+coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "CI_Lower", "CI_Upper", "SE")]
+
+
+# Now, we will merge coefs_df with param_likelihoods_df by 'Parameter' to add the likelihoods
+coefs_df <- merge(coefs_df, param_likelihoods_df, by = "Parameter", all.x = TRUE)
+
+# Print the updated dataframe to see the result
+print(coefs_df)
+
+colnames(coefs_df)[colnames(coefs_df) == "WeightedLikelihood"] <- "ParamLikelihood"
+
+coefs_df <- coefs_df %>%
+  arrange(desc(ParamLikelihood)) #arrange dataframe in descending order according to ParamLikelihoods
+
+# Optionally, write the results to a CSV file
+write.csv(coefs_df, file = "scbodymass_runtiminggroup/SizeCorrectedBodyMass~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
+
+
 ```
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
