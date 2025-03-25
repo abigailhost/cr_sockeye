@@ -1,0 +1,22 @@
+﻿model
+EggSize~1
+EggSize~Collection_Location + bodysize_pc
+EggSize~Collection_RiverMile_m + EnergyPDry_1
+EggSize~Collection_RiverMile_m + RunTimingGroup
+EggSize~Collection_RiverMile_m + Year
+EggSize~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1
+EggSize~Collection_RiverMile_m + bodysize_pc*EnergyPDry_1
+EggSize~Collection_RiverMile_m + bodysize_pc + RunTimingGroup
+EggSize~Collection_RiverMile_m + bodysize_pc*RunTimingGroup
+EggSize~Collection_RiverMile_m + bodysize_pc + Year
+EggSize~Collection_RiverMile_m + bodysize_pc*Year
+EggSize~Collection_RiverMile_m + EnergyPDry_1 + RunTimingGroup
+EggSize~Collection_RiverMile_m + EnergyPDry_1*RunTimingGroup
+EggSize~Collection_RiverMile_m + EnergyPDry_1 + Year
+EggSize~Collection_RiverMile_m + EnergyPDry_1*Year
+EggSize~Collection_RiverMile_m + RunTimingGroup + Year
+EggSize~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup
+EggSize~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year
+EggSize~Collection_RiverMile_m + bodysize_pc + RuntimingGroup + Year
+EggSize~Collection_RiverMile_m + EnergyPDry_1 + RuntimingGroup + Year
+EggSize~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year
