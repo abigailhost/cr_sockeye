@@ -118,19 +118,32 @@ any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
 any(is.na(lowerriver_bodycomp_all$Fish_Ht))
 any(is.na(lowerriver_bodycomp_all$Fish_Grth)) # no longer an NA present
 ```
+### PC Score for Body Size, using leng_1, height, girth
 
 ```{r}
-# NOT NEEDED ANYMORE w/ PREVIOUS CHUNK
-######### lowerriver_bodycomp_all_pc <- lowerriver_bodycomp_all[-64,] #new dataframe with no NA's for bodysize metrics
-
-bc_pca1 <- princomp(lowerriver_bodycomp_all[,c(12,14,16,19)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
+bc_pca1 <- princomp(lowerriver_bodycomp_all[,c(12,16,19)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
 summary(bc_pca1, loadings=T, cutoff=0.0001) #summary of PC analysis
 bc_pca1$scores
 screeplot(bc_pca1, type=c('lines'))
 bodysize_pc <- bc_pca1$scores[,1]
 
+
+## Convert leng_1, Ht, and Grth -- for bodysize_pc_g_mm
+lowerriver_bodycomp_all$Fish_Leng_1_mm <- lowerriver_bodycomp_all$Fish_Leng_1*10
+lowerriver_bodycomp_all$Fish_Ht_mm <- lowerriver_bodycomp_all$Fish_Ht*10
+lowerriver_bodycomp_all$Fish_Grth_mm <- lowerriver_bodycomp_all$Fish_Grth*10
+
+bc_pca2 <- princomp(lowerriver_bodycomp_all[,c(82,83,84)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
+summary(bc_pca2, loadings=T, cutoff=0.0001) #summary of PC analysis
+bc_pca2$scores
+screeplot(bc_pca2, type=c('lines'))
+bodysize_pc_g_mm <- bc_pca2$scores[,1]
+
 #combine dataframe with column for body size PC scores
-lowerriver_bodycomp_pc <- cbind(lowerriver_bodycomp_all, bodysize_pc) 
+lowerriver_bodycomp_pc <- cbind(lowerriver_bodycomp_all, bodysize_pc, bodysize_pc_g_mm) #So, worth noting that despite conversion, the PC score is exactly the same
+
+
+
 
 #Now, run AIC again but PC1 scores are the response variable / numeric
 write.csv(lowerriver_bodycomp_pc, "lowerriver_bodycomp_PCscores.csv")
@@ -147,7 +160,7 @@ DataSet<-read.csv(lowerriver_bodycomp_PCscores)[,-1] #79 variables, 179 observat
 
 #### CHECK DIRECTION OF PC SCORE ###
 library(ggplot2)
-ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc)) +
+ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc_g_mm)) +
   geom_point()
 #so direction of PC score is positive, can check with other variables
 
@@ -174,20 +187,16 @@ bodysize_RTG_modelset <- "bodysize_runtiminggroup/bodysize~RunTimingGroup_models
 
 ModelSet<-read.csv(bodysize_RTG_modelset)
 
-model1 <- lm(bodysize_pc~1, data=DataSet)
-# model2 <- lm(bodysize_pc~Collection_Location, data = DataSet) , not using anymore
-model2 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup, data = DataSet)
-model3 <- lm(bodysize_pc~Collection_RiverMile_m + Sex, data = DataSet)
-model4 <- lm(bodysize_pc~Collection_RiverMile_m + Year, data = DataSet)
-model5 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
-summary(model5)
-model6 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
-model7 <- lm(bodysize_pc~Collection_RiverMile_m + Sex + Year, data = DataSet)
-model8 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
-# model10 <- lm(bodysize_pc~Collection_Location + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet) ,   not using anymore
-model9 <- lm(bodysize_pc~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
-summary(model10)
+model1 <- lm(bodysize_pc_g_mm~1, data=DataSet)
+model2 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup, data = DataSet)
+model3 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Year, data = DataSet)
+model5 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+model6 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
+model7 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year, data = DataSet)
+model8 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+model9 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
 
 ```
 
@@ -205,16 +214,16 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex",
-                      "bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + Year",
-                      "bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex", 
-                      "bodysize_pc~Collection_RiverMile_m + Sex", 
-                      "bodysize_pc~Collection_RiverMile_m + Sex + Year",
-                      "bodysize_pc~Collection_RiverMile_m + Sex + Year + Sex:Year", 
-                      "bodysize_pc~Collection_RiverMile_m + RunTimingGroup",
-                      "bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Year", 
-                      "bodysize_pc~1", 
-                      "bodysize_pc~Collection_RiverMile_m + Year")
+aic_df$ModelName <- c("bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Sex + Year",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Sex",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex", 
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Year", 
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup", 
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Sex",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year + Sex:Year", 
+                      "bodysize_pc~Collection_RiverMile_m + Year",
+                      "bodysize_pc~1")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
@@ -244,20 +253,10 @@ print(coefs_df) #Model Averaging Coefficients for AIC model selection approach w
 
 write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
 ```
+
 ### Parameter Likelihoods
 ```{r}
-models <- list(
-  lm(bodysize_pc~1, data=DataSet),
-  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup, data = DataSet),
-  lm(bodysize_pc~Collection_RiverMile_m + Sex, data = DataSet),
-  lm(bodysize_pc~Collection_RiverMile_m + Year, data = DataSet),
-  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet),
-  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet),
-  lm(bodysize_pc~Collection_RiverMile_m + Sex + Year, data = DataSet),
-  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet),
-  lm(bodysize_pc~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet),
-  lm(bodysize_pc~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
-)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
 # Assign model names
 model_names <- paste0("Model_", seq_along(models))
@@ -307,8 +306,7 @@ write.csv(coefs_df, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_mode
 ### FOR AMSS
 ```{r}
 #Body size ~ RunTimingGroup + Sex , in order to address hypothesis 1 and hypothesis 3
-summary(model5)
-anova(model5)
+summary(model10)
 #Boxplot
 g <- ggplot(data = DataSet, aes(x = RunTimingGroup, y = bodysize_pc, fill = Sex)) +
   geom_boxplot() +
@@ -368,19 +366,6 @@ ggplot(estimates_body, aes(x = Avg_Coef, y = X)) +
   theme(axis.title = element_text(size = 24), 
         axis.text = element_text(size = 24))
 
-g2 <- ggplot(estimates_body, aes(x = Avg_Coef, y = X)) + 
-  geom_point(size = 3) +  # For the coefficient estimate as dots
-  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
-  labs(x = "Parameter Estimate", y = "Parameter") +
-  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
-  theme_minimal() +
-  theme(
-    axis.title = element_text(size = 24, face = "bold", color = "black"),  # Axis titles in black
-    axis.text = element_text(size = 24, face = "bold", color = "black"),   # Axis text in black
-    plot.title = element_text(color = "black"),                            # Title in black (if you add a title)
-    plot.subtitle = element_text(color = "black")                         # Subtitle in black (if you add a subtitle)
-  )
-
 
 estimates_body_filtered <- estimates_body %>%
   filter(X != "Collection_RiverMile_m")
@@ -399,7 +384,7 @@ estimates_body_filtered$X <- factor(estimates_body_filtered$X,
                                                    "SexM:Year2021")))
 
 # Create the plot
-ggplot(estimates_body_filtered, aes(x = Avg_Coef, y = X)) + 
+bodysize_plot <- ggplot(estimates_body_filtered, aes(x = Avg_Coef, y = X)) + 
   geom_point(size = 3) +  # For the coefficient estimate as dots
   geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
   labs(x = "Parameter Estimate", y = "Parameter") +
@@ -410,8 +395,7 @@ ggplot(estimates_body_filtered, aes(x = Avg_Coef, y = X)) +
     axis.text = element_text(size = 24, face = "bold", color = "black"),   # Axis text in black
     plot.title = element_text(color = "black"))
 
-# Save the plot to a file
-ggsave("AMSS_2025/AMSS Body Size Parameter Estimates.png", plot = last_plot(), height = 6, width = 12, units = "in")
+ggsave("bodysize_runtiminggroup/bodysize_ParamEstimates_Plot.png", plot=bodysize_plot, height=8, width=12, units="in")
 
 
 ```
