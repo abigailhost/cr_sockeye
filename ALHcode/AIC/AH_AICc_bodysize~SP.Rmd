@@ -290,40 +290,6 @@ any(is.na(upperriver_bodycomp_all$Fish_Ht)) #FALSE
 
 ```
 
-### Estimate Length_2 Values for NA rows
-```{r}
-#Determine best metric for estimating NAs for Leng_2
-summary(lm(Fish_Leng_2 ~ Fish_Leng_1, data = upperriver_bodycomp_all)) # R =  0.05932 
-summary(lm(Fish_Leng_2 ~ Fish_Grth, data = upperriver_bodycomp_all)) #R = 0.1022 
-summary(lm(Fish_Leng_2 ~ Fish_Wt, data = upperriver_bodycomp_all)) #R =  0.09534
-summary(lm(Fish_Leng_2 ~ Fish_Ht, data = upperriver_bodycomp_all)) # Adjusted R-squared =  0.113 
-
-any(is.na(upperriver_bodycomp_all$Fish_Leng_2))
-upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Fish_Leng_2), ]
-
-####female subset
-# allF_upperriver_bodycomp_all <- upperriver_bodycomp_all[upperriver_bodycomp_all$Sex == "F", ]
-
-# pca_leng2 <- princomp(allF_upperriver_bodycomp_all[,c(12,16,19)], cor=T, scores=T, covmat = NULL)
-# summary(pca_leng2, loadings=T, cutoff=0.001) #summary of PC analysis
-
-#### Create a new dataframe with PCA scores for the female F fish subset
-# allF_upperriver_bodycomp_all <- cbind(allF_upperriver_bodycomp_all, pca_leng2$scores[, 1])  # First principal component
-
-### Create the linear model for predicting Fish_Grth based on the first principal component
-# leng2_F_lm <- lm(Fish_Leng_2 ~ pca_leng2$scores[, 1], data = allF_upperriver_bodycomp_all)
-# summary(leng2_F_lm)
-
-
-# predicted_values_Leng2F <- predict(leng2_F_lm, newdata = allF_upperriver_bodycomp_all)
-
-# allF_upperriver_bodycomp_all$Predicted_Fish_Ht <- predicted_values_HtF # Add these predictions back to your dataset
-
-
-### ALL different regressions with leng_2 as response produce super low r^2 values == As of now, leaving leng_2 out of the body size metric for spawning population 
-
-```
-
 ### Estimate Width Values for NA rows
 ```{r}
 #Determine best metric for estimating NAs for Wdth
