@@ -76,6 +76,9 @@ DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
 str(DataSet)
 
+
+DataSet$EnergyPDry_1_mJ_g <- DataSet$EnergyPDry_1 / 1000
+
 ```
 
 ### Making Models for bodysize_pc~RunTimingGroup
@@ -86,18 +89,16 @@ EnergyPDry_RTG_modelset <- "energydensity_runtiminggroup/EnergyPDry_1~RunTimingG
 ModelSet<-read.csv(EnergyPDry_RTG_modelset)
 
 #models
-edModel1 <- lm(EnergyPDry_1 ~ 1, data = DataSet)
- # not using anymore: edModel2 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_Location, data = DataSet)
-edModel2 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet)
-edModel3 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex, data = DataSet)
-edModel4 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + Year, data = DataSet)
-edModel5 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
-edModel6 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
-edModel7 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
-edModel8 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
-# not using anymore: edModel10 <- lm(EnergyDensity_mJ.kg_1 ~ Collection_RiverMile_m + RunTimingGroup + Year + RunTimingGroup:Year, data = DataSet)
-edModel9 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
-edModel10 <- lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+edModel1 <- lm(EnergyPDry_1_mJ_g ~ 1, data = DataSet)
+edModel2 <- lm(EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet)
+edModel3 <- lm(EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + Sex, data = DataSet)
+edModel4 <- lm(EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + Year, data = DataSet)
+edModel5 <- lm(EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+edModel6 <- lm(EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
+edModel7 <- lm(EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
+edModel8 <- lm(EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+edModel9 <- lm(EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+edModel10 <- lm(EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
 ```
 
 
@@ -114,16 +115,16 @@ print(ed_aicc) #so model 6 is preferred followed by the global model and then mo
 
 # Convert AIC table to a data frame for easier manipulation
 EDaic_df <- as.data.frame(ed_aicc)
-EDaic_df$ModelName <- c("EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
-                        "EnergyPDry_1 ~ Collection_RiverMile_m + Sex",
-                        "EnergyPDry_1 ~ 1")
+EDaic_df$ModelName <- c("EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup + Year",
+                        "EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year",
+                        "EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup",
+                        "EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + Year",
+                        "EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup + Sex",
+                        "EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + Sex + Year",
+                        "EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
+                        "EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
+                        "EnergyPDry_1_mJ_g ~ Collection_RiverMile_m + Sex",
+                        "EnergyPDry_1_mJ_g ~ 1")
 colnames(EDaic_df)[colnames(EDaic_df) == "Modnames"] <- "Model #"
 
 write.csv(EDaic_df, file = "energydensity_runtiminggroup/AICresults_EnergyPDry_1~RunTimingGroup.csv", row.names = FALSE)
@@ -155,18 +156,7 @@ write.csv(coefs_df, file = "energydensity_runtiminggroup/EnergyPDry_1~runtimingg
 
 ### Parameter Likelihoods
 ```{r}
-models <- list(
-  lm(EnergyPDry_1 ~ 1, data = DataSet),
-  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet),
-  lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex, data = DataSet),
-  lm(EnergyPDry_1 ~ Collection_RiverMile_m + Year, data = DataSet),
-  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet),
-  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet),
-  lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year, data = DataSet),
-  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet),
-  lm(EnergyPDry_1 ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet),
-  lm(EnergyPDry_1 ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
-  )
+models <- list(edModel1, edModel2, edModel3, edModel4, edModel5, edModel6, edModel7, edModel8, edModel9, edModel10)
 
 # Assign model names
 model_names <- paste0("Model_", seq_along(models))
