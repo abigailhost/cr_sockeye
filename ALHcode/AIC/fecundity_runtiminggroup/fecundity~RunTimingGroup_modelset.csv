@@ -1,19 +1,15 @@
 ﻿model
 Fecun_num_by_wt1~1
-Fecun_num_by_wt1~Collection_Location + bodysize_pc
+Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc
 Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1
 Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup
 Fecun_num_by_wt1~Collection_RiverMile_m + Year
 Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1
-Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*EnergyPDry_1
 Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup
-Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*RunTimingGroup
 Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Year
-Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*Year
 Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + RunTimingGroup
-Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*RunTimingGroup
+Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + RunTimingGroup + EnergyPDry_1*RunTimingGroup
 Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Year
-Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*Year
 Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup + Year
 Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup
 Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year
