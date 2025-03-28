@@ -48,3 +48,71 @@ hist(post_spawn_data$Gonad_Wt_g,
 
 # Reset the plotting layout to default (single plot)
 par(mfrow = c(1, 1))
+
+
+
+##SEX Differences
+
+# Get the min and max range for Gonad_Wt_g across all groups
+all_data <- c(pre_spawn_data$Gonad_Wt_g, 
+              partialpost_spawn_data$Gonad_Wt_g, 
+              post_spawn_data$Gonad_Wt_g)
+
+x_range <- range(all_data, na.rm=T)  # Get min and max values
+
+# Set layout to 2 rows and 3 columns for 6 plots
+par(mfrow = c(2, 3))
+
+# Males - Pre-Spawn
+hist(pre_spawn_data$Gonad_Wt_g[pre_spawn_data$Sex == "M"], 
+     main = "Males: Pre-Spawn Gonad Weight", 
+     xlab = "Gonad Weight (g)", 
+     col = "lightblue", 
+     border = "black", 
+     breaks = 20, 
+     xlim = x_range)
+
+# Males - Partial and Post-Spawn
+hist(partialpost_spawn_data$Gonad_Wt_g[partialpost_spawn_data$Sex == "M"], 
+     main = "Males: Partial/Post-Spawn Gonad Weight", 
+     xlab = "Gonad Weight (g)", 
+     col = "lightgreen", 
+     border = "black", 
+     breaks = 20, 
+     xlim = x_range)
+
+# Males - Post-Spawn
+hist(post_spawn_data$Gonad_Wt_g[post_spawn_data$Sex == "M"], 
+     main = "Males: Post-Spawn Gonad Weight", 
+     xlab = "Gonad Weight (g)", 
+     col = "salmon", 
+     border = "black", 
+     breaks = 20, 
+     xlim = x_range)
+
+# Females - Pre-Spawn
+hist(pre_spawn_data$Gonad_Wt_g[pre_spawn_data$Sex == "F"], 
+     main = "Females: Pre-Spawn Gonad Weight", 
+     xlab = "Gonad Weight (g)", 
+     col = "lightblue", 
+     border = "black", 
+     breaks = 20, 
+     xlim = x_range)
+
+# Females - Partial and Post-Spawn
+hist(partialpost_spawn_data$Gonad_Wt_g[partialpost_spawn_data$Sex == "F"], 
+     main = "Females: Partial/Post-Spawn Gonad Weight", 
+     xlab = "Gonad Weight (g)", 
+     col = "lightgreen", 
+     border = "black", 
+     breaks = 20, 
+     xlim = x_range)
+
+# Females - Post-Spawn
+hist(post_spawn_data$Gonad_Wt_g[post_spawn_data$Sex == "F"], 
+     main = "Females: Post-Spawn Gonad Weight", 
+     xlab = "Gonad Weight (g)", 
+     col = "salmon", 
+     border = "black", 
+     breaks = 20, 
+     xlim = x_range)
