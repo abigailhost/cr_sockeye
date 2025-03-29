@@ -43,7 +43,7 @@ DataSetF <- subset(DataSet, Sex == "F")
 ```{r}
 # values i have for fecundity are # of eggs in a subsample and weight of eggs in a subsample-- so I think best to calculate #/g and then average the three subsamples 
 
-DataSetF$Fecun_num_by_wt1 <- (DataSetF$Fem_Fecun_1_num/DataSetF$Fem_Fecun_1_wt)*DataSetF$Gonad_Wt
+DataSetF$Fecun_num_by_wt1 <- (DataSetF$Fem_Fecun_1_num/DataSetF$Fem_Fecun_1_wt)*(DataSetF$Gonad_Wt * 1000)
 #unsure if there is enough of 2 and 3 subsamples to find averages as necessary, so just use the first sub sample here
 
 # View DataSet.

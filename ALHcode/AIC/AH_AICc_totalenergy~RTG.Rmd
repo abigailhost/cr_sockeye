@@ -46,7 +46,9 @@ write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")
 ### Add Total Energy as a Variable
 ```{r}
 # Total energy = PDry_1 * Fish_Wt == mJ energy
-lowerriver_bodycomp_all$TotalEnergy <- lowerriver_bodycomp_all$EnergyPDry_1 * lowerriver_bodycomp_all$Fish_Wt
+lowerriver_bodycomp_all$EnergyPDry_1_mJ_g <- lowerriver_bodycomp_all$EnergyPDry_1 / 1000
+lowerriver_bodycomp_all$Fish_Wt_g <- lowerriver_bodycomp_all$Fish_Wt * 1000
+lowerriver_bodycomp_all$TotalEnergy_g <- lowerriver_bodycomp_all$EnergyPDry_1_mJ_g * lowerriver_bodycomp_all$Fish_Wt_g
 str(lowerriver_bodycomp_all)
 
 write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_TotalEnergy.csv")
@@ -91,17 +93,16 @@ TotalEnergy_RTG_modelset <- "totalenergy_runtiminggroup/TotalEnergy~RunTimingGro
 ModelSet<-read.csv(TotalEnergy_RTG_modelset)
 
 #models
-teModel1 <- lm(TotalEnergy ~ 1, data = DataSet)
-teModel2 <- lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet)
-teModel3 <- lm(TotalEnergy ~ Collection_RiverMile_m + Sex, data = DataSet)
-teModel4 <- lm(TotalEnergy ~ Collection_RiverMile_m + Year, data = DataSet)
-teModel5 <- lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
-summary(teModel5)
-teModel6 <- lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
-teModel7 <- lm(TotalEnergy ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
-teModel8 <- lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
-teModel9 <- lm(TotalEnergy ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
-teModel10 <- lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+teModel1 <- lm(TotalEnergy_g ~ 1, data = DataSet)
+teModel2 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet)
+teModel3 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + Sex, data = DataSet)
+teModel4 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + Year, data = DataSet)
+teModel5 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+teModel6 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
+teModel7 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
+teModel8 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+teModel9 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+teModel10 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
 ```
 
 ### AICc Model Selection
@@ -158,18 +159,7 @@ write.csv(coefs_df, file = "totalenergy_runtiminggroup/TotalEnergy~runtiminggrou
 
 ### Parameter Likelihoods
 ```{r}
-models <- list(
-  lm(TotalEnergy ~ 1, data = DataSet),
-  lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet),
-  lm(TotalEnergy ~ Collection_RiverMile_m + Sex, data = DataSet),
-  lm(TotalEnergy ~ Collection_RiverMile_m + Year, data = DataSet),
-  lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet),
-  lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet),
-  lm(TotalEnergy ~ Collection_RiverMile_m + Sex + Year, data = DataSet),
-  lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet),
-  lm(TotalEnergy ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet),
-  lm(TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
-  )
+models <- list(teModel1, teModel2, teModel3, teModel4, teModel5, teModel6, teModel7, teModel8, teModel9, teModel10)
 
 # Assign model names
 model_names <- paste0("Model_", seq_along(models))
