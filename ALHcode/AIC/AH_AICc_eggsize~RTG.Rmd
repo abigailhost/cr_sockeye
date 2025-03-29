@@ -13,6 +13,10 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE
 #' AICc code for EggSize~RunTimingGroup models
 #' =====================================================
 
+
+#### NOT planning on using for lower river (run timing group analysis) unless the spawning ground analysis leads us to think it may be valuable
+
+
 ### Loading Data
 ```{r}
 rm(list = ls())
@@ -66,21 +70,17 @@ model3 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + EnergyPDry_1, data=DataSetF)
 model4 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + RunTimingGroup, data=DataSetF)
 model5 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + Year, data=DataSetF)
 model6 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1, data=DataSetF)
-model7 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc*EnergyPDry_1, data=DataSetF)
-model8 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup, data=DataSetF)
-model9 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc*RunTimingGroup, data=DataSetF)
-model10 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + Year, data=DataSetF)
-model11 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc*Year, data=DataSetF)
-model12 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
-model13 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + EnergyPDry_1*RunTimingGroup, data=DataSetF)
-model14 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + EnergyPDry_1 + Year, data=DataSetF)
-model15 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + EnergyPDry_1*Year, data=DataSetF)
-model16 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + RunTimingGroup + Year, data=DataSetF)
-model17 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
-model18 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year, data=DataSetF)
-model19 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup + Year, data=DataSetF)
-model20 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m +  EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
-model21 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
+model7 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup, data=DataSetF)
+model8 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + Year, data=DataSetF)
+model9 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
+model10 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + EnergyPDry_1*RunTimingGroup, data=DataSetF)
+model11 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + EnergyPDry_1 + Year, data=DataSetF)
+model12 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + RunTimingGroup + Year, data=DataSetF)
+model13 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
+model14 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year, data=DataSetF)
+model15 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup + Year, data=DataSetF)
+model16 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m +  EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
+model17 <- lm(Fem_Egg_Sz_1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
 
 ```
 
