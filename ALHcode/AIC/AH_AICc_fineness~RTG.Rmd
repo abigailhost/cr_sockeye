@@ -434,7 +434,16 @@ ggplot(DataSet, aes(x = RunTimingGroup, y = fineness, fill = RunTimingGroup)) +
 #Shapes that are short and wide have a low fineness ratio, those that are long and narrow have high fineness ratios.
 
 
+DataSet$Strontium_marked_Y.N <- as.factor(DataSet$Strontium_marked_Y.N)
 
+ggplot(DataSet, aes(x = RunTimingGroup, y = fineness, fill = Strontium_marked_Y.N)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +  # Place boxes side by side
+ # Add mean as text
+  labs(x = "Run Timing Group", 
+       y = "Fineness", 
+       fill = "Strontium Presence") +  # Label for Strontium marking
+  scale_fill_manual(values = c("Y" = "blue", "N" = "red", "NO READ" = "orange")) +  # Color customization
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 ```

@@ -71,31 +71,27 @@ model3 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1, data=DataSe
 model4 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup, data=DataSetF)
 model5 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + Year, data=DataSetF)
 model6 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1, data=DataSetF)
-model7 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*EnergyPDry_1, data=DataSetF)
-model8 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup, data=DataSetF)
-model9 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*RunTimingGroup, data=DataSetF)
-model10 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Year, data=DataSetF)
-model11 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*Year, data=DataSetF)
-model12 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
-model13 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*RunTimingGroup, data=DataSetF)
-model14 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Year, data=DataSetF)
-model15 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*Year, data=DataSetF)
-model16 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup + Year, data=DataSetF)
-model17 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
-model18 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year, data=DataSetF)
-model19 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup + Year, data=DataSetF)
-model20 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m +  EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
-model21 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
+model7 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup, data=DataSetF)
+model8 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Year, data=DataSetF)
+model9 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
+model10 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*RunTimingGroup, data=DataSetF)
+model11 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Year, data=DataSetF)
+model12 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup + Year, data=DataSetF)
+model13 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup, data=DataSetF)
+model14 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year, data=DataSetF)
+model15 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup + Year, data=DataSetF)
+model16 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m +  EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
+model17 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year, data=DataSetF)
 
 ```
 
 ### AICc Model Selection
 ```{r}
-AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17, model18, model19, model20, model21)
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17)
 
 #table of AIC results
-mynames1 <- paste("model", as.character(1:21), sep = "")
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17, model18, model19, model20, model21)
+mynames1 <- paste("model", as.character(1:17), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17)
 
 # Generate AIC table
 myaicc1 <- aictab(models, modnames = mynames1)
@@ -105,15 +101,12 @@ aic_df <- as.data.frame(myaicc1)
 aic_df$ModelName <- c("Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Year",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup + Year",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*Year",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup + Year",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + RunTimingGroup",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + RunTimingGroup",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*RunTimingGroup",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + Year",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc*EnergyPDry_1",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Year",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup + Year",
@@ -121,7 +114,6 @@ aic_df$ModelName <- c("Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Y
                       "Fecun_num_by_wt1~Collection_RiverMile_m + RunTimingGroup",
                       "Fecun_num_by_wt1~Collection_RiverMile_m +  EnergyPDry_1 + RunTimingGroup + Year",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*RunTimingGroup",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*Year",
                       "Fecun_num_by_wt1~1")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
@@ -155,7 +147,7 @@ write.csv(coefs_df, file = "fecundity_runtiminggroup/fecundity~runtiminggroup_mo
 
 ### Parameter Likelihoods
 ```{r}
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17, model18, model19, model20, model21)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17)
 
 # Assign model names
 model_names <- paste0("Model_", seq_along(models))
