@@ -119,6 +119,9 @@ DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
 DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
 str(DataSet)
+
+ggplot(DataSet, aes(x = Fish_Wt_g, y = sizecorrected_bodymass_residuals)) + 
+  geom_point()
 ```
 
 ### Making Models for energydensity~RunTimingGroup
@@ -156,16 +159,16 @@ print(scbm_aicc) #so model 2 is preferred (lowest AIC score) followed by model 8
 
 # Convert AIC table to a data frame for easier manipulation
 SCBMaic_df <- as.data.frame(scbm_aicc)
-SCBMaic_df$ModelName <- c("sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup",
-                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
-                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex",
-                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Year",
-                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex",
-                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Year",
-                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
-                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year",
-                      "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year",
-                      "sizecorrected_bodymass_residuals ~ 1")
+SCBMaic_df$ModelName <- c("sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Year",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Year",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup",
+                          "sizecorrected_bodymass_residuals ~ 1")
 colnames(SCBMaic_df)[colnames(SCBMaic_df) == "Modnames"] <- "Model #"
 
 write.csv(SCBMaic_df, file = "scbodymass_runtiminggroup/AICresults_SizeCorrectedBodyMass~RunTimingGroup.csv", row.names = FALSE)
