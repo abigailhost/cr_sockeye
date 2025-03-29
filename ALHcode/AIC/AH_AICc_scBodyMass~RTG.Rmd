@@ -80,13 +80,13 @@ str(DataSet)
 ### Calculating Size-Corrected Body Mass in DataSet 
 ```{r}
 ### Size corrected body mass should be the residuals of linear regression between weight ~ total fish length ###
-DataSet$Fish_Leng_1_mm <- DataSet$Fish_Leng_1*10
-DataSet$Fish_Leng_2_mm <- DataSet$Fish_Leng_2*10
-DataSet$Fish_Leng_Total_mm <- DataSet$Fish_Leng_1_mm + DataSet$Fish_Leng_2
+DataSet$Fish_Leng_1_mm <- DataSet$Fish_Leng_1*10 #convert from cm to mm
+DataSet$Fish_Leng_2_mm <- DataSet$Fish_Leng_2*10 #convert from cm to mm
+DataSet$Fish_Leng_Total_mm <- DataSet$Fish_Leng_1_mm + DataSet$Fish_Leng_2_mm
 DataSet$Fish_Wt_g <- DataSet$Fish_Wt*1000
 sizecorrected_bodymass_lm <- lm(DataSet$Fish_Wt_g ~ DataSet$Fish_Leng_Total_mm) #linear regression for size corrected body mass
 sizecorrected_bodymass_residuals <- residuals(sizecorrected_bodymass_lm) #residuals for regression
-plot(sizecorrected_bodymass_residuals, DataSet$Fish_Leng_Total)
+plot(sizecorrected_bodymass_residuals, DataSet$Fish_Leng_Total_mm)
 sizecorrected_bodymass <- as.data.frame(sizecorrected_bodymass_residuals)
 DataSet <- cbind(DataSet, sizecorrected_bodymass) #adds the residuals to data set as a variable
 
@@ -159,15 +159,15 @@ print(scbm_aicc) #so model 2 is preferred (lowest AIC score) followed by model 8
 
 # Convert AIC table to a data frame for easier manipulation
 SCBMaic_df <- as.data.frame(scbm_aicc)
-SCBMaic_df$ModelName <- c("sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
-                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
-                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year",
-                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex",
+SCBMaic_df$ModelName <- c("sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup",
                           "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
-                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex",
                           "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Year",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex",
                           "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Year",
-                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year",
+                          "sizecorrected_bodymass_residuals ~ Collection_RiverMile_m + Sex + Year",
                           "sizecorrected_bodymass_residuals ~ 1")
 colnames(SCBMaic_df)[colnames(SCBMaic_df) == "Modnames"] <- "Model #"
 
