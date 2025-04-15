@@ -57,12 +57,13 @@ library(dplyr)
 
 # Assuming your data frame is named df, use filter() to exclude the specific collection locations
 upperriver_bodycomp_all <- upperriver_bodycomp_all %>%
-  filter(!Collection_Location %in% c("Power Creek Cordova", "Eyak Weir Cordova", "Bone Creek", "Copper Lake", "Klutina River", "Upper Klutina", "Klutina River"))
+  filter(!Collection_Location %in% c("Power Creek Cordova", "Eyak Weir Cordova", "Bone Creek", "Copper Lake", "Klutina River", "Upper Klutina"))
 
 
 ### Now, need to remove NAs that will mess up levels / model weight
 any(is.na(upperriver_bodycomp_all$Collection_Location))
-any(is.na(upperriver_bodycomp_all$Migratory_Difficulty))
+any(is.na(upperriver_bodycomp_all$Collection_RiverMile_m))
+any(is.na(upperriver_bodycomp_all$Elevation_m))
 any(is.na(upperriver_bodycomp_all$Year))
 any(is.na(upperriver_bodycomp_all$Sex))
 upperriver_bodycomp_all[is.na(upperriver_bodycomp_all$Sex), ] #row 87 and 110 has no sex value, eliminate it for models
@@ -327,7 +328,8 @@ any(is.na(DataSet$Fish_Ht)) #FALSE
 any(is.na(DataSet$Collection_Location)) #FALSE
 any(is.na(DataSet$Year)) #FALSE
 any(is.na(DataSet$Sex)) #FALSE
-any(is.na(DataSet$Migratory_Difficulty)) # FALSE
+any(is.na(DataSet$Collection_RiverMile_m)) # FALSE
+any(is.na(DataSet$Elevation_m)) #FALSE
 
 #### CHECK DIRECTION OF PC SCORE ###
 library(ggplot2)
@@ -341,17 +343,28 @@ summary(DataSet)
 nrow(DataSet)
 str(DataSet)
 
+#Make work metric (migratory difficulty metric where work = F x distance)
+DataSet$Elevation_m <- as.numeric(DataSet$Elevation_m)
+DataSet$Work <- (DataSet$Collection_RiverMile_m * DataSet$Elevation_m) / (1000*1000) #so work is in km^2 
+str(DataSet) 
+
+#convert gonad_wt to grams from kilograms
+DataSet$Gonad_Wt_g <- DataSet$Gonad_Wt * 1000
+
 #make response variables factors
 DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
 levels(DataSet$Collection_Location) # 7 unique locations
 DataSet$Year<- as.factor(DataSet$Year)
 levels(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
-DataSet$Migratory_Difficulty <- as.factor(DataSet$Migratory_Difficulty)
-levels(DataSet$Migratory_Difficulty) # 4 Levels
-DataSet$SpawnStatus <- as.factor(DataSet$SpawnStatus)
-levels(DataSet$SpawnStatus) # 4 levels
 str(DataSet)
+
+
+#check gonad weight for NAs
+any(is.na(DataSet$Gonad_Wt_g))
+DataSet[is.na(DataSet$Gonad_Wt_g), ] #need to eliminate these rows or model selection will not work
+DataSet <- DataSet[-c(8, 19, 20, 31, 35, 37, 50, 59, 70, 71, 73, 81, 84, 111, 112, 114),]
+any(is.na(DataSet$Gonad_Wt_g)) #FALSE
 
 ```
 
@@ -363,16 +376,16 @@ bodysize_SP_modelset <- "bodysize_spawningpopulation/bodysize~SpawningPopulation
 ModelSet<-read.csv(bodysize_SP_modelset) 
 
 model1 <- lm(bodysize_pc~1, data=DataSet)
-model2 <- lm(bodysize_pc~ SpawnStatus + Migratory_Difficulty, data = DataSet)
-model3 <- lm(bodysize_pc~ SpawnStatus + Sex, data = DataSet)
-model4 <- lm(bodysize_pc~SpawnStatus + Year, data = DataSet)
-model5 <- lm(bodysize_pc~ SpawnStatus + Migratory_Difficulty + Sex, data = DataSet)
-model6 <- lm(bodysize_pc~ SpawnStatus + Migratory_Difficulty + Year, data = DataSet)
-model7 <- lm(bodysize_pc~ SpawnStatus + Sex + Year, data = DataSet)
-model8 <- lm(bodysize_pc~ SpawnStatus + Migratory_Difficulty + Sex + Migratory_Difficulty:Sex, data = DataSet)
-model9 <- lm(bodysize_pc~ SpawnStatus + Migratory_Difficulty + Year + Migratory_Difficulty:Year, data = DataSet)
-model10 <- lm(bodysize_pc~SpawnStatus + Sex + Year + Sex:Year, data = DataSet)
-model11 <- lm(bodysize_pc~ SpawnStatus + Migratory_Difficulty + Sex + Year, data = DataSet)
+model2 <- lm(bodysize_pc~ Gonad_Wt_g + Work, data = DataSet)
+model3 <- lm(bodysize_pc~ Gonad_Wt_g + Sex, data = DataSet)
+model4 <- lm(bodysize_pc~ Gonad_Wt_g + Year, data = DataSet)
+model5 <- lm(bodysize_pc~ Gonad_Wt_g + Work + Sex, data = DataSet)
+model6 <- lm(bodysize_pc~ Gonad_Wt_g + Work + Year, data = DataSet)
+model7 <- lm(bodysize_pc~ Gonad_Wt_g + Sex + Year, data = DataSet)
+model8 <- lm(bodysize_pc~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
+model9 <- lm(bodysize_pc~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet)
+model10 <- lm(bodysize_pc~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
+model11 <- lm(bodysize_pc~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
 ```
 
 ### AICc Model Selection
@@ -388,16 +401,16 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("bodysize_pc~ SpawnStatus + Sex",
-                      "bodysize_pc~ SpawnStatus + Sex + Year",
-                      "bodysize_pc~ SpawnStatus + Migratory_Difficulty + Sex",
-                      "bodysize_pc~ SpawnStatus + Migratory_Difficulty + Sex + Year",
-                      "bodysize_pc~SpawnStatus + Sex + Year + Sex:Year",
-                      "bodysize_pc~ SpawnStatus + Migratory_Difficulty + Sex + Migratory_Difficulty:Sex",
-                      "bodysize_pc~ SpawnStatus + Migratory_Difficulty",
-                      "bodysize_pc~ SpawnStatus + Migratory_Difficulty + Year",
-                      "(bodysize_pc~SpawnStatus + Year",
-                      "bodysize_pc~ SpawnStatus + Migratory_Difficulty + Year + Migratory_Difficulty:Year",
+aic_df$ModelName <- c("bodysize_pc~ Gonad_Wt_g + Sex + Year",
+                      "bodysize_pc~Gonad_Wt_g + Sex + Year + Sex:Year",
+                      "bodysize_pc~ Gonad_Wt_g + Work + Sex + Year",
+                      "bodysize_pc~ Gonad_Wt_g + Sex",
+                      "bodysize_pc~ Gonad_Wt_g + Work + Sex",
+                      "bodysize_pc~ Gonad_Wt_g + Work + Sex + Work:Sex",
+                      "bodysize_pc~Gonad_Wt_g + Year",
+                      "bodysize_pc~ Gonad_Wt_g + Work + Year",
+                      "bodysize_pc~ Gonad_Wt_g + Work",
+                      "bodysize_pc~ Gonad_Wt_g + Work + Year + Work:Year",
                       "bodysize_pc~1")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
@@ -410,7 +423,7 @@ write.csv(aic_df, file = "bodysize_spawningpopulation/AICresults_bodysize~Spawni
 ```{r}
 library(MuMIn)
 
- # Create a model selection table (this will give you AIC, AIC weights, etc.)
+# Create a model selection table (this will give you AIC, AIC weights, etc.)
 model_weights <- myaicc1$AICcWt ##Get the AIC weights from the AIC table
 model_avg <- model.avg(models, weights = model_weights)
 summary(model_avg)
@@ -428,7 +441,6 @@ print(coefs_df) #Model Averaging Coefficients for AIC model selection approach w
 
 write.csv(coefs_df, file = "bodysize_spawningpopulation/bodysize~spawningpopulation_models_CoefEstimates.csv", row.names = TRUE)
 
-### Of Note, Klutina Lake only has data for 2021 (males and females) which might be causing the NA values-- Klutina River is only 1 point, should I remove?
 ```
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
@@ -455,7 +467,7 @@ ggplot(paramestimates_bodysize, aes(x = Avg_Coef, y = X)) +
 
 library(dplyr)
 paramestimates_bodysize_filtered <- paramestimates_bodysize %>%
-  filter(!X %in% c("SpawnStatus0", "SpawnStatus1", "SpawnStatus2", "SpawnStatus3"))  # Filter out specific levels
+  filter(!X %in% c("Gonad_Wt_g"))  # Filter out specific levels
 
 bodysize_plot <- ggplot(paramestimates_bodysize_filtered, aes(x = Avg_Coef, y = X)) + 
   geom_point(size = 3) +  # For the coefficient estimate as dots
@@ -465,8 +477,5 @@ bodysize_plot <- ggplot(paramestimates_bodysize_filtered, aes(x = Avg_Coef, y = 
   theme_minimal() +
   theme(axis.title = element_text(size = 24), 
         axis.text = element_text(size = 24))
-
-ggsave("bodysize_spawningpopulation/BodySize_ParamEstimates_Plot.png", plot=bodysize_plot, height=12, width=12, units="in")
-
 
 ```

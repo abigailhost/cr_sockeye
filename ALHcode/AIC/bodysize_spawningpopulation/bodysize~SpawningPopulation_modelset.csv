@@ -1,15 +1,12 @@
 ﻿Model
 bodysize_pc~1
-bodysize_pc~SpawnStatus + Collection_Location
-bodysize_pc~SpawnStatus + Sex
-bodysize_pc~SpawnStatus + Year
-bodysize_pc~SpawnStatus + Collection_Region
-bodysize_pc~SpawnStatus + Collection_Location + Sex
-bodysize_pc~SpawnStatus + Collection_Region + Sex
-bodysize_pc~SpawnStatus + Collection_Location + Year
-bodysize_pc~SpawnStatus + Collection_Region + Year
-bodysize_pc~SpawnStatus + Sex + Year
-bodysize_pc~SpawnStatus + Collection_Location + Sex + Collection_Region:Sex
-bodysize_pc~SpawnStatus + Collection_Location + Sex + Collection_Region:Year
-bodysize_pc~SpawnStatus + Sex + Year + Sex:Year
-bodysize_pc~SpawnStatus + Collection_Location + Collection_Region + Sex + Year
+bodysize_pc~Gonad_Wt + Work
+bodysize_pc~Gonad_Wt + Sex
+bodysize_pc~Gonad_Wt + Year
+bodysize_pc~Gonad_Wt + Work + Sex
+bodysize_pc~Gonad_Wt + Work + Year
+bodysize_pc~Gonad_Wt + Sex + Year
+bodysize_pc~Gonad_Wt + Work + Sex + Work:Sex
+bodysize_pc~Gonad_Wt + Work + Year + Work:Year
+bodysize_pc~Gonad_Wt + Sex + Year + Sex:Year
+bodysize_pc~Gonad_Wt + Work + Sex + Year
