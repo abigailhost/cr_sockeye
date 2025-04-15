@@ -1,15 +1,12 @@
 ﻿Model
 EnergyPDry_1~1
-EnergyPDry_1~SpawnStatus + Collection_Location
-EnergyPDry_1~SpawnStatus + Sex
-EnergyPDry_1~SpawnStatus + Year
-EnergyPDry_1~SpawnStatus + Collection_Region
-EnergyPDry_1~SpawnStatus + Collection_Region + Sex
-EnergyPDry_1~SpawnStatus + Collection_Location + Sex
-EnergyPDry_1~SpawnStatus + Collection_Region + Year
-EnergyPDry_1~SpawnStatus + Collection_Location + Year
-EnergyPDry_1~SpawnStatus + Sex + Year
-EnergyPDry_1~SpawnStatus + Collection_Region + Sex + Collection_Region:Sex
-EnergyPDry_1~SpawnStatus + Collection_Region + Year + Collection_Region:Year
-EnergyPDry_1~SpawnStatus + Sex + Year + Sex:Year
-EnergyPDry_1~SpawnStatus + Collection_Location + Collection_Region + Sex + Year
+EnergyPDry_1~Gonad_Wt + Work
+EnergyPDry_1~Gonad_Wt + Sex
+EnergyPDry_1~Gonad_Wt + Year
+EnergyPDry_1~Gonad_Wt + Work + Sex
+EnergyPDry_1~Gonad_Wt + Work + Year
+EnergyPDry_1~Gonad_Wt + Sex + Year
+EnergyPDry_1~Gonad_Wt + Work + Sex + Work:Sex
+EnergyPDry_1~Gonad_Wt + Work + Year + Work:Year
+EnergyPDry_1~Gonad_Wt + Sex + Year + Sex:Year
+EnergyPDry_1~Gonad_Wt + Work + Sex + Year
