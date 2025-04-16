@@ -395,8 +395,6 @@ bodysize_plot <- ggplot(estimates_body_filtered, aes(x = Avg_Coef, y = X)) +
     axis.text = element_text(size = 24, face = "bold", color = "black"),   # Axis text in black
     plot.title = element_text(color = "black"))
 
-ggsave("bodysize_runtiminggroup/bodysize_ParamEstimates_Plot.png", plot=bodysize_plot, height=8, width=12, units="in")
-
 
 ```
 

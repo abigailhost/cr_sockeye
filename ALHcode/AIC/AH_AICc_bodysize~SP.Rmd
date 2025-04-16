@@ -443,6 +443,68 @@ write.csv(coefs_df, file = "bodysize_spawningpopulation/bodysize~spawningpopulat
 
 ```
 
+
+### Parameter Likelihoods
+```{r}
+### Parameter Likelihoods
+# Load your model list
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+
+# Assign model names
+model_names <- paste0("Model_", seq_along(models))
+
+# Compute AICc and model weights
+aic_table <- aictab(cand.set = models, modnames = model_names)
+weights <- aic_table$AICcWt  # Extract AICc weights
+
+# --- START: Normalize parameter names before likelihood calculation ---
+normalize_param <- function(name) {
+  if (grepl(":", name)) {
+    parts <- unlist(strsplit(name, ":"))
+    paste(sort(parts), collapse = ":")
+  } else {
+    name
+  }
+}
+
+# Get all unique normalized parameter names across models
+param_names <- unique(unlist(sapply(models, function(m) {
+  sapply(names(coef(m)), normalize_param)
+})))
+
+# Compute parameter likelihoods using normalized names
+param_likelihoods <- sapply(param_names, function(param) {
+  models_with_param <- sapply(models, function(m) {
+    model_params <- sapply(names(coef(m)), normalize_param)
+    param %in% model_params
+  })
+  sum(weights[models_with_param])
+})
+
+# Format output as a data frame
+param_likelihoods_df <- data.frame(Parameter = param_names, WeightedLikelihood = param_likelihoods)
+# --- END normalization block ---
+
+# Normalize coefs_df Parameter names too
+coefs_df$Parameter <- sapply(rownames(coefs_df), normalize_param)  # If not already added
+coefs_df$Parameter <- sapply(coefs_df$Parameter, normalize_param)
+
+# Merge parameter likelihoods into coefs_df
+coefs_df <- merge(coefs_df, param_likelihoods_df, by = "Parameter", all.x = TRUE)
+
+# Rename and sort
+colnames(coefs_df)[colnames(coefs_df) == "WeightedLikelihood"] <- "ParamLikelihood"
+coefs_df <- coefs_df %>%
+  arrange(desc(ParamLikelihood))
+
+# Output to CSV
+write.csv(coefs_df, file = "bodysize_spawningpopulation/bodysize~spawningpopulation_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
+
+
+```
+
+
+
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}
 paramestimates_bodysize <- "bodysize_spawningpopulation/bodysize~spawningpopulation_models_CoefEstimates.csv"
