@@ -502,7 +502,92 @@ write.csv(coefs_df, file = "bodysize_spawningpopulation/bodysize~spawningpopulat
 
 
 ```
+```{r}
+# Load required packages
+library(MuMIn)
+library(dplyr)
 
+# Step 1: Define models and assign names
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+model_names <- paste0("model", 1:11)
+names(models) <- model_names
+
+# Step 2: Get AICc and model weights
+aic_table <- aictab(cand.set = models, modnames = model_names)
+weights <- aic_table$AICcWt
+
+# Step 3: Model averaging
+model_avg <- model.avg(models, weights = weights)
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
+avg_se <- sqrt(diag(vcov(model_avg)))
+
+# Step 4: Tidy coefficient results
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]
+coefs_df$CI_Upper <- avg_confint[, 2]
+coefs_df$SE <- avg_se
+coefs_df$Parameter <- rownames(coefs_df)
+
+# Step 5: Normalize parameter names for interaction consistency
+normalize_param <- function(name) {
+  if (grepl(":", name)) {
+    parts <- unlist(strsplit(name, ":"))
+    paste(sort(parts), collapse = ":")
+  } else {
+    name
+  }
+}
+coefs_df$Parameter <- sapply(coefs_df$Parameter, normalize_param)
+
+# Step 6: Extract normalized parameter names from all models
+param_names <- unique(unlist(sapply(models, function(m) {
+  sapply(names(coef(m)), normalize_param)
+})))
+
+# Step 7: Calculate individual parameter likelihoods
+param_likelihoods <- sapply(param_names, function(param) {
+  models_with_param <- sapply(models, function(m) {
+    model_params <- sapply(names(coef(m)), normalize_param)
+    param %in% model_params
+  })
+  sum(weights[models_with_param])
+})
+
+param_likelihoods_df <- data.frame(Parameter = names(param_likelihoods),
+                                   ParamLikelihood = param_likelihoods)
+
+# Step 8: Merge param likelihoods into coefs_df
+coefs_df <- merge(coefs_df, param_likelihoods_df, by = "Parameter", all.x = TRUE)
+
+# Step 9 (Optional): Group dummy variables into broader categories (like Year, Sex, etc.)
+grouped_params <- list(
+  Gonad_Wt_g = "Gonad_Wt_g",
+  Work = grep("^Work", param_names, value = TRUE),
+  Sex = grep("^Sex", param_names, value = TRUE),
+  Year = grep("^Year", param_names, value = TRUE),
+  "Sex:Year" = grep("^Sex.*:Year|Year.*:Sex", param_names, value = TRUE),
+  "Work:Year" = grep("^Work.*:Year|Year.*:Work", param_names, value = TRUE),
+  "Sex:Work" = grep("^Sex.*:Work|Work.*:Sex", param_names, value = TRUE)
+)
+
+grouped_likelihoods <- sapply(names(grouped_params), function(group) {
+  terms <- grouped_params[[group]]
+  sum(param_likelihoods[terms], na.rm = TRUE)
+})
+grouped_likelihoods_df <- data.frame(
+  ParameterGroup = names(grouped_likelihoods),
+  GroupLikelihood = grouped_likelihoods
+)
+
+coefs_df <- coefs_df %>%
+  arrange(desc(ParamLikelihood))
+
+# Step 10: Save results
+write.csv(coefs_df, file = "bodysize_spawningpopulation/bodysize~spawningpopulation_models_CoefEstimates_withLikelihoods.csv", row.names = FALSE)
+write.csv(grouped_likelihoods_df, file = "bodysize_spawningpopulation/bodysize~spawningpopulation_models_GroupedParamLikelihoods.csv", row.names = FALSE)
+```
 
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
