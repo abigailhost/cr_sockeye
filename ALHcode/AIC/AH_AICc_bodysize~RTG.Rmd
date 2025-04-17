@@ -198,6 +198,8 @@ model8 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Sex + Ru
 model9 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
 model10 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
 
+summary(model10)
+summary(model5)
 ```
 
 

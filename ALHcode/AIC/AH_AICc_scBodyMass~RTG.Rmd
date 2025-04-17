@@ -257,13 +257,13 @@ write.csv(coefs_df, "scbodymass_runtiminggroup/SizeCorrectedBodyMass_ModelAvg_Co
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}
-paramestimates_scbm <- "scbodymass_runtiminggroup/SizeCorrectedBodyMass~runtiminggroup_models_CoefEstimates.csv"
+paramestimates_scbm <- "scbodymass_runtiminggroup/SizeCorrectedBodyMass_ModelAvg_Coefs_withLikelihoods.csv"
 
 estimates_scbm<-read.csv(paramestimates_scbm)
 str(estimates_scbm)
 
-levels(factor(estimates_scbm$X))
-estimates_scbm$X <- factor(estimates_scbm$X, 
+levels(factor(estimates_scbm$Parameter))
+estimates_scbm$Parameter <- factor(estimates_scbm$Parameter, 
                            levels = rev(c("(Intercept)", 
                                       "Collection_RiverMile_m",
                                       "RunTimingGroupMiddle", 
@@ -278,7 +278,7 @@ estimates_scbm$X <- factor(estimates_scbm$X,
 
 
 library(ggplot2)
-ggplot(estimates_scbm, aes(x = Avg_Coef, y = X)) + 
+ggplot(estimates_scbm, aes(x = Avg_Coef, y = Parameter)) + 
   geom_point(size = 3) +  # For the coefficient estimate as dots
   geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
   labs(x = "Parameter Estimate", y = "Parameter") +
@@ -289,9 +289,9 @@ ggplot(estimates_scbm, aes(x = Avg_Coef, y = X)) +
 
 library(dplyr)
 estimates_scbm_filtered <- estimates_scbm %>%
-  filter(X != "Collection_RiverMile_m") #filter out collection river mile, as it is not necessary for the estimates
+  filter(Parameter != "Collection_RiverMile_m") #filter out collection river mile, as it is not necessary for the estimates
 
-scbm_plot <- ggplot(estimates_scbm_filtered, aes(x = Avg_Coef, y = X)) + 
+scbm_plot <- ggplot(estimates_scbm_filtered, aes(x = Avg_Coef, y = Parameter)) + 
   geom_point(size = 3) +  # For the coefficient estimate as dots
   geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
   labs(x = "Parameter Estimate", y = "Parameter") +
