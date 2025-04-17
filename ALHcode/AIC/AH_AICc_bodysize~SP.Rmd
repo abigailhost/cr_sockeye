@@ -386,6 +386,7 @@ model8 <- lm(bodysize_pc~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
 model9 <- lm(bodysize_pc~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet)
 model10 <- lm(bodysize_pc~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
 model11 <- lm(bodysize_pc~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
+summary(model11)
 ```
 
 ### AICc Model Selection
