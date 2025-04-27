@@ -51,10 +51,10 @@ rm(list = ls())
 upperriver_bodycomp_all <- "upperriver_bodycomp_all.csv"
 DataSet<-read.csv(upperriver_bodycomp_all)[,-1]
 
-##### For the Upper River Data, I want to elimiate Power Creek Cordova, Eyak Weir Cordova, Bone Creek, and Copper Lake data points as they don't apply to my spawning populations of interest ####
+##### For the Upper River Data, I want to elimiate Power Creek Cordova, Eyak Weir Cordova, Bone Creek, Klutina River, and Upper Klutina, and Copper Lake data points as they don't apply to my spawning populations of interest ####
 library(dplyr)
 
-# Assuming your data frame is named df, use filter() to exclude the specific collection locations
+# Use filter() to exclude the specific collection locations
 DataSet <- DataSet %>%
   filter(!Collection_Location %in% c("Power Creek Cordova", "Eyak Weir Cordova", "Bone Creek", "Copper Lake", "Klutina River", "Upper Klutina"))
 
@@ -80,7 +80,7 @@ any(is.na(DataSet$EnergyPDry_1)) #FALSE
 head(DataSet)
 summary(DataSet)
 nrow(DataSet)
-str(DataSet)
+str(DataSet) #220 observations and 82 variables
 
 #Make work metric (migratory difficulty metric where work = F x distance)
 DataSet$Elevation_m <- as.numeric(DataSet$Elevation_m)
@@ -131,7 +131,19 @@ edModels <- list(model1, model2, model3, model4, model5, model6, model7, model8,
 # Generate AIC table
 mynames_ed <- paste("model", as.character(1:11), sep = "")
 ed_aicc <- aictab(edModels, modnames = mynames_ed)
-print(ed_aicc) #so model 14 is preferred 
+print(ed_aicc) #so selection order is:
+              # K   AICc Delta_AICc AICcWt Cum.Wt      LL
+              # model9  8 654.23       0.00   0.68   0.68 -318.77
+              # model7  6 657.02       2.79   0.17   0.85 -322.31
+              # model10 8 658.51       4.28   0.08   0.93 -320.91
+              # model11 7 658.88       4.65   0.07   1.00 -322.17
+              # model4  5 665.64      11.41   0.00   1.00 -327.68
+              # model6  6 667.41      13.18   0.00   1.00 -327.51
+              # model3  4 668.94      14.71   0.00   1.00 -330.38
+              # model5  5 671.00      16.77   0.00   1.00 -330.36
+              # model8  6 672.60      18.38   0.00   1.00 -330.10
+              # model1  2 674.81      20.58   0.00   1.00 -335.38
+              # model2  4 678.82      24.59   0.00   1.00 -335.32
 
 # Convert AIC table to a data frame for easier manipulation
 EDaic_df <- as.data.frame(ed_aicc)
@@ -152,44 +164,133 @@ write.csv(EDaic_df, file = "energydensity_spawningpopulation/AICresults_EnergyPD
 
 ```
 
-### Model Averaging
+### Model Averaging and Parameter Likelihoods
 ```{r}
+# ---- Load necessary packages ----
 library(MuMIn)
+library(dplyr)
 
- # Create a model selection table (this will give you AIC, AIC weights, etc.)
-model_weights <- ed_aicc$AICcWt ##Get the AIC weights from the AIC table
-model_avg <- model.avg(edModels, weights = model_weights)
+# ---- Step 1: Combine models into a named list ----
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+model_names <- paste0("Model_", seq_along(models))
+names(models) <- model_names
+
+# ---- Step 2: Run model selection (AICc) ----
+model_sel <- model.sel(models)
+
+# ---- Step 3: Model averaging (conditional averaging recommended) ----
+model_avg <- model.avg(model_sel, full = FALSE)  # full = FALSE for conditional averaging
 summary(model_avg)
-avg_coefs <- coef(model_avg)
 
+# ---- Step 4: Extract averaged coefficients and confidence intervals ----
+avg_coefs <- coef(model_avg)
 avg_confint <- confint(model_avg)
 avg_se <- sqrt(diag(vcov(model_avg)))
 
-# Convert the coefficients into a tidy data frame
+# ---- Step 5: Create tidy coefficient summary ----
 coefs_df <- as.data.frame(avg_coefs)
 colnames(coefs_df) <- "Avg_Coef"
-coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
-coefs_df$CI_Upper <- avg_confint[, 2] # Add upper bound of confidence intervals
+coefs_df$CI_Lower <- avg_confint[, 1]
+coefs_df$CI_Upper <- avg_confint[, 2]
 coefs_df$SE <- avg_se
-print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
+coefs_df$Parameter <- rownames(coefs_df)
 
-write.csv(coefs_df, file = "energydensity_spawningpopulation/EnergyPDry_1~spawningpopulation_models_CoefEstimates.csv", row.names = TRUE)
+# Reorder for clarity
+coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "SE", "CI_Lower", "CI_Upper")]
+
+# ---- Step 6: Helper function to normalize interaction term names ----
+normalize_param_name <- function(name) {
+  if (grepl(":", name)) {
+    parts <- strsplit(name, ":")[[1]]
+    paste(sort(parts), collapse = ":")
+  } else {
+    name
+  }
+}
+
+# ---- Step 7: Calculate parameter likelihoods (relative importance) ----
+weights <- model_sel$weight
+
+# Extract all unique parameter names across models (normalize interaction terms)
+param_names <- unique(unlist(sapply(models, function(m) {
+  sapply(names(coef(m)), normalize_param_name)
+})))
+
+# Calculate parameter likelihoods safely
+param_likelihoods <- sapply(param_names, function(param) {
+  models_with_param <- sapply(models, function(m) {
+    any(sapply(names(coef(m)), function(p) normalize_param_name(p) == param))
+  })
+  if (any(models_with_param)) {
+    sum(weights[models_with_param])
+  } else {
+    0  # If not in any model, assign 0
+  }
+})
+
+# ---- Step 8: Create param_likelihoods_df and merge cleanly ----
+param_likelihoods_df <- data.frame(
+  Parameter = param_names,
+  ParamLikelihood = param_likelihoods
+)
+
+# Drop any old ParamLikelihood (if present), then merge cleanly
+coefs_df <- coefs_df %>% select(-any_of("ParamLikelihood"))
+coefs_df <- left_join(coefs_df, param_likelihoods_df, by = "Parameter")
+
+# ---- Step 9: Sort by parameter likelihood ----
+coefs_df <- coefs_df %>%
+  arrange(desc(ParamLikelihood))
+
+# ---- Step 9: View or export final result ----
+print(coefs_df)
+write.csv(coefs_df, "energydensity_spawningpopulation/energydensity_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv", row.names = FALSE)
+
+
+# ---- Step 10: Table for coefficients and threshold for parameter likelihoods ----
+threshold <- 0.1  # Set threshold for importance
+
+# Add a new column to coefs_df that marks important vs non-important parameters
+coefs_df$Importance <- ifelse(coefs_df$ParamLikelihood > threshold, "Important", "Non-Important")
+
+# ---- Color Code Important Parameters with Color Blind Friendly Colors ----
+# Light green for important, light gray for non-important
+library(kableExtra)
+
+# Create the table without adding duplicate headers
+coefs_table <- coefs_df %>%
+  arrange(desc(ParamLikelihood)) %>%
+  kable("html", escape = FALSE, align = c("l", "r", "r", "r", "r", "r", "l")) %>%
+  # Apply color coding based on importance
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  row_spec(which(coefs_df$Importance == "Important"), background = "lightgreen", color = "black") %>%
+  row_spec(which(coefs_df$Importance == "Non-Important"), background = "lightgray", color = "black") # Adjust column width if needed
+
+# Print or save the table
+coefs_table
+
 ```
+
+
+
+
+
+
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}
-paramestimates_energypdry <- "energydensity_spawningpopulation/EnergyPDry_1~spawningpopulation_models_CoefEstimates.csv"
+paramestimates_energypdry <- "energydensity_spawningpopulation/energydensity_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv"
 
 paramestimates_energy<-read.csv(paramestimates_energypdry)
 str(paramestimates_energy)
 
-levels(factor(paramestimates_energy$X))
-paramestimates_energy$X <- factor(paramestimates_energy$X, 
-                           levels = rev(factor(paramestimates_energy$X)))
+levels(factor(paramestimates_energy$Parameter))
+paramestimates_energy$Parameter <- factor(paramestimates_energy$Parameter, 
+                           levels = rev(factor(paramestimates_energy$Parameter)))
 
 
 library(ggplot2)
-ggplot(paramestimates_energy, aes(x = Avg_Coef, y = X)) + 
+ggplot(paramestimates_energy, aes(x = Avg_Coef, y = Parameter)) + 
   geom_point(size = 3) +  # For the coefficient estimate as dots
   geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
   labs(x = "Parameter Estimate", y = "Parameter") +

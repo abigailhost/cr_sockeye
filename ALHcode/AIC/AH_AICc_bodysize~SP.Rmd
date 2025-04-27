@@ -526,7 +526,7 @@ coefs_df <- coefs_df %>%
 
 # ---- Step 9: View or export final result ----
 print(coefs_df)
-write.csv(coefs_df, "scbodymass_runtiminggroup/SizeCorrectedBodyMass_ModelAvg_Coefs_withLikelihoods.csv", row.names = FALSE)
+write.csv(coefs_df, "bodysize_spawningpopulation/bodysize_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv", row.names = FALSE)
 
 
 # ---- Step 10: Table for coefficients and threshold for parameter likelihoods ----
@@ -559,7 +559,7 @@ coefs_table
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}
-paramestimates_bodysize <- "bodysize_spawningpopulation/bodysize~spawningpopulation_models_CoefEstimates_WithLikelihoods.csv"
+paramestimates_bodysize <- "bodysize_spawningpopulation/bodysize_spawningpopulation_models_CoefEstimates_WithLikelihoods.csv"
 
 paramestimates_bodysize<-read.csv(paramestimates_bodysize)
 str(paramestimates_bodysize)
@@ -592,4 +592,5 @@ bodysize_plot <- ggplot(paramestimates_bodysize_filtered, aes(x = Avg_Coef, y = 
   theme(axis.title = element_text(size = 24), 
         axis.text = element_text(size = 24))
 
+ggsave("bodysize_spawningpopulation/BodySize_ParamEstimates_Plot.png", plot=bodysize_plot, height=8, width=12, units="in")
 ```
