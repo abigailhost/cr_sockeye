@@ -5,26 +5,184 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
 ```
 
-## R Markdown
+#' =====================================================
+#' AICc code for Size Corrected Body Mass~SpawningPopulation models
+#' =====================================================
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### Loading Data
+```{r}
+rm(list = ls())
+library(AICcmodavg)
+library(lubridate)
+library(ggplot2)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#data loading
+bc19 <- read.csv("bodycomp_2019.csv")
+bc20 <- read.csv("bodycomp_2020.csv")
+bc21 <- read.csv("bodycomp_2021.csv")
+#need to bind all together for total body comp dataset, Upper River river only
 
-```{r cars}
-summary(cars)
+bc_UR_total <- rbind(bc19[61:172,], bc20[61:120,], bc21[61:182,])
+write.csv(bc_UR_total, "upperriver_bodycomp_all.csv")
+upperriver_bodycomp_all<-read.csv("upperriver_bodycomp_all.csv")[,-1]
+#all data is loaded now
+
+#need to add year to dataset
+str(upperriver_bodycomp_all)
+upperriver_bodycomp_all$Collection_Date <- as.Date(upperriver_bodycomp_all$Collection_Date)
+
+# Create a new column 'year' from the collection_date
+upperriver_bodycomp_all$Year <- year(upperriver_bodycomp_all$Collection_Date)
+str(upperriver_bodycomp_all)
+
+#replace blank cell in Sex with NA 
+upperriver_bodycomp_all$Sex[upperriver_bodycomp_all$Sex == ""] <- NA
+str(upperriver_bodycomp_all)
+
+write.csv(upperriver_bodycomp_all, "upperriver_bodycomp_all.csv")
 ```
 
-## Including Plots
+### Import Data for models, check for NAs and eliminate as needed
+```{r}
+rm(list = ls())
+upperriver_bodycomp_PCscores <- "upperriver_bodycomp_PCscores.csv"
 
-You can also embed plots, for example:
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(upperriver_bodycomp_PCscores)[,-1]
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+### Removing NAs that will mess up levels / model weight
+any(is.na(DataSet$Collection_Location)) #FALSE
+any(is.na(DataSet$Year)) #FALSE
+any(is.na(DataSet$Sex)) #FALSE
+any(is.na(DataSet$Collection_RiverMile_m)) # FALSE
+any(is.na(DataSet$Elevation_m)) #FALSE
+
+
+#### CHECK DIRECTION OF PC SCORE ###
+library(ggplot2)
+ggplot(DataSet, aes(x=Fish_Wt, y=bodysize_pc_g_mm)) +
+  geom_point()
+#so direction of PC score is positive, can check with other variables
+
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet)
+
+#Make work metric (migratory difficulty metric where work = F x distance)
+DataSet$Elevation_m <- as.numeric(DataSet$Elevation_m)
+DataSet$Work <- (DataSet$Collection_RiverMile_m * DataSet$Elevation_m) / (1000*1000) #so work is in km^2 
+str(DataSet) 
+
+#convert gonad_wt to grams from kilograms
+DataSet$Gonad_Wt_g <- DataSet$Gonad_Wt * 1000
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+levels(DataSet$Collection_Location) # 7 unique locations
+DataSet$Year<- as.factor(DataSet$Year)
+levels(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+
+#check gonad weight for NAs
+any(is.na(DataSet$Gonad_Wt_g))
+DataSet[is.na(DataSet$Gonad_Wt_g), ] #need to eliminate these rows or model selection will not work
+DataSet <- DataSet[-c(8, 19, 20, 31, 35, 37, 50, 59, 70, 71, 73, 81, 84, 111, 112, 114),]
+any(is.na(DataSet$Gonad_Wt_g)) #FALSE
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Calculating Size-Corrected Body Mass in DataSet 
+```{r}
+### Size corrected body mass should be the residuals of linear regression between weight ~ fish body size PC Score ###
+# DataSet$bodysize_pc_g_mm = in the correct units already
+DataSet$Fish_Wt_g <- DataSet$Fish_Wt*1000 #grams conversion
+sizecorrected_bodymass_lm <- lm(DataSet$Fish_Wt_g ~ DataSet$bodysize_pc_g_mm) #linear regression for size corrected body mass
+sizecorrected_bodymass_residuals <- residuals(sizecorrected_bodymass_lm) #residuals for regression
+plot(sizecorrected_bodymass_residuals, DataSet$bodysize_pc_g_mm)
+sizecorrected_bodymass <- as.data.frame(sizecorrected_bodymass_residuals)
+DataSet <- cbind(DataSet, sizecorrected_bodymass) #adds the residuals to data set as a variable
+str(DataSet)
+
+write.csv(DataSet, "upperriver_bodycomp_SizeCorrectedBodyMass.csv") #should all be according to grams and mm values
+```
+
+### Reload data for model sets now that size corrected body mass has been calculated
+```{r}
+rm(list = ls())
+lowerriver_bodycomp_all<- "upperriver_bodycomp_SizeCorrectedBodyMass.csv"
+
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(lowerriver_bodycomp_all)[,-1]
+
+### Removing NAs that will mess up levels / model weight
+any(is.na(DataSet$Collection_RiverMile_m))
+any(is.na(DataSet$Year))
+any(is.na(DataSet$Sex))
+any(is.na(DataSet$Gonad_Wt_g))
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+levels(DataSet$Collection_Location) # 7 unique locations
+DataSet$Year<- as.factor(DataSet$Year)
+levels(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+DataSet$Gonad_Wt_g <- as.numeric(DataSet$Gonad_Wt_g)
+str(DataSet)
+
+
+ggplot(DataSet, aes(x = Fish_Wt_g, y = sizecorrected_bodymass_residuals)) + 
+  geom_point() #one major outlier
+
+```
+
+### Making Models for sizecorrectedbodymass~SP
+```{r}
+# Models for reference
+scBodyMass_SP_modelset <- "scbodymass_spawningpopulation/SizeCorrectedBodyMass~SpawningPopulation_modelset.csv"
+
+ModelSet<-read.csv(scBodyMass_SP_modelset)
+
+#models
+model1 <- lm(sizecorrected_bodymass_residuals~1, data=DataSet)
+model2 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work, data = DataSet)
+model3 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex, data = DataSet)
+model4 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Year, data = DataSet)
+model5 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex, data = DataSet)
+model6 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year, data = DataSet)
+model7 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex + Year, data = DataSet)
+model8 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
+model9 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet)
+model10 <- lm(sizecorrected_bodymass_residuals~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
+model11 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
+```
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:11), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "bodysize_spawningpopulation/AICresults_bodysize~SpawningPopulation.csv", row.names = FALSE)
+
+```

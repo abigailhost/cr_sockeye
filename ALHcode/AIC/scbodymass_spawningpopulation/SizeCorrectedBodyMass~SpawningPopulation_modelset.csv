@@ -1,0 +1,12 @@
+﻿Model
+sizecorrected_bodymass_residuals~1
+sizecorrected_bodymass_residuals~Gonad_Wt + Work
+sizecorrected_bodymass_residuals~Gonad_Wt + Sex
+sizecorrected_bodymass_residuals~Gonad_Wt + Year
+sizecorrected_bodymass_residuals~Gonad_Wt + Work + Sex
+sizecorrected_bodymass_residuals~Gonad_Wt + Work + Year
+sizecorrected_bodymass_residuals~Gonad_Wt + Sex + Year
+sizecorrected_bodymass_residuals~Gonad_Wt + Work + Sex + Work:Sex
+sizecorrected_bodymass_residuals~Gonad_Wt + Work + Year + Work:Year
+sizecorrected_bodymass_residuals~Gonad_Wt + Sex + Year + Sex:Year
+sizecorrected_bodymass_residuals~Gonad_Wt + Work + Sex + Year
