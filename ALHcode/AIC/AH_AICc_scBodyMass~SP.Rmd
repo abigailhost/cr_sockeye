@@ -118,10 +118,10 @@ write.csv(DataSet, "upperriver_bodycomp_SizeCorrectedBodyMass.csv") #should all 
 ### Reload data for model sets now that size corrected body mass has been calculated
 ```{r}
 rm(list = ls())
-lowerriver_bodycomp_all<- "upperriver_bodycomp_SizeCorrectedBodyMass.csv"
+upperriver_bodycomp_all<- "upperriver_bodycomp_SizeCorrectedBodyMass.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
-DataSet<-read.csv(lowerriver_bodycomp_all)[,-1]
+DataSet<-read.csv(upperriver_bodycomp_all)[,-1]
 
 ### Removing NAs that will mess up levels / model weight
 any(is.na(DataSet$Collection_RiverMile_m))
@@ -163,6 +163,7 @@ model8 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Work:Se
 model9 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet)
 model10 <- lm(sizecorrected_bodymass_residuals~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
 model11 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
+summary(model6)
 ```
 
 ### AICc Model Selection
@@ -179,10 +180,20 @@ print(myaicc1)
 
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("")
+aic_df$ModelName <- c("sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year + Work:Year",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Year",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Year",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex + Year",
+                      "sizecorrected_bodymass_residuals~1",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Work:Sex",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex",
+                      "sizecorrected_bodymass_residuals~Gonad_Wt_g + Sex + Year + Sex:Year") 
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
-write.csv(aic_df, file = "bodysize_spawningpopulation/AICresults_bodysize~SpawningPopulation.csv", row.names = FALSE)
+write.csv(aic_df, file = "scbodymass_spawningpopulation/AICresults_SizeCorrectedBodyMass~SpawningPopulation.csv", row.names = FALSE)
 
 ```
