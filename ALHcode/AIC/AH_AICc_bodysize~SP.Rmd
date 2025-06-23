@@ -412,7 +412,6 @@ model8 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSe
 model9 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet_clean)
 model10 <- lm(bodysize_pc_g_mm~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet_clean)
 model11 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Year, data = DataSet_clean)
-summary(model11)
 ```
 
 ### AICc Model Selection
@@ -559,7 +558,7 @@ coefs_table
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}
-paramestimates_bodysize <- "bodysize_spawningpopulation/bodysize_spawningpopulation_models_CoefEstimates_WithLikelihoods.csv"
+paramestimates_bodysize <- "bodysize_spawningpopulation/bodysize_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv"
 
 paramestimates_bodysize<-read.csv(paramestimates_bodysize)
 str(paramestimates_bodysize)
