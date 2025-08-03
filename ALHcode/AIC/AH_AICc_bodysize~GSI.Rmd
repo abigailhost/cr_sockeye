@@ -1,0 +1,367 @@
+---
+title: "AH_AICc_bodysize~GSI"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
+```
+
+#' =====================================================
+#' AICc code for BodySizePC_1~GSI models
+#' =====================================================
+
+### Loading Data
+```{r}
+library(AICcmodavg)
+library(lubridate)
+library(ggplot2)
+
+#data loading
+gsi20 <- read.csv("GSI_lowerriver20.csv")[,-1]
+gsi21 <- read.csv("GSI_lowerriver21.csv")
+#need to bind all together for total body comp GSI dataset, lower river only
+
+gsi_LR_total <- rbind(gsi20[1:60,], gsi21[1:60,])
+write.csv(gsi_LR_total, "lowerriver_GSI_all.csv")
+lowerriver_GSI_all<-read.csv("lowerriver_GSI_all.csv")[,-1]
+#all data is loaded now
+#Year already included as a variable/column
+
+#replace blank cell in Sex with NA 
+lowerriver_GSI_all$Sex[lowerriver_GSI_all$Sex == ""] <- NA
+str(lowerriver_GSI_all)
+
+write.csv(lowerriver_GSI_all, "lowerriver_GSI_all.csv")
+
+```
+
+### Checking for NAs for PC score
+```{r}
+rm(list = ls())
+lowerriver_GSI_all <- "lowerriver_GSI_all.csv"
+lowerriver_GSI_all<-read.csv("lowerriver_GSI_all.csv")[,-1]
+
+### Removing NAs that will mess up levels / model weight
+any(is.na(lowerriver_GSI_all$Collection_Location))
+any(is.na(lowerriver_GSI_all$Group_Assignment))
+any(is.na(lowerriver_GSI_all$Year))
+any(is.na(lowerriver_GSI_all$Sex))
+lowerriver_GSI_all[is.na(lowerriver_GSI_all$Sex), ] #row 55 has no sex value, eliminate it for models
+lowerriver_GSI_all <- lowerriver_GSI_all[-55,] #excludes row missing sex file
+any(is.na(lowerriver_GSI_all$Sex))
+
+#checking NA
+any(is.na(lowerriver_GSI_all$Fish_Leng_2))
+any(is.na(lowerriver_GSI_all$Fish_Ht))
+any(is.na(lowerriver_GSI_all$Fish_Grth)) #Na's present, will need to omit them for PC score
+lowerriver_GSI_all[is.na(lowerriver_GSI_all$Fish_Grth), ] #row 4 has NA, can estimate for PC score
+
+```
+
+### Estimate Girth Values for NA rows
+```{r}
+ggplot(lowerriver_GSI_all, aes(x=Fish_Leng_1, y = Fish_Grth)) + 
+  geom_point() #length relationship to girth, one major outlier, eliminate that point(?) in row 67
+
+lowerriver_GSI_all <- lowerriver_GSI_all[-67,]
+
+ggplot(lowerriver_GSI_all, aes(x=Fish_Leng_1, y = Fish_Grth)) + 
+  geom_point() #length relationship to girth, no more outliers
+
+girth_leng_lm <- lm(Fish_Grth ~ Fish_Leng_1, data = lowerriver_GSI_all)
+summary(girth_leng_lm) # Adjusted R-squared:  0.6951
+
+# Subset the data for female F fish only
+allfemale_lowerriver_GSI_all <- lowerriver_GSI_all[lowerriver_GSI_all$Sex == "F", ]
+
+# Perform PCA on the subset of female F fish
+pca_model_allF <- princomp(allfemale_lowerriver_GSI_all[,c(12,14,16)], cor=T, scores=T, covmat = NULL)
+
+summary(pca_model_allF, loadings=T, cutoff=0.001) #summary of PC analysis
+
+# Create a new dataframe with PCA scores for the female F fish subset
+allfemale_lowerriver_bodycomp <- cbind(allfemale_lowerriver_GSI_all, pca_model_allF$scores[, 1])  # First principal component
+
+# Create the linear model for predicting Fish_Grth based on the first principal component
+girth_pc_lm <- lm(Fish_Grth ~ pca_model_allF$scores[, 1], data = allfemale_lowerriver_bodycomp)
+
+# View the summary of the linear model
+summary(girth_pc_lm)
+plot(girth_pc_lm)
+
+
+predicted_values <- predict(girth_pc_lm, newdata = allfemale_lowerriver_bodycomp)
+
+allfemale_lowerriver_bodycomp$Predicted_Fish_Grth <- predicted_values # Add these predictions back to your dataset
+
+### the predicted value for row 64 when all female fish is Fish_Grth = 30.57211
+
+#plot the original data and the predicted values to see how well the model fits
+ggplot(allfemale_lowerriver_bodycomp, aes(x = Predicted_Fish_Grth, y = Fish_Grth)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Grth, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Fish Growth",
+       x = "Comparison PC",
+       y = "Fish Growth") +
+  theme_minimal() 
+
+###### Now, back to using lowerriver_bodycomp_all #######
+lowerriver_GSI_all$Fish_Grth[is.na(lowerriver_GSI_all$Fish_Grth)] <- 30.57211
+any(is.na(lowerriver_GSI_all$Fish_Leng_1))
+any(is.na(lowerriver_GSI_all$Fish_Ht))
+any(is.na(lowerriver_GSI_all$Fish_Grth)) # no longer an NA present
+```
+
+### PC Score for Body Size, using leng_1, height, girth
+```{r}
+bc_pca1 <- princomp(lowerriver_GSI_all[,c(12,16,19)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
+summary(bc_pca1, loadings=T, cutoff=0.0001) #summary of PC analysis
+bc_pca1$scores
+screeplot(bc_pca1, type=c('lines'))
+bodysize_pc <- bc_pca1$scores[,1]
+
+
+## Convert leng_1, Ht, and Grth -- for bodysize_pc_g_mm
+lowerriver_GSI_all$Fish_Leng_1_mm <- lowerriver_GSI_all$Fish_Leng_1*10
+lowerriver_GSI_all$Fish_Ht_mm <- lowerriver_GSI_all$Fish_Ht*10
+lowerriver_GSI_all$Fish_Grth_mm <- lowerriver_GSI_all$Fish_Grth*10
+
+bc_pca2 <- princomp(lowerriver_GSI_all[,c(84,85,86)], cor=T, scores=T, covmat = NULL) #should work now without any NAs, identical scores to that of the one above.  units do not matter!
+summary(bc_pca2, loadings=T, cutoff=0.0001) #summary of PC analysis
+bc_pca2$scores
+screeplot(bc_pca2, type=c('lines'))
+bodysize_pc_g_mm <- bc_pca2$scores[,1]
+
+#combine dataframe with column for body size PC scores
+lowerriver_GSI_pc <- cbind(lowerriver_GSI_all, bodysize_pc, bodysize_pc_g_mm) #So, worth noting that despite conversion, the PC score is exactly the same
+
+
+
+
+#Now, run AIC again but PC1 scores are the response variable / numeric
+write.csv(lowerriver_GSI_pc, "lowerriver_GSI_PCscores.csv")
+```
+
+
+### Import Data for models
+```{r}
+rm(list = ls())
+lowerriver_GSI_PCscores <- "lowerriver_GSI_PCscores.csv"
+
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(lowerriver_GSI_PCscores)[,-1] #88 variables, 118 observations b/c one row with NA sex is removed
+
+#### CHECK DIRECTION OF PC SCORE ###
+library(ggplot2)
+ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc_g_mm)) +
+  geom_point()
+#so direction of PC score is positive, can check with other variables
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet)
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$Group_Assignment <- as.factor(DataSet$Group_Assignment)
+levels(DataSet$Group_Assignment) #levels are not all consistent. Need to fix this
+
+# Strip whitespace
+DataSet$Group_Assignment <- trimws(DataSet$Group_Assignment)
+
+# Standardize levels
+DataSet$Group_Assignment <- factor(DataSet$Group_Assignment)
+
+# Use recoding to fix inconsistencies
+levels(DataSet$Group_Assignment) <- recode_levels <- c(
+  "Bremner" = "Bremner",
+  "Chitina" = "Chitina",
+  "Gulkana" = "Gulkana",
+  "Gulkana " = "Gulkana",  # merge with "Gulkana"
+  "Gulkanahatchery" = "GulkanaHatchery",
+  "GulkanaHatchery" = "GulkanaHatchery",
+  "insufficient genotypes" = "insufficient_genotypes" ,
+  "KlutinaLake" = "KlutinaLake",
+  "KlutinaTonsinaOutlet" = "KlutinaTonsinaOutlet",
+  "KlutinaTonsinaOutlets" = "KlutinaTonsinaOutlet",  # merged
+  "LowerGroups" = "LowerGroups",
+  "Slana" = "Slana",
+  "TanadaCopperLakes" = "TanadaCopperLakes",
+  "Tazlina" = "Tazlina"
+)
+
+# Confirm new levels
+levels(DataSet$Group_Assignment) #now these have been merged properly
+
+
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet) #collection_rivermile_m is numeric
+
+```
+
+### Making Models for bodysize_pc~GSI,
+```{r}
+# Models for reference
+bodysize_GSI_modelset <- "bodysize_GSI/bodysize~GSI_modelset.csv"
+
+ModelSet<-read.csv(bodysize_GSI_modelset)
+
+model1 <- lm(bodysize_pc_g_mm~1, data=DataSet)
+model2 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment, data = DataSet)
+model3 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Year, data = DataSet)
+model5 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+model6 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Year, data = DataSet)
+model7 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year, data = DataSet)
+model8 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex, data = DataSet)
+model9 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex + Year, data = DataSet)
+
+
+```
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:10), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("bodysize_pc_g_mm~Collection_RiverMile_m + Sex",
+                     "bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year",
+                     "bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year + Sex:Year",
+                     "bodysize_pc_g_mm~Collection_RiverMile_m + Year",
+                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex",
+                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex + Year",
+                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Year",
+                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment",
+                     "bodysize_pc_g_mm~1",
+                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "bodysize_GSI/AICresults_bodysize~GSI.csv", row.names = FALSE)
+
+```
+
+
+
+### Model Averaging and Parameter Likelihoods
+```{r}
+# ---- Load necessary packages ----
+library(MuMIn)
+library(dplyr)
+
+# ---- Step 1: Combine models into a named list ----
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+model_names <- paste0("Model_", seq_along(models))
+names(models) <- model_names
+
+# ---- Step 2: Run model selection (AICc) ----
+model_sel <- model.sel(models)
+
+# ---- Step 3: Model averaging (conditional averaging recommended) ----
+model_avg <- model.avg(model_sel, full = FALSE)  # full = FALSE for conditional averaging
+summary(model_avg)
+
+# ---- Step 4: Extract averaged coefficients and confidence intervals ----
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
+avg_se <- sqrt(diag(vcov(model_avg)))
+
+# ---- Step 5: Create tidy coefficient summary ----
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]
+coefs_df$CI_Upper <- avg_confint[, 2]
+coefs_df$SE <- avg_se
+coefs_df$Parameter <- rownames(coefs_df)
+
+# Reorder for clarity
+coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "SE", "CI_Lower", "CI_Upper")]
+
+# ---- Step 6: Helper function to normalize interaction term names ----
+normalize_param_name <- function(name) {
+  if (grepl(":", name)) {
+    parts <- strsplit(name, ":")[[1]]
+    paste(sort(parts), collapse = ":")
+  } else {
+    name
+  }
+}
+
+# ---- Step 7: Calculate parameter likelihoods (relative importance) ----
+weights <- model_sel$weight
+
+# Extract all unique parameter names across models (normalize interaction terms)
+param_names <- unique(unlist(sapply(models, function(m) {
+  sapply(names(coef(m)), normalize_param_name)
+})))
+
+# Calculate parameter likelihoods safely
+param_likelihoods <- sapply(param_names, function(param) {
+  models_with_param <- sapply(models, function(m) {
+    any(sapply(names(coef(m)), function(p) normalize_param_name(p) == param))
+  })
+  if (any(models_with_param)) {
+    sum(weights[models_with_param])
+  } else {
+    0  # If not in any model, assign 0
+  }
+})
+
+# ---- Step 8: Create param_likelihoods_df and merge cleanly ----
+param_likelihoods_df <- data.frame(
+  Parameter = param_names,
+  ParamLikelihood = param_likelihoods
+)
+
+# Drop any old ParamLikelihood (if present), then merge cleanly
+coefs_df <- coefs_df %>% select(-any_of("ParamLikelihood"))
+coefs_df <- left_join(coefs_df, param_likelihoods_df, by = "Parameter")
+
+# ---- Step 9: Sort by parameter likelihood ----
+coefs_df <- coefs_df %>%
+  arrange(desc(ParamLikelihood))
+
+# ---- Step 9: View or export final result ----
+print(coefs_df)
+write.csv(coefs_df, "bodysize_GSI/bodysize_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = FALSE)
+
+
+# ---- Step 10: Table for coefficients and threshold for parameter likelihoods ----
+threshold <- 0.1  # Set threshold for importance
+
+# Add a new column to coefs_df that marks important vs non-important parameters
+coefs_df$Importance <- ifelse(coefs_df$ParamLikelihood > threshold, "Important", "Non-Important")
+
+# ---- Color Code Important Parameters with Color Blind Friendly Colors ----
+# Light green for important, light gray for non-important
+library(kableExtra)
+
+# Create the table without adding duplicate headers
+coefs_table <- coefs_df %>%
+  arrange(desc(ParamLikelihood)) %>%
+  kable("html", escape = FALSE, align = c("l", "r", "r", "r", "r", "r", "l")) %>%
+  # Apply color coding based on importance
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  row_spec(which(coefs_df$Importance == "Important"), background = "lightgreen", color = "black") %>%
+  row_spec(which(coefs_df$Importance == "Non-Important"), background = "lightgray", color = "black") # Adjust column width if needed
+
+# Print or save the table
+coefs_table
+
+```

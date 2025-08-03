@@ -1,0 +1,11 @@
+﻿Model
+Body Size~1
+Body Size~Collection_RiverMile_m  + Group_Assignment
+Body Size~Collection_RiverMile_m  + Sex
+Body Size~Collection_RiverMile_m  + Year
+Body Size~Collection_RiverMile_m  + Group_Assignment + Sex
+Body Size~Collection_RiverMile_m  + Group_Assignment + Year
+Body Size~Collection_RiverMile_m  + Sex + Year
+Body Size~Collection_RiverMile_m  + Group_Assignment + Sex + Group_Assignment*Sex
+Body Size~Collection_RiverMile_m  + Sex + Year + Sex*Year
+Body Size~Collection_RiverMile_m  + Group_Assignment + Sex + Year
