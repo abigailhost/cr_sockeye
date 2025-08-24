@@ -13,8 +13,13 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE
 #' AICc code for BodySizePC_1~GSI models
 #' =====================================================
 
+
+
+NOTE!!!! Need to ensure what level of assignment likelihood we are using for inclusion in GSI analysis!
+
 ### Loading Data
 ```{r}
+rm(list = ls())
 library(AICcmodavg)
 library(lubridate)
 library(ggplot2)
@@ -161,12 +166,6 @@ ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc_g_mm)) +
   geom_point()
 #so direction of PC score is positive, can check with other variables
 
-# View DataSet.
-head(DataSet)
-summary(DataSet)
-nrow(DataSet)
-str(DataSet)
-
 #make response variables factors
 DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
 DataSet$Group_Assignment <- as.factor(DataSet$Group_Assignment)
@@ -177,27 +176,21 @@ DataSet$Group_Assignment <- trimws(DataSet$Group_Assignment)
 
 # Standardize levels
 DataSet$Group_Assignment <- factor(DataSet$Group_Assignment)
+levels(DataSet$Group_Assignment)
 
-# Use recoding to fix inconsistencies
-levels(DataSet$Group_Assignment) <- recode_levels <- c(
-  "Bremner" = "Bremner",
-  "Chitina" = "Chitina",
-  "Gulkana" = "Gulkana",
-  "Gulkana " = "Gulkana",  # merge with "Gulkana"
-  "Gulkanahatchery" = "GulkanaHatchery",
-  "GulkanaHatchery" = "GulkanaHatchery",
-  "insufficient genotypes" = "insufficient_genotypes" ,
-  "KlutinaLake" = "KlutinaLake",
-  "KlutinaTonsinaOutlet" = "KlutinaTonsinaOutlet",
-  "KlutinaTonsinaOutlets" = "KlutinaTonsinaOutlet",  # merged
-  "LowerGroups" = "LowerGroups",
-  "Slana" = "Slana",
-  "TanadaCopperLakes" = "TanadaCopperLakes",
-  "Tazlina" = "Tazlina"
-)
+
+# Clean up levels manually
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "Gulkana "] <- "Gulkana"
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "Gulkanahatchery"] <- "GulkanaHatchery"
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "KlutinaTonsinaOutlets"] <- "KlutinaTonsinaOutlet"
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "insufficient genotypes"] <- "insufficient_genotypes"
+
+# Then drop the insufficient genotypes
+DataSet <- subset(DataSet, Group_Assignment != "insufficient_genotypes")
+DataSet$Group_Assignment <- droplevels(DataSet$Group_Assignment)
 
 # Confirm new levels
-levels(DataSet$Group_Assignment) #now these have been merged properly
+levels(DataSet$Group_Assignment)
 
 
 DataSet$Year<- as.factor(DataSet$Year)
@@ -241,19 +234,23 @@ print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
 aic_df$ModelName <- c("bodysize_pc_g_mm~Collection_RiverMile_m + Sex",
-                     "bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year",
-                     "bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year + Sex:Year",
-                     "bodysize_pc_g_mm~Collection_RiverMile_m + Year",
-                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex",
-                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex + Year",
-                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Year",
-                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment",
-                     "bodysize_pc_g_mm~1",
-                     "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex")
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Sex + Year + Sex:Year",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex + Year",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Year",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Year",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment",
+                      "bodysize_pc_g_mm~1",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex")
+
+
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
 write.csv(aic_df, file = "bodysize_GSI/AICresults_bodysize~GSI.csv", row.names = FALSE)
+
+summary(model7)
 
 ```
 
