@@ -1,0 +1,11 @@
+﻿Model
+EnergyPDry_1~1
+EnergyPDry_1~Collection_RiverMile_m + Group_Assignment
+EnergyPDry_1~Collection_RiverMile_m + Sex
+EnergyPDry_1~Collection_RiverMile_m + Year
+EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex
+EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Year
+EnergyPDry_1~Collection_RiverMile_m + Sex + Year
+EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment*Sex
+EnergyPDry_1~Collection_RiverMile_m + Sex + Year + Sex*Year
+EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex + Year
