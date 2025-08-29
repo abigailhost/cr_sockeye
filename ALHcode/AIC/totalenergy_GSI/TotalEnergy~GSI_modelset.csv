@@ -1,0 +1,11 @@
+﻿Model
+TotalEnergy~1
+TotalEnergy_g~Collection_RiverMile_m + Group_Assignment
+TotalEnergy_g~Collection_RiverMile_m + Sex
+TotalEnergy_g~Collection_RiverMile_m + Year
+TotalEnergy_g~Collection_RiverMile_m + Group_Assignment + Sex
+TotalEnergy_g~Collection_RiverMile_m + Group_Assignment + Year
+TotalEnergy_g~Collection_RiverMile_m + Sex + Year
+TotalEnergy_g~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment*Sex
+TotalEnergy_g~Collection_RiverMile_m + Sex + Year + Sex*Year
+TotalEnergy_g~Collection_RiverMile_m + Group_Assignment + Sex + Year

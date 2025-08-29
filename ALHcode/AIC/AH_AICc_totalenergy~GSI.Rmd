@@ -1,0 +1,299 @@
+---
+title: "AH_AICc_totalenergy~GSI"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
+```
+
+#' =====================================================
+#' AICc code for TotalEnergy~GSI models
+#' =====================================================
+
+
+NOTE!!!! Need to ensure what level of assignment likelihood we are using for inclusion in GSI analysis!
+
+### Loading Data
+```{r}
+rm(list = ls())
+library(AICcmodavg)
+library(lubridate)
+library(ggplot2)
+
+#data loading
+gsi20 <- read.csv("GSI_lowerriver20.csv")[,-1]
+gsi21 <- read.csv("GSI_lowerriver21.csv")
+#need to bind all together for total body comp GSI dataset, lower river only
+
+gsi_LR_total <- rbind(gsi20[1:60,], gsi21[1:60,])
+write.csv(gsi_LR_total, "lowerriver_GSI_all.csv")
+lowerriver_GSI_all<-read.csv("lowerriver_GSI_all.csv")[,-1]
+#all data is loaded now
+#Year already included as a variable/column
+
+#replace blank cell in Sex with NA 
+lowerriver_GSI_all$Sex[lowerriver_GSI_all$Sex == ""] <- NA
+str(lowerriver_GSI_all)
+
+write.csv(lowerriver_GSI_all, "lowerriver_GSI_all.csv")
+
+```
+
+### Add Total Energy as a Variable
+```{r}
+# Total energy = PDry_1 * Fish_Wt == mJ energy
+lowerriver_GSI_all$EnergyPDry_1_mJ_g <- lowerriver_GSI_all$EnergyPDry_1 / 1000
+lowerriver_GSI_all$Fish_Wt_g <- lowerriver_GSI_all$Fish_Wt * 1000
+lowerriver_GSI_all$TotalEnergy_mJ <- lowerriver_GSI_all$EnergyPDry_1_mJ_g * lowerriver_GSI_all$Fish_Wt_g
+str(lowerriver_GSI_all)
+
+write.csv(lowerriver_GSI_all, "lowerriver_GSI_TotalEnergy.csv")
+```
+
+### Import Data for models
+```{r}
+rm(list = ls())
+lowerriver_GSI_TE <- "lowerriver_GSI_TotalEnergy.csv"
+
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(lowerriver_GSI_TE)[,-1] #83 variables, 120 observations b/c one row with NA sex is removed
+
+
+### Removing NAs that will mess up levels / model weight
+any(is.na(DataSet$Collection_Location))
+any(is.na(DataSet$Group_Assignment))
+any(is.na(DataSet$Year))
+any(is.na(DataSet$Sex))
+DataSet[is.na(DataSet$Sex), ] #row 115 has no sex value, eliminate it for models
+DataSet <- DataSet[-55,] #excludes row missing sex file
+any(is.na(DataSet$Sex)) 
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet)
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$Group_Assignment <- as.factor(DataSet$Group_Assignment)
+levels(DataSet$Group_Assignment) #levels are not all consistent. Need to fix this
+
+# Strip whitespace
+DataSet$Group_Assignment <- trimws(DataSet$Group_Assignment)
+
+# Standardize levels
+DataSet$Group_Assignment <- factor(DataSet$Group_Assignment)
+levels(DataSet$Group_Assignment)
+
+
+# Clean up levels manually
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "Gulkana "] <- "Gulkana"
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "Gulkanahatchery"] <- "GulkanaHatchery"
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "KlutinaTonsinaOutlets"] <- "KlutinaTonsinaOutlet"
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "insufficient genotypes"] <- "insufficient_genotypes"
+
+# Then drop the insufficient genotypes
+DataSet <- subset(DataSet, Group_Assignment != "insufficient_genotypes")
+DataSet$Group_Assignment <- droplevels(DataSet$Group_Assignment)
+
+# Confirm new levels
+levels(DataSet$Group_Assignment) #should have 10 levels
+
+
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet) #collection_rivermile_m is numeric
+
+```
+
+### Making Models for TotalEnergy~GSI,
+```{r}
+# Models for reference
+totalenergy_GSI_modelset <- "totalenergy_GSI/TotalEnergy~GSI_modelset.csv"
+
+ModelSet<-read.csv(totalenergy_GSI_modelset)
+
+model1 <- lm(TotalEnergy_mJ~1, data=DataSet)
+model2 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment, data = DataSet)
+model3 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Year, data = DataSet)
+model5 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+model6 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Year, data = DataSet)
+model7 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year, data = DataSet)
+model8 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex, data = DataSet)
+model9 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Year, data = DataSet)
+
+
+```
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:10), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex",
+                      "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment",
+                      "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Year",
+                      "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Year",
+                      "TotalEnergy_mJ~Collection_RiverMile_m + Sex",
+                      "TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year",
+                      "TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year + Sex:Year",
+                      "TotalEnergy_mJ~Collection_RiverMile_m + Year",
+                      "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex",
+                      "TotalEnergy_mJ~1")
+
+
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "totalenergy_GSI/AICresults_TotalEnergy~GSI.csv", row.names = FALSE)
+
+summary(model5)
+summary(model2)
+
+```
+
+### Model Averaging and Parameter Likelihoods
+```{r}
+# ---- Load necessary packages ----
+library(MuMIn)
+library(dplyr)
+
+# ---- Step 1: Combine models into a named list ----
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+model_names <- paste0("Model_", seq_along(models))
+names(models) <- model_names
+
+# ---- Step 2: Run model selection (AICc) ----
+model_sel <- model.sel(models)
+
+# ---- Step 3: Model averaging (conditional averaging recommended) ----
+model_avg <- model.avg(model_sel, full = FALSE)  # full = FALSE for conditional averaging
+summary(model_avg)
+
+# ---- Step 4: Extract averaged coefficients and confidence intervals ----
+avg_coefs <- coef(model_avg)
+avg_confint <- confint(model_avg)
+avg_se <- sqrt(diag(vcov(model_avg)))
+
+# ---- Step 5: Create tidy coefficient summary ----
+coefs_df <- as.data.frame(avg_coefs)
+colnames(coefs_df) <- "Avg_Coef"
+coefs_df$CI_Lower <- avg_confint[, 1]
+coefs_df$CI_Upper <- avg_confint[, 2]
+coefs_df$SE <- avg_se
+coefs_df$Parameter <- rownames(coefs_df)
+
+# Reorder for clarity
+coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "SE", "CI_Lower", "CI_Upper")]
+
+# ---- Step 6: Helper function to normalize interaction term names ----
+normalize_param_name <- function(name) {
+  if (grepl(":", name)) {
+    parts <- strsplit(name, ":")[[1]]
+    paste(sort(parts), collapse = ":")
+  } else {
+    name
+  }
+}
+
+# ---- Step 7: Calculate parameter likelihoods (relative importance) ----
+weights <- model_sel$weight
+
+# Extract all unique parameter names across models (normalize interaction terms)
+param_names <- unique(unlist(sapply(models, function(m) {
+  sapply(names(coef(m)), normalize_param_name)
+})))
+
+# Calculate parameter likelihoods safely
+param_likelihoods <- sapply(param_names, function(param) {
+  models_with_param <- sapply(models, function(m) {
+    any(sapply(names(coef(m)), function(p) normalize_param_name(p) == param))
+  })
+  if (any(models_with_param)) {
+    sum(weights[models_with_param])
+  } else {
+    0  # If not in any model, assign 0
+  }
+})
+
+# ---- Step 8: Create param_likelihoods_df and merge cleanly ----
+param_likelihoods_df <- data.frame(
+  Parameter = param_names,
+  ParamLikelihood = param_likelihoods
+)
+
+# Drop any old ParamLikelihood (if present), then merge cleanly
+coefs_df <- coefs_df %>% select(-any_of("ParamLikelihood"))
+coefs_df <- left_join(coefs_df, param_likelihoods_df, by = "Parameter")
+
+# ---- Step 9: Sort by parameter likelihood ----
+coefs_df <- coefs_df %>%
+  arrange(desc(ParamLikelihood))
+
+# ---- Step 9: View or export final result ----
+print(coefs_df)
+write.csv(coefs_df, "totalenergy_GSI/TotalEnergy_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = FALSE)
+
+
+# ---- Step 10: Table for coefficients and threshold for parameter likelihoods ----
+threshold <- 0.1  # Set threshold for importance
+
+# Add a new column to coefs_df that marks important vs non-important parameters
+coefs_df$Importance <- ifelse(coefs_df$ParamLikelihood > threshold, "Important", "Non-Important")
+
+# ---- Color Code Important Parameters with Color Blind Friendly Colors ----
+# Light green for important, light gray for non-important
+library(kableExtra)
+
+# Create the table without adding duplicate headers
+coefs_table <- coefs_df %>%
+  arrange(desc(ParamLikelihood)) %>%
+  kable("html", escape = FALSE, align = c("l", "r", "r", "r", "r", "r", "l")) %>%
+  # Apply color coding based on importance
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  row_spec(which(coefs_df$Importance == "Important"), background = "lightgreen", color = "black") %>%
+  row_spec(which(coefs_df$Importance == "Non-Important"), background = "lightgray", color = "black") # Adjust column width if needed
+
+# Print or save the table
+coefs_table
+
+```
+
+```{r}
+#visualizing model 5 -- "TotalEnergy_g~Collection_RiverMile_m + Group_Assignment + Sex"
+ggplot(DataSet, aes(x = Group_Assignment, y = TotalEnergy_mJ, fill = Sex)) +
+  geom_boxplot(position = position_dodge()) +
+  labs(
+    title = "Total Energy by Sex and Group Assignment (GSI Working Group)",
+    x = "Group Assignment",
+    y = "Total Energy (mJ)",
+    fill = "Sex",
+  ) +
+  theme_minimal()
+
+#just looking at group assignment
+ggplot(DataSet, aes(x = Group_Assignment, y = TotalEnergy_mJ, fill = Group_Assignment)) +
+  geom_boxplot(position = position_dodge()) +
+  labs(
+    title = "Total Energy by Sex and Group Assignment (GSI Working Group)",
+    x = "Group Assignment",
+    y = "Total Energy (mJ)",
+  ) +
+  theme_minimal()
+
+
+```
