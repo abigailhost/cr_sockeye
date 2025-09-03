@@ -1,0 +1,18 @@
+﻿Model
+Fecun_num_by_wt1~1
+Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc
+Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1
+Fecun_num_by_wt1~Collection_RiverMile_m + Group_Assignment
+Fecun_num_by_wt1~Collection_RiverMile_m + Year
+Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1
+Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Group_Assignment
+Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Year
+Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Group_Assignment
+Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Group_Assignment + EnergyPDry_1*Group_Assignment
+Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Year
+Fecun_num_by_wt1~Collection_RiverMile_m + Group_Assignment + Year
+Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Group_Assignment
+Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year
+Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Group_Assignment + Year
+Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Group_Assignment + Year
+Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Group_Assignment + Year
