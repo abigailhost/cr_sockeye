@@ -1,0 +1,11 @@
+﻿Model
+sizecorrected_bodymass_residuals~1
+sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment
+sizecorrected_bodymass_residuals~Collection_RiverMile_m + Sex
+sizecorrected_bodymass_residuals~Collection_RiverMile_m + Year
+sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Sex
+sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Year
+sizecorrected_bodymass_residuals~Collection_RiverMile_m + Sex + Year
+sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment*Sex
+sizecorrected_bodymass_residuals~Collection_RiverMile_m + Sex + Year + Sex*Year
+sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Sex + Year

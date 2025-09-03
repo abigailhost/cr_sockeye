@@ -1,5 +1,5 @@
 ---
-title: "AH_AICc_totalenergy~GSI"
+title: "AH_AICc_scbodymass~GSI"
 author: "Abby Host"
 date: "`r Sys.Date()`"
 output: html_document
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE
 ```
 
 #' =====================================================
-#' AICc code for TotalEnergy~GSI models
+#' AICc code for Size Corrected Body Mass~GSI models
 #' =====================================================
 
 
@@ -42,24 +42,42 @@ write.csv(lowerriver_GSI_all, "lowerriver_GSI_all.csv")
 
 ```
 
-### Add Total Energy as a Variable
+### Import Data for models, check for NAs and eliminate as needed
 ```{r}
-# Total energy = PDry_1 * Fish_Wt == mJ energy
-lowerriver_GSI_all$EnergyPDry_1_mJ_g <- lowerriver_GSI_all$EnergyPDry_1 / 1000
-lowerriver_GSI_all$Fish_Wt_g <- lowerriver_GSI_all$Fish_Wt * 1000
-lowerriver_GSI_all$TotalEnergy_mJ <- lowerriver_GSI_all$EnergyPDry_1_mJ_g * lowerriver_GSI_all$Fish_Wt_g
-str(lowerriver_GSI_all)
+rm(list = ls())
+lowerriver_GSI_PCscores<- "lowerriver_GSI_PCscores.csv"
 
-write.csv(lowerriver_GSI_all, "lowerriver_GSI_TotalEnergy.csv")
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(lowerriver_GSI_PCscores)[,-1]
+
+### Removing NAs that will mess up levels / model weight
+any(is.na(DataSet$Collection_Location))
+any(is.na(DataSet$Group_Assignment))
+any(is.na(DataSet$Year))
+any(is.na(DataSet$Sex)) # All false!
 ```
+### Calculating Size-Corrected Body Mass in DataSet 
+```{r}
+### Size corrected body mass should be the residuals of linear regression between weight ~ fish body size PC Score ###
+# DataSet$bodysize_pc_g_mm = in the correct units already
+DataSet$Fish_Wt_g <- DataSet$Fish_Wt*1000 #grams conversion
+sizecorrected_bodymass_lm <- lm(DataSet$Fish_Wt_g ~ DataSet$bodysize_pc_g_mm) #linear regression for size corrected body mass
+sizecorrected_bodymass_residuals <- residuals(sizecorrected_bodymass_lm) #residuals for regression
+plot(sizecorrected_bodymass_residuals, DataSet$Fish_Leng_Total_mm)
+sizecorrected_bodymass <- as.data.frame(sizecorrected_bodymass_residuals)
+DataSet <- cbind(DataSet, sizecorrected_bodymass) #adds the residuals to data set as a variable
+
+write.csv(DataSet, "lowerriver_GSI_SizeCorrectedBodyMass.csv") #should all be according to grams and mm values
+```
+
 
 ### Import Data for models
 ```{r}
 rm(list = ls())
-lowerriver_GSI_TE <- "lowerriver_GSI_TotalEnergy.csv"
+lowerriver_GSI_scbm <- "lowerriver_GSI_SizeCorrectedBodyMass.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
-DataSet<-read.csv(lowerriver_GSI_TE)[,-1] #83 variables, 120 observations b/c one row with NA sex is removed
+DataSet<-read.csv(lowerriver_GSI_scbm)[,-1] #83 variables, 120 observations b/c one row with NA sex is removed
 
 
 ### Removing NAs that will mess up levels / model weight
@@ -67,9 +85,6 @@ any(is.na(DataSet$Collection_Location))
 any(is.na(DataSet$Group_Assignment))
 any(is.na(DataSet$Year))
 any(is.na(DataSet$Sex))
-DataSet[is.na(DataSet$Sex), ] #row 115 has no sex value, eliminate it for models
-DataSet <- DataSet[-55,] #excludes row missing sex file
-any(is.na(DataSet$Sex)) 
 
 # View DataSet.
 head(DataSet)
@@ -108,25 +123,28 @@ DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
 str(DataSet) #collection_rivermile_m is numeric
 
+ggplot(DataSet, aes(x = Fish_Wt_g, y = sizecorrected_bodymass_residuals)) + 
+  geom_point() #a couple outliers but nothing too crazy!
+
 ```
 
 ### Making Models for TotalEnergy~GSI,
 ```{r}
 # Models for reference
-totalenergy_GSI_modelset <- "totalenergy_GSI/TotalEnergy~GSI_modelset.csv"
+scbm_GSI_modelset <- "scbodymass_GSI/SizeCorrectedBodyMass~GSI_modelset.csv"
 
-ModelSet<-read.csv(totalenergy_GSI_modelset)
+ModelSet<-read.csv(scbm_GSI_modelset)
 
-model1 <- lm(TotalEnergy_mJ~1, data=DataSet)
-model2 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment, data = DataSet)
-model3 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex, data = DataSet)
-model4 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Year, data = DataSet)
-model5 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
-model6 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Year, data = DataSet)
-model7 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year, data = DataSet)
-model8 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex, data = DataSet)
-model9 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Year, data = DataSet)
+model1 <- lm(sizecorrected_bodymass_residuals~1, data=DataSet)
+model2 <- lm(sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment, data = DataSet)
+model3 <- lm(sizecorrected_bodymass_residuals~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(sizecorrected_bodymass_residuals~Collection_RiverMile_m + Year, data = DataSet)
+model5 <- lm(sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+model6 <- lm(sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Year, data = DataSet)
+model7 <- lm(sizecorrected_bodymass_residuals~Collection_RiverMile_m + Sex + Year, data = DataSet)
+model8 <- lm(sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex, data = DataSet)
+model9 <- lm(sizecorrected_bodymass_residuals~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Sex + Year, data = DataSet)
 
 
 ```
@@ -144,25 +162,25 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Year",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Year",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Sex",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year + Sex:Year",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Year",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex",
-                      "TotalEnergy_mJ~1")
+aic_df$ModelName <- c("sizecorrected_bodymass_residuals~Collection_RiverMile_m + Sex + Year",
+                      "sizecorrected_bodymass_residuals~Collection_RiverMile_m + Sex",
+                      "sizecorrected_bodymass_residuals~Collection_RiverMile_m + Sex + Year + Sex:Year",
+                      "sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Sex + Year",
+                      "sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Sex",
+                      "sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Year",
+                      "sizecorrected_bodymass_residuals~Collection_RiverMile_m + Year",
+                      "sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment",
+                      "sizecorrected_bodymass_residuals~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex",
+                      "sizecorrected_bodymass_residuals~1")
 
 
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
-write.csv(aic_df, file = "totalenergy_GSI/AICresults_TotalEnergy~GSI.csv", row.names = FALSE)
+write.csv(aic_df, file = "scBodyMass_GSI/AICresults_SizeCorrectedBodyMass~GSI.csv", row.names = FALSE)
 
-summary(model5)
-summary(model2)
+summary(model7)
+summary(model3)
 
 ```
 
@@ -246,7 +264,7 @@ coefs_df <- coefs_df %>%
 
 # ---- Step 9: View or export final result ----
 print(coefs_df)
-write.csv(coefs_df, "totalenergy_GSI/TotalEnergy_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = FALSE)
+write.csv(coefs_df, "scBodyMass_GSI/SizeCorrectedBodyMass_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = FALSE)
 
 
 # ---- Step 10: Table for coefficients and threshold for parameter likelihoods ----
@@ -270,33 +288,5 @@ coefs_table <- coefs_df %>%
 
 # Print or save the table
 coefs_table
-
-```
-
-```{r}
-#visualizing model 5 -- "TotalEnergy_g~Collection_RiverMile_m + Group_Assignment + Sex"
-ggplot(DataSet, aes(x = Group_Assignment, y = TotalEnergy_mJ, fill = Sex)) +
-  geom_boxplot(position = position_dodge()) +
-  labs(
-    title = "Total Energy by Sex and Group Assignment (GSI Working Group)",
-    x = "Group Assignment",
-    y = "Total Energy (mJ)",
-    fill = "Sex",
-  ) +
-  theme_minimal()
-
-#just looking at group assignment
-ggplot(DataSet, aes(x = Group_Assignment, y = TotalEnergy_mJ, fill = Group_Assignment)) +
-  geom_boxplot(position = position_dodge()) +
-  labs(
-    title = "Total Energy by Group Assignment (GSI Working Group)",
-    x = "Group Assignment",
-    y = "Total Energy (mJ)"
-  ) +
-  scale_fill_manual(values = c(
-    "#855C75FF", "#D9AF6BFF", "#AF6458FF", "#736F4CFF", "#526A83FF", 
-    "#625377FF", "#68855CFF", "#9C9C5EFF", "#A06177FF", "#467378FF"
-  )) +
-  theme_minimal()
 
 ```
