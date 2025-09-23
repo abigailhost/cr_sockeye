@@ -282,7 +282,7 @@ manual_likelihoods <- c(
 )
 
 # Add ParamLikelihoods by matching rownames
-coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df)]
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
 
 # View final table
 print(coefs_df_full)

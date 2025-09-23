@@ -135,23 +135,59 @@ write.csv(EDaic_df, file = "energydensity_runtiminggroup/AICresults_EnergyPDry_1
 ```{r}
 library(MuMIn)
 
- # Create a model selection table (this will give you AIC, AIC weights, etc.)
-model_weights <- ed_aicc$AICcWt ##Get the AIC weights from the AIC table
-model_avg <- model.avg(edModels, weights = model_weights)
+# List your models (already fit with na.action=na.fail)
+models <- list(edModel1, edModel2, edModel3, edModel4, edModel5, edModel6, edModel7, edModel8, edModel9, edModel10)
+
+# Model averaging based on AICc, conditional averaging (default is full=TRUE)
+model_avg <- model.avg(models, rank = "AICc", full = TRUE)
+
+# Summary with coefficients, SE, CIs
 summary(model_avg)
-avg_coefs <- coef(model_avg)
-avg_confint <- confint(model_avg)
-avg_se <- sqrt(diag(vcov(model_avg)))
 
-# Convert the coefficients into a tidy data frame
-coefs_df <- as.data.frame(avg_coefs)
-colnames(coefs_df) <- "Avg_Coef"
-coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
-coefs_df$CI_Upper <- avg_confint[, 2] # Add upper bound of confidence intervals
-coefs_df$SE <- avg_se
-print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
+# Full averaged coefficients
+avg_coefs_full <- coef(model_avg, full = TRUE)
 
-write.csv(coefs_df, file = "energydensity_runtiminggroup/EnergyPDry_1~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
+# Full averaged confidence intervals
+avg_confint_full <- confint(model_avg, full = TRUE)
+
+# Full averaged variance-covariance matrix and SE
+avg_vcov_full <- vcov(model_avg, full = TRUE)
+avg_se_full <- sqrt(diag(avg_vcov_full))
+
+# Create tidy data frame with full averages
+coefs_df_full <- as.data.frame(avg_coefs_full)
+colnames(coefs_df_full) <- "Avg_Coef"
+coefs_df_full$CI_Lower <- avg_confint_full[, 1]
+coefs_df_full$CI_Upper <- avg_confint_full[, 2]
+coefs_df_full$SE <- avg_se_full
+
+# Calculate parameter importance (parameter likelihoods)
+param_likelihoods <- sw(model_avg)
+as.data.frame(param_likelihoods)
+
+
+# Manually specify parameter likelihoods from sw(model_avg)
+manual_likelihoods <- c(
+  "(Intercept)" = 1.0,
+  "Collection_RiverMile_m" = 1.0,
+  "RunTimingGroupLate" = 0.9987395464,
+  "RunTimingGroupMiddle" = 0.9987395464,
+  "SexM" = 0.2659417207,
+  "Year2020" = 0.9975958123,
+  "Year2021" = 0.9975958123,
+  "RunTimingGroupLate:SexM" = 0.0001631917,
+  "RunTimingGroupMiddle:SexM" = 0.0001631917,
+  "SexM:Year2020" = 0.0001919752,
+  "SexM:Year2021" = 0.0001919752
+)
+
+# Add ParamLikelihoods by matching rownames
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
+
+# View final table
+print(coefs_df_full)
+
+write.csv(coefs_df_full, file = "energydensity_runtiminggroup/EnergyPDry_1~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
 ```
 
 ### Parameter Likelihoods
