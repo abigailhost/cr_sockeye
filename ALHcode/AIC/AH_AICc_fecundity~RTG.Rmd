@@ -126,77 +126,65 @@ write.csv(aic_df, file = "fecundity_runtiminggroup/AICresults_fecundity~RunTimin
 ```{r}
 library(MuMIn)
 
- # Create a model selection table (this will give you AIC, AIC weights, etc.)
-model_weights <- myaicc1$AICcWt ##Get the AIC weights from the AIC table
-model_avg <- model.avg(models, weights = model_weights)
-summary(model_avg)
-avg_coefs <- coef(model_avg)
-avg_confint <- confint(model_avg)
-avg_se <- sqrt(diag(vcov(model_avg)))
-
-# Convert the coefficients into a tidy data frame
-coefs_df <- as.data.frame(avg_coefs)
-colnames(coefs_df) <- "Avg_Coef"
-coefs_df$CI_Lower <- avg_confint[, 1]  # Add lower bound of confidence intervals
-coefs_df$CI_Upper <- avg_confint[, 2] # Add upper bound of confidence intervals
-coefs_df$SE <- avg_se
-print(coefs_df) #Model Averaging Coefficients for AIC model selection approach with body size as response variable
-
-write.csv(coefs_df, file = "fecundity_runtiminggroup/fecundity~runtiminggroup_models_CoefEstimates.csv", row.names = TRUE)
-```
-
-### Parameter Likelihoods
-```{r}
+# List your models (already fit with na.action=na.fail)
 models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17)
 
-# Assign model names
-model_names <- paste0("Model_", seq_along(models))
+# Model averaging based on AICc, conditional averaging (default is full=TRUE)
+model_avg <- model.avg(models, rank = "AICc", full = TRUE)
 
-# Compute AICc and model weights
-aic_table <- aictab(cand.set = models, modnames = model_names)
-weights <- aic_table$AICcWt  # Extract AICc weights
+# Summary with coefficients, SE, CIs
+summary(model_avg)
 
-# Extract model coefficients
-param_names <- unique(unlist(sapply(models, function(m) names(coef(m)))))
+# Full averaged coefficients
+avg_coefs_full <- coef(model_avg, full = TRUE)
 
-# Compute parameter likelihoods
-param_likelihoods <- sapply(param_names, function(param) {
-  # Identify models that include this parameter
-  models_with_param <- sapply(models, function(m) param %in% names(coef(m)))
-  
-  # Sum AICc weights for models that include this parameter
-  sum(weights[models_with_param])
-})
+# Full averaged confidence intervals
+avg_confint_full <- confint(model_avg, full = TRUE)
 
-# Format output as a data frame
-param_likelihoods_df <- data.frame(Parameter = param_names, WeightedLikelihood = param_likelihoods)
+# Full averaged variance-covariance matrix and SE
+avg_vcov_full <- vcov(model_avg, full = TRUE)
+avg_se_full <- sqrt(diag(avg_vcov_full))
 
-# Make sure that coefs_df has a column with the parameter names
-coefs_df$Parameter <- rownames(coefs_df)  # Add the parameter names to the dataframe
-coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "CI_Lower", "CI_Upper", "SE")]
+# Create tidy data frame with full averages
+coefs_df_full <- as.data.frame(avg_coefs_full)
+colnames(coefs_df_full) <- "Avg_Coef"
+coefs_df_full$CI_Lower <- avg_confint_full[, 1]
+coefs_df_full$CI_Upper <- avg_confint_full[, 2]
+coefs_df_full$SE <- avg_se_full
 
+# Calculate parameter importance (parameter likelihoods)
+param_likelihoods <- sw(model_avg)
+as.data.frame(param_likelihoods)
 
-# Now, we will merge coefs_df with param_likelihoods_df by 'Parameter' to add the likelihoods
-coefs_df <- merge(coefs_df, param_likelihoods_df, by = "Parameter", all.x = TRUE)
+# Manually specify parameter likelihoods from sw(model_avg)
+manual_likelihoods <- c(
+  "(Intercept)" = 1.0,
+  "Collection_RiverMile_m" = 0.9999993039,
+  "bodysize_pc" = 0.9831753874, 
+  "Year2020" = 0.8934375153,
+  "Year2021" = 0.8934375153,
+  "RunTimingGroupLate" = 0.3756698911,
+  "RunTimingGroupMiddle" = 0.3756698911,
+  "EnergyPDry_1" = 0.2578156945, 
+  "EnergyPDry_1:RunTimingGroupLate" = 0.0002608785,
+  "EnergyPDry_1:RunTimingGroupMiddle" = 0.0002608785
+)
 
-# Print the updated dataframe to see the result
-print(coefs_df)
+# Add ParamLikelihoods by matching rownames
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
 
-colnames(coefs_df)[colnames(coefs_df) == "WeightedLikelihood"] <- "ParamLikelihood"
+# View final table
+print(coefs_df_full)
 
-coefs_df <- coefs_df %>%
-  arrange(desc(ParamLikelihood)) #arrange dataframe in descending order according to ParamLikelihoods
-
-# Optionally, write the results to a CSV file
-write.csv(coefs_df, file = "fecundity_runtiminggroup/fecundity~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
-
-
+write.csv(coefs_df_full, file = "fecundity_runtiminggroup/fecundity~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
 ```
+
+
 
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}
-paramestimates_fecundity <- "fecundity_runtiminggroup/fecundity~runtiminggroup_models_CoefEstimates.csv"
+paramestimates_fecundity <- "fecundity_runtiminggroup/fecundity~runtiminggroup_models_CoefEstimates_withLikelihoods.csv"
 
 paramestimates_fecundity<-read.csv(paramestimates_fecundity)
 str(paramestimates_fecundity)
@@ -211,7 +199,7 @@ ggplot(paramestimates_fecundity, aes(x = Avg_Coef, y = X)) +
   geom_point(size = 3) +  # For the coefficient estimate as dots
   geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
   labs(x = "Parameter Estimate", y = "Parameter") +
-  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", linewidth = 1) +
   theme_minimal() +
   theme(axis.title = element_text(size = 24), 
         axis.text = element_text(size = 24))
