@@ -150,115 +150,102 @@ colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 # Write the data frame to a CSV file
 write.csv(aic_df, file = "energydensity_GSI/AICresults_EnergyPDry_1~GSI.csv", row.names = FALSE)
 
-summary(model6)
-summary(model10)
 
 ```
 
 ### Model Averaging and Parameter Likelihoods
 ```{r}
-# ---- Load necessary packages ----
 library(MuMIn)
-library(dplyr)
 
-# ---- Step 1: Combine models into a named list ----
+# List your models (already fit with na.action=na.fail)
 models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
-model_names <- paste0("Model_", seq_along(models))
-names(models) <- model_names
 
-# ---- Step 2: Run model selection (AICc) ----
-model_sel <- model.sel(models)
+# Model averaging based on AICc, conditional averaging (default is full=TRUE)
+model_avg <- model.avg(models, rank = "AICc", full = TRUE)
 
-# ---- Step 3: Model averaging (conditional averaging recommended) ----
-model_avg <- model.avg(model_sel, full = FALSE)  # full = FALSE for conditional averaging
+# Summary with coefficients, SE, CIs
 summary(model_avg)
 
-# ---- Step 4: Extract averaged coefficients and confidence intervals ----
-avg_coefs <- coef(model_avg)
-avg_confint <- confint(model_avg)
-avg_se <- sqrt(diag(vcov(model_avg)))
+# Full averaged coefficients
+avg_coefs_full <- coef(model_avg, full = TRUE)
 
-# ---- Step 5: Create tidy coefficient summary ----
-coefs_df <- as.data.frame(avg_coefs)
-colnames(coefs_df) <- "Avg_Coef"
-coefs_df$CI_Lower <- avg_confint[, 1]
-coefs_df$CI_Upper <- avg_confint[, 2]
-coefs_df$SE <- avg_se
-coefs_df$Parameter <- rownames(coefs_df)
+# Full averaged confidence intervals
+avg_confint_full <- confint(model_avg, full = TRUE)
 
-# Reorder for clarity
-coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "SE", "CI_Lower", "CI_Upper")]
+# Full averaged variance-covariance matrix and SE
+avg_vcov_full <- vcov(model_avg, full = TRUE)
+avg_se_full <- sqrt(diag(avg_vcov_full))
 
-# ---- Step 6: Helper function to normalize interaction term names ----
-normalize_param_name <- function(name) {
-  if (grepl(":", name)) {
-    parts <- strsplit(name, ":")[[1]]
-    paste(sort(parts), collapse = ":")
-  } else {
-    name
-  }
-}
+# Create tidy data frame with full averages
+coefs_df_full <- as.data.frame(avg_coefs_full)
+colnames(coefs_df_full) <- "Avg_Coef"
+coefs_df_full$CI_Lower <- avg_confint_full[, 1]
+coefs_df_full$CI_Upper <- avg_confint_full[, 2]
+coefs_df_full$SE <- avg_se_full
 
-# ---- Step 7: Calculate parameter likelihoods (relative importance) ----
-weights <- model_sel$weight
+# Calculate parameter importance (parameter likelihoods)
+param_likelihoods <- sw(model_avg)
+as.data.frame(param_likelihoods)
 
-# Extract all unique parameter names across models (normalize interaction terms)
-param_names <- unique(unlist(sapply(models, function(m) {
-  sapply(names(coef(m)), normalize_param_name)
-})))
-
-# Calculate parameter likelihoods safely
-param_likelihoods <- sapply(param_names, function(param) {
-  models_with_param <- sapply(models, function(m) {
-    any(sapply(names(coef(m)), function(p) normalize_param_name(p) == param))
-  })
-  if (any(models_with_param)) {
-    sum(weights[models_with_param])
-  } else {
-    0  # If not in any model, assign 0
-  }
-})
-
-# ---- Step 8: Create param_likelihoods_df and merge cleanly ----
-param_likelihoods_df <- data.frame(
-  Parameter = param_names,
-  ParamLikelihood = param_likelihoods
+# Manually specify parameter likelihoods from sw(model_avg)
+manual_likelihoods <- c(
+  "(Intercept)" = 1.0,
+  "Collection_RiverMile_m" = 1.0,
+  "Group_AssignmentChitina" = 0.9999345,
+  "Group_AssignmentGulkana" = 0.9999345,
+  "Group_AssignmentGulkanaHatchery" = 0.9999345,
+  "Group_AssignmentKlutinaLake" = 0.9999345,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 0.9999345,
+  "Group_AssignmentLowerGroups" = 0.9999345,
+  "Group_AssignmentSlana" = 0.9999345,
+  "Group_AssignmentTanadaCopperLakes" = 0.9999345,
+  "Group_AssignmentTazlina" = 0.9999345,
+  "SexM" = 0.2753707,
+  "Year2020" = 0.9999996,
+  "Year2021" = 0.9999996,
+  "SexM:Year2020" = 0.00003286614,
+  "SexM:Year2021" = 0.00003286614,
+  "Group_AssignmentChitina:SexM" = 0.00000000009263763,
+  "Group_AssignmentGulkana:SexM" = 0.00000000009263763, 
+  "Group_AssignmentGulkanaHatchery:SexM" = 0.00000000009263763, 
+  "Group_AssignmentKlutinaLake:SexM" = 0.00000000009263763,
+  "Group_AssignmentKlutinaTonsinaOutlet:SexM" = 0.00000000009263763,
+  "Group_AssignmentLowerGroups:SexM" = 0.00000000009263763, 
+  "Group_AssignmentSlana:SexM" = 0.00000000009263763, 
+  "Group_AssignmentTanadaCopperLakes:SexM" = 0.00000000009263763,
+  "Group_AssignmentTazlina:SexM" = 0.00000000009263763
 )
 
-# Drop any old ParamLikelihood (if present), then merge cleanly
-coefs_df <- coefs_df %>% select(-any_of("ParamLikelihood"))
-coefs_df <- left_join(coefs_df, param_likelihoods_df, by = "Parameter")
+# Add ParamLikelihoods by matching rownames
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
 
-# ---- Step 9: Sort by parameter likelihood ----
-coefs_df <- coefs_df %>%
-  arrange(desc(ParamLikelihood))
+# View final table
+print(coefs_df_full)
 
-# ---- Step 9: View or export final result ----
-print(coefs_df)
-write.csv(coefs_df, "energydensity_GSI/EnergyPDry_1_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = FALSE)
+write.csv(coefs_df_full, "energydensity_GSI/EnergyPDry_1_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
 
 # ---- Step 10: Table for coefficients and threshold for parameter likelihoods ----
-threshold <- 0.1  # Set threshold for importance
+# threshold <- 0.1  # Set threshold for importance
 
 # Add a new column to coefs_df that marks important vs non-important parameters
-coefs_df$Importance <- ifelse(coefs_df$ParamLikelihood > threshold, "Important", "Non-Important")
+# coefs_df$Importance <- ifelse(coefs_df$ParamLikelihood > threshold, "Important", "Non-Important")
 
 # ---- Color Code Important Parameters with Color Blind Friendly Colors ----
 # Light green for important, light gray for non-important
-library(kableExtra)
+# library(kableExtra)
 
 # Create the table without adding duplicate headers
-coefs_table <- coefs_df %>%
-  arrange(desc(ParamLikelihood)) %>%
-  kable("html", escape = FALSE, align = c("l", "r", "r", "r", "r", "r", "l")) %>%
+# coefs_table <- coefs_df %>%
+ #  arrange(desc(ParamLikelihood)) %>%
+  # kable("html", escape = FALSE, align = c("l", "r", "r", "r", "r", "r", "l")) %>%
   # Apply color coding based on importance
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  row_spec(which(coefs_df$Importance == "Important"), background = "lightgreen", color = "black") %>%
-  row_spec(which(coefs_df$Importance == "Non-Important"), background = "lightgray", color = "black") # Adjust column width if needed
+ #  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+ # = row_spec(which(coefs_df$Importance == "Important"), background = "lightgreen", color = "black") %>%
+  # row_spec(which(coefs_df$Importance == "Non-Important"), background = "lightgray", color = "black") # Adjust column width if needed
 
 # Print or save the table
-coefs_table
+# coefs_table
 
 ```
 
