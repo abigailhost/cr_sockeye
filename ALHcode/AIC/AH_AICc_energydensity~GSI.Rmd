@@ -108,25 +108,20 @@ ModelSet<-read.csv(energydensity_GSI_modelset)
 
 model1 <- lm(EnergyPDry_1~1, data=DataSet)
 model2 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment, data = DataSet)
-model3 <- lm(EnergyPDry_1~Collection_RiverMile_m + Sex, data = DataSet)
-model4 <- lm(EnergyPDry_1~Collection_RiverMile_m + Year, data = DataSet)
-model5 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
-model6 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Year, data = DataSet)
-model7 <- lm(EnergyPDry_1~Collection_RiverMile_m + Sex + Year, data = DataSet)
-model8 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex, data = DataSet)
-model9 <- lm(EnergyPDry_1~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex + Year, data = DataSet)
+model3 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+model4 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Year, data = DataSet)
+model5 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex + Year, data = DataSet)
 
 
 ```
 
 ### AICc Model Selection
 ```{r}
-AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+AIC(model1, model2, model3, model4, model5)
 
 #table of AIC results
-mynames1 <- paste("model", as.character(1:10), sep = "")
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+mynames1 <- paste("model", as.character(1:5), sep = "")
+models <- list(model1, model2, model3, model4, model5)
 
 # Generate AIC table
 myaicc1 <- aictab(models, modnames = mynames1)
@@ -135,13 +130,8 @@ print(myaicc1)
 aic_df <- as.data.frame(myaicc1)
 aic_df$ModelName <- c("EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Year",
                       "EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex + Year",
-                      "EnergyPDry_1~Collection_RiverMile_m + Sex + Year + Sex:Year",
-                      "EnergyPDry_1~Collection_RiverMile_m + Year",
-                      "EnergyPDry_1~Collection_RiverMile_m + Sex + Year",
                       "EnergyPDry_1~Collection_RiverMile_m + Group_Assignment",
                       "EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex",
-                      "EnergyPDry_1~Collection_RiverMile_m + Sex",
-                      "EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex",
                       "EnergyPDry_1~1")
 
 
@@ -158,7 +148,7 @@ write.csv(aic_df, file = "energydensity_GSI/AICresults_EnergyPDry_1~GSI.csv", ro
 library(MuMIn)
 
 # List your models (already fit with na.action=na.fail)
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+models <- list(model1, model2, model3, model4, model5)
 
 # Model averaging based on AICc, conditional averaging (default is full=TRUE)
 model_avg <- model.avg(models, rank = "AICc", full = TRUE)
@@ -190,31 +180,18 @@ as.data.frame(param_likelihoods)
 # Manually specify parameter likelihoods from sw(model_avg)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
-  "Collection_RiverMile_m" = 1.0,
-  "Group_AssignmentChitina" = 0.9999345,
-  "Group_AssignmentGulkana" = 0.9999345,
-  "Group_AssignmentGulkanaHatchery" = 0.9999345,
-  "Group_AssignmentKlutinaLake" = 0.9999345,
-  "Group_AssignmentKlutinaTonsinaOutlet" = 0.9999345,
-  "Group_AssignmentLowerGroups" = 0.9999345,
-  "Group_AssignmentSlana" = 0.9999345,
-  "Group_AssignmentTanadaCopperLakes" = 0.9999345,
-  "Group_AssignmentTazlina" = 0.9999345,
-  "SexM" = 0.2753707,
-  "Year2020" = 0.9999996,
-  "Year2021" = 0.9999996,
-  "SexM:Year2020" = 0.00003286614,
-  "SexM:Year2021" = 0.00003286614,
-  "Group_AssignmentChitina:SexM" = 0.00000000009263763,
-  "Group_AssignmentGulkana:SexM" = 0.00000000009263763, 
-  "Group_AssignmentGulkanaHatchery:SexM" = 0.00000000009263763, 
-  "Group_AssignmentKlutinaLake:SexM" = 0.00000000009263763,
-  "Group_AssignmentKlutinaTonsinaOutlet:SexM" = 0.00000000009263763,
-  "Group_AssignmentLowerGroups:SexM" = 0.00000000009263763, 
-  "Group_AssignmentSlana:SexM" = 0.00000000009263763, 
-  "Group_AssignmentTanadaCopperLakes:SexM" = 0.00000000009263763,
-  "Group_AssignmentTazlina:SexM" = 0.00000000009263763
-)
+  "Collection_RiverMile_m" = 1.0000000,
+  "Group_AssignmentChitina" = 1.0000000,
+  "Group_AssignmentGulkana" = 1.0000000,
+  "Group_AssignmentGulkanaHatchery" = 1.0000000,
+  "Group_AssignmentKlutinaLake" = 1.0000000,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 1.0000000,
+  "Group_AssignmentLowerGroups" = 1.0000000,
+  "Group_AssignmentSlana" = 1.0000000,
+  "Group_AssignmentTanadaCopperLakes" = 1.0000000,
+  "Group_AssignmentTazlina" = 1.0000000,
+  "SexM" = 0.2753472,
+  "Year2021" = 0.9999996)
 
 # Add ParamLikelihoods by matching rownames
 coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
