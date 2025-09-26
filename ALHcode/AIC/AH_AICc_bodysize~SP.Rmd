@@ -52,7 +52,7 @@ rm(list = ls())
 upperriver_bodycomp_all <- "upperriver_bodycomp_all.csv"
 upperriver_bodycomp_all<-read.csv("upperriver_bodycomp_all.csv")[,-1]
 
-##### For the Upper River Data, I want to elimiate Power Creek Cordova, Eyak Weir Cordova, Bone Creek, and Copper Lake data points as they don't apply to my spawning populations of interest ####
+##### For the Upper River Data, I want to eliminate Power Creek Cordova, Eyak Weir Cordova, Bone Creek, and Copper Lake data points as they don't apply to my spawning populations of interest ####
 library(dplyr)
 
 # Assuming your data frame is named df, use filter() to exclude the specific collection locations
@@ -329,7 +329,7 @@ rm(list = ls())
 upperriver_bodycomp_PCscores <- "upperriver_bodycomp_PCscores.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
-DataSet<-read.csv(upperriver_bodycomp_PCscores)[,-1] #87 variables, 237 observations b/c one row with NA sex is removed
+DataSet<-read.csv(upperriver_bodycomp_PCscores)[,-1] #88 variables, 237 observations b/c one row with NA sex is removed
 any(is.na(DataSet$Fish_Leng_1_mm)) #FALSE
 any(is.na(DataSet$Fish_Grth_mm)) #FALSE
 any(is.na(DataSet$Fish_Ht_mm)) #FALSE
@@ -384,14 +384,6 @@ qqline(DataSet$bodysize_pc_g_mm, col = "red")
 shapiro.test(DataSet$bodysize_pc_g_mm)
 boxplot(DataSet$bodysize_pc_g_mm, main = "Boxplot of Body Size", col = "lightgreen")
 
-DataSet_clean <- DataSet %>%
-  filter(bodysize_pc_g_mm >= -4 & bodysize_pc_g_mm <= 4)
-hist(DataSet_clean$bodysize_pc_g_mm) #normal!
-qqnorm(DataSet_clean$bodysize_pc_g_mm)
-qqline(DataSet_clean$bodysize_pc_g_mm, col = "red")
-shapiro.test(DataSet_clean$bodysize_pc_g_mm) #Normal! after removing 4 outliers
-
-
 ```
 
 ### Making Models for bodysize_pc~SpawningPopulation, includes SpawnStatus
@@ -401,17 +393,17 @@ bodysize_SP_modelset <- "bodysize_spawningpopulation/bodysize~SpawningPopulation
 
 ModelSet<-read.csv(bodysize_SP_modelset) 
 
-model1 <- lm(bodysize_pc_g_mm~1, data=DataSet_clean)
-model2 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work, data = DataSet_clean)
-model3 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Sex, data = DataSet_clean)
-model4 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Year, data = DataSet_clean)
-model5 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex, data = DataSet_clean)
-model6 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Year, data = DataSet_clean)
-model7 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Sex + Year, data = DataSet_clean)
-model8 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet_clean)
-model9 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet_clean)
-model10 <- lm(bodysize_pc_g_mm~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet_clean)
-model11 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Year, data = DataSet_clean)
+model1 <- lm(bodysize_pc_g_mm~1, data=DataSet)
+model2 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work, data = DataSet)
+model3 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Sex, data = DataSet)
+model4 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Year, data = DataSet)
+model5 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex, data = DataSet)
+model6 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Year, data = DataSet)
+model7 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Sex + Year, data = DataSet)
+model8 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
+model9 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet)
+model10 <- lm(bodysize_pc_g_mm~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
+model11 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
 ```
 
 ### AICc Model Selection
@@ -427,17 +419,17 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("bodysize_pc~ Gonad_Wt_g + Sex + Year",
-                      "bodysize_pc~ Gonad_Wt_g + Work + Sex + Year",
-                      "bodysize_pc~Gonad_Wt_g + Sex + Year + Sex:Year",
-                      "bodysize_pc~ Gonad_Wt_g + Sex",
-                      "bodysize_pc~ Gonad_Wt_g + Work + Sex",
-                      "bodysize_pc~ Gonad_Wt_g + Work + Sex + Work:Sex",
-                      "bodysize_pc~Gonad_Wt_g + Year",
-                      "bodysize_pc~ Gonad_Wt_g + Work + Year",
-                      "bodysize_pc~ Gonad_Wt_g + Work + Year + Work:Year",
-                      "bodysize_pc~1",
-                      "bodysize_pc~ Gonad_Wt_g + Work")
+aic_df$ModelName <- c("bodysize_pc_g_mm~ Gonad_Wt_g + Sex + Year",
+                      "bodysize_pc_g_mm~Gonad_Wt_g + Sex + Year + Sex:Year",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Year",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Sex",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Work:Sex",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Year",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work + Year",
+                      "bodysize_pc_g_mm~1",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work + Year + Work:Year")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
@@ -449,106 +441,61 @@ write.csv(aic_df, file = "bodysize_spawningpopulation/AICresults_bodysize~Spawni
 ```{r}
 # ---- Load necessary packages ----
 library(MuMIn)
-library(dplyr)
 
-# ---- Step 1: Combine models into a named list ----
+# List your models (already fit with na.action=na.fail)
 models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
-model_names <- paste0("Model_", seq_along(models))
-names(models) <- model_names
 
-# ---- Step 2: Run model selection (AICc) ----
-model_sel <- model.sel(models)
+# Model averaging based on AICc, conditional averaging (default is full=TRUE)
+model_avg <- model.avg(models, rank = "AICc", full = TRUE)
 
-# ---- Step 3: Model averaging (conditional averaging recommended) ----
-model_avg <- model.avg(model_sel, full = FALSE)  # full = FALSE for conditional averaging
+# Summary with coefficients, SE, CIs
 summary(model_avg)
 
-# ---- Step 4: Extract averaged coefficients and confidence intervals ----
-avg_coefs <- coef(model_avg)
-avg_confint <- confint(model_avg)
-avg_se <- sqrt(diag(vcov(model_avg)))
+# Full averaged coefficients
+avg_coefs_full <- coef(model_avg, full = TRUE)
 
-# ---- Step 5: Create tidy coefficient summary ----
-coefs_df <- as.data.frame(avg_coefs)
-colnames(coefs_df) <- "Avg_Coef"
-coefs_df$CI_Lower <- avg_confint[, 1]
-coefs_df$CI_Upper <- avg_confint[, 2]
-coefs_df$SE <- avg_se
-coefs_df$Parameter <- rownames(coefs_df)
+# Full averaged confidence intervals
+avg_confint_full <- confint(model_avg, full = TRUE)
 
-# Reorder for clarity
-coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "SE", "CI_Lower", "CI_Upper")]
+# Full averaged variance-covariance matrix and SE
+avg_vcov_full <- vcov(model_avg, full = TRUE)
+avg_se_full <- sqrt(diag(avg_vcov_full))
 
-# ---- Step 6: Helper function to normalize interaction term names ----
-normalize_param_name <- function(name) {
-  if (grepl(":", name)) {
-    parts <- strsplit(name, ":")[[1]]
-    paste(sort(parts), collapse = ":")
-  } else {
-    name
-  }
-}
+# Create tidy data frame with full averages
+coefs_df_full <- as.data.frame(avg_coefs_full)
+colnames(coefs_df_full) <- "Avg_Coef"
+coefs_df_full$CI_Lower <- avg_confint_full[, 1]
+coefs_df_full$CI_Upper <- avg_confint_full[, 2]
+coefs_df_full$SE <- avg_se_full
 
-# ---- Step 7: Calculate parameter likelihoods (relative importance) ----
-weights <- model_sel$weight
+# Calculate parameter importance (parameter likelihoods)
+param_likelihoods <- sw(model_avg)
+as.data.frame(param_likelihoods)
 
-# Extract all unique parameter names across models (normalize interaction terms)
-param_names <- unique(unlist(sapply(models, function(m) {
-  sapply(names(coef(m)), normalize_param_name)
-})))
-
-# Calculate parameter likelihoods safely
-param_likelihoods <- sapply(param_names, function(param) {
-  models_with_param <- sapply(models, function(m) {
-    any(sapply(names(coef(m)), function(p) normalize_param_name(p) == param))
-  })
-  if (any(models_with_param)) {
-    sum(weights[models_with_param])
-  } else {
-    0  # If not in any model, assign 0
-  }
-})
-
-# ---- Step 8: Create param_likelihoods_df and merge cleanly ----
-param_likelihoods_df <- data.frame(
-  Parameter = param_names,
-  ParamLikelihood = param_likelihoods
+# Manually specify parameter likelihoods from sw(model_avg)
+manual_likelihoods <- c(
+  "(Intercept)" = 1.0,
+  "Gonad_Wt_g" = 1.0,
+  "SexM" = 1.0, 
+  "Year2020" = 0.9738555,
+  "Year2021" = 0.9738555, 
+  "SexM:Year2020" = 0.3555654,
+  "SexM:Year2021" = 0.3555654,
+  "Work" = 0.1745799,
+  "SexM:Work" = 0.002743190,
+  "Work:Year2020" = 5.042509e-23,
+  "Work:Year2021" = 5.042509e-23
 )
 
-# Drop any old ParamLikelihood (if present), then merge cleanly
-coefs_df <- coefs_df %>% select(-any_of("ParamLikelihood"))
-coefs_df <- left_join(coefs_df, param_likelihoods_df, by = "Parameter")
-
-# ---- Step 9: Sort by parameter likelihood ----
-coefs_df <- coefs_df %>%
-  arrange(desc(ParamLikelihood))
-
-# ---- Step 9: View or export final result ----
-print(coefs_df)
-write.csv(coefs_df, "bodysize_spawningpopulation/bodysize_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv", row.names = FALSE)
 
 
-# ---- Step 10: Table for coefficients and threshold for parameter likelihoods ----
-threshold <- 0.1  # Set threshold for importance
+# Add ParamLikelihoods by matching rownames
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
 
-# Add a new column to coefs_df that marks important vs non-important parameters
-coefs_df$Importance <- ifelse(coefs_df$ParamLikelihood > threshold, "Important", "Non-Important")
+# View final table
+print(coefs_df_full)
 
-# ---- Color Code Important Parameters with Color Blind Friendly Colors ----
-# Light green for important, light gray for non-important
-library(kableExtra)
-
-# Create the table without adding duplicate headers
-coefs_table <- coefs_df %>%
-  arrange(desc(ParamLikelihood)) %>%
-  kable("html", escape = FALSE, align = c("l", "r", "r", "r", "r", "r", "l")) %>%
-  # Apply color coding based on importance
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  row_spec(which(coefs_df$Importance == "Important"), background = "lightgreen", color = "black") %>%
-  row_spec(which(coefs_df$Importance == "Non-Important"), background = "lightgray", color = "black") # Adjust column width if needed
-
-# Print or save the table
-coefs_table
+write.csv(coefs_df_full, file = "bodysize_spawningpopulation/bodysize_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
 ```
 
