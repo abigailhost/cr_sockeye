@@ -21,13 +21,13 @@ library(lubridate)
 library(ggplot2)
 
 #data loading
-bc19 <- read.csv("bodycomp_2019.csv")
-bc20 <- read.csv("bodycomp_2020.csv")
-bc21 <- read.csv("bodycomp_2021.csv")
+# bc19 <- read.csv("bodycomp_2019.csv")
+# bc20 <- read.csv("bodycomp_2020.csv")
+#bc21 <- read.csv("bodycomp_2021.csv")
 #need to bind all together for total body comp dataset, Upper River river only
 
-bc_UR_total <- rbind(bc19[61:172,], bc20[61:120,], bc21[61:182,])
-write.csv(bc_UR_total, "upperriver_bodycomp_all.csv")
+# bc_UR_total <- rbind(bc19[61:172,], bc20[61:120,], bc21[61:182,])
+# write.csv(bc_UR_total, "upperriver_bodycomp_all.csv")
 upperriver_bodycomp_all<-read.csv("upperriver_bodycomp_all.csv")[,-1]
 #all data is loaded now
 
@@ -305,7 +305,7 @@ any(is.na(upperriver_bodycomp_all$Fish_Ht_mm)) #FALSE
 str(upperriver_bodycomp_all)
 
 ## PC scores via linear regression for body size analysis ### 
-bc_pca1 <- princomp(upperriver_bodycomp_all[,c(82,84,85)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
+bc_pca1 <- princomp(upperriver_bodycomp_all[,c(83,85,86)], cor=T, scores=T, covmat = NULL) #should work now without any NAs
 summary(lm(upperriver_bodycomp_all$Fish_Leng_1_mm ~ bc_pca1$scores[,1])) #R = 0.641
 
 summary(bc_pca1, loadings=T, cutoff=0.0001) #summary of PC analysis
@@ -316,7 +316,7 @@ bodysize_pc_g_mm <- bc_pca1$scores[,1]
 #combine dataframe with column for body size PC scores
 upperriver_bodycomp_pc <- cbind(upperriver_bodycomp_all, bodysize_pc_g_mm) 
 str(upperriver_bodycomp_pc)
-upperriver_bodycomp_pc <- upperriver_bodycomp_pc[,-(87:89)]
+upperriver_bodycomp_pc <- upperriver_bodycomp_pc[,-(88:90)]
 str(upperriver_bodycomp_pc)
 
 #Now, run AIC again but PC1 scores are the response variable / numeric

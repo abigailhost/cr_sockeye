@@ -119,25 +119,20 @@ ModelSet<-read.csv(totalenergy_GSI_modelset)
 
 model1 <- lm(TotalEnergy_mJ~1, data=DataSet)
 model2 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment, data = DataSet)
-model3 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex, data = DataSet)
-model4 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Year, data = DataSet)
-model5 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
-model6 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Year, data = DataSet)
-model7 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year, data = DataSet)
-model8 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex, data = DataSet)
-model9 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Year, data = DataSet)
+model3 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+model4 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Year, data = DataSet)
+model5 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Year, data = DataSet)
 
 
 ```
 
 ### AICc Model Selection
 ```{r}
-AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+AIC(model1, model2, model3, model4, model5)
 
 #table of AIC results
-mynames1 <- paste("model", as.character(1:10), sep = "")
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+mynames1 <- paste("model", as.character(1:5), sep = "")
+models <- list(model1, model2, model3, model4, model5)
 
 # Generate AIC table
 myaicc1 <- aictab(models, modnames = mynames1)
@@ -148,11 +143,6 @@ aic_df$ModelName <- c("TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment 
                       "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment",
                       "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Year",
                       "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Year",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Sex",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Sex + Year + Sex:Year",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Year",
-                      "TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex + Group_Assignment:Sex",
                       "TotalEnergy_mJ~1")
 
 
@@ -169,7 +159,7 @@ write.csv(aic_df, file = "totalenergy_GSI/AICresults_TotalEnergy~GSI.csv", row.n
 library(MuMIn)
 
 # List your models (already fit with na.action=na.fail)
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+models <- list(model1, model2, model3, model4, model5)
 
 # Model averaging based on AICc, conditional averaging (default is full=TRUE)
 model_avg <- model.avg(models, rank = "AICc", full = TRUE)
@@ -202,29 +192,17 @@ as.data.frame(param_likelihoods)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
   "Collection_RiverMile_m" = 0.9999994029,
-  "Group_AssignmentChitina" = 0.9479959708,
-  "Group_AssignmentGulkana" = 0.9479959708,
-  "Group_AssignmentGulkanaHatchery" = 0.9479959708,
-  "Group_AssignmentKlutinaLake" = 0.9479959708,
-  "Group_AssignmentKlutinaTonsinaOutlet" = 0.9479959708,
-  "Group_AssignmentLowerGroups" = 0.9479959708,
-  "Group_AssignmentSlana" = 0.9479959708,
-  "Group_AssignmentTanadaCopperLakes" = 0.9479959708,
-  "Group_AssignmentTazlina" = 0.9479959708,
-  "SexM" = 0.7201116226,
-  "Year2020" = 0.2284819945,
-  "Year2021" = 0.2284819945,
-  "SexM:Year2020" = 0.0043510732,
-  "SexM:Year2021" = 0.0043510732,
-  "Group_AssignmentChitina:SexM" = 0.0006064267,
-  "Group_AssignmentGulkana:SexM" = 0.0006064267, 
-  "Group_AssignmentGulkanaHatchery:SexM" = 0.0006064267, 
-  "Group_AssignmentKlutinaLake:SexM" = 0.0006064267,
-  "Group_AssignmentKlutinaTonsinaOutlet:SexM" = 0.0006064267,
-  "Group_AssignmentLowerGroups:SexM" = 0.0006064267, 
-  "Group_AssignmentSlana:SexM" = 0.0006064267, 
-  "Group_AssignmentTanadaCopperLakes:SexM" = 0.0006064267,
-  "Group_AssignmentTazlina:SexM" = 0.0006064267
+  "Group_AssignmentChitina" = 0.9999994029,
+  "Group_AssignmentGulkana" = 0.9999994029,
+  "Group_AssignmentGulkanaHatchery" = 0.9999994029,
+  "Group_AssignmentKlutinaLake" = 0.9999994029,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 0.9999994029,
+  "Group_AssignmentLowerGroups" = 0.9999994029,
+  "Group_AssignmentSlana" = 0.9999994029,
+  "Group_AssignmentTanadaCopperLakes" = 0.9999994029,
+  "Group_AssignmentTazlina" = 0.9999994029,
+  "SexM" = 0.7064755,
+  "Year2021" = 0.2222921
 )
 
 

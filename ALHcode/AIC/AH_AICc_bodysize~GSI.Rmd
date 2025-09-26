@@ -188,6 +188,7 @@ levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "insufficie
 DataSet <- subset(DataSet, Group_Assignment != "insufficient_genotypes")
 DataSet$Group_Assignment <- droplevels(DataSet$Group_Assignment)
 
+
 # Confirm new levels
 levels(DataSet$Group_Assignment)
 

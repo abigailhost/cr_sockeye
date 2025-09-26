@@ -21,13 +21,13 @@ library(lubridate)
 library(ggplot2)
 
 #data loading
-bc19 <- read.csv("bodycomp_2019.csv")
-bc20 <- read.csv("bodycomp_2020.csv")
-bc21 <- read.csv("bodycomp_2021.csv")
+# bc19 <- read.csv("bodycomp_2019.csv")
+# bc20 <- read.csv("bodycomp_2020.csv")
+# bc21 <- read.csv("bodycomp_2021.csv")
 #need to bind all together for total body comp dataset, Upper River river only
 
-bc_UR_total <- rbind(bc19[61:172,], bc20[61:120,], bc21[61:182,])
-write.csv(bc_UR_total, "upperriver_bodycomp_all.csv")
+# bc_UR_total <- rbind(bc19[61:172,], bc20[61:120,], bc21[61:182,])
+# write.csv(bc_UR_total, "upperriver_bodycomp_all.csv")
 upperriver_bodycomp_all<-read.csv("upperriver_bodycomp_all.csv")[,-1]
 #all data is loaded now
 
