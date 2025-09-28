@@ -1,0 +1,12 @@
+﻿Model
+TotalEnergy_mJ~1
+TotalEnergy_mJ~ Gonad_Wt_g + Work
+TotalEnergy_mJ~ Gonad_Wt_g + Sex
+TotalEnergy_mJ~Gonad_Wt_g + Year
+TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex
+TotalEnergy_mJ~ Gonad_Wt_g + Work + Year
+TotalEnergy_mJ~ Gonad_Wt_g + Sex + Year
+TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Work:Sex
+TotalEnergy_mJ~ Gonad_Wt_g + Work + Year + Work:Year
+TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year
+TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Year

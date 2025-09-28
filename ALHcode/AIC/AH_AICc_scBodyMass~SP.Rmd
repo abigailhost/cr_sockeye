@@ -77,7 +77,7 @@ str(DataSet)
 
 #Make work metric (migratory difficulty metric where work = F x distance)
 DataSet$Elevation_m <- as.numeric(DataSet$Elevation_m)
-DataSet$Work <- (DataSet$Collection_RiverMile_m * DataSet$Elevation_m) / (1000*1000) #so work is in km^2 
+DataSet$Work <- round((DataSet$Collection_RiverMile_m * DataSet$Elevation_m) / (1000 * 1000), digits = 1) #in km^2
 str(DataSet) 
 
 #convert gonad_wt to grams from kilograms
@@ -151,6 +151,8 @@ scBodyMass_SP_modelset <- "scbodymass_spawningpopulation/SizeCorrectedBodyMass~S
 
 ModelSet<-read.csv(scBodyMass_SP_modelset)
 
+DataSet$Work <- factor(DataSet$Work) #This is an important fix, otherwise its numeric but in fact its discrete factors
+
 #models
 model1 <- lm(sizecorrected_bodymass_residuals~1, data=DataSet)
 model2 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work, data = DataSet)
@@ -160,19 +162,18 @@ model5 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex, data = D
 model6 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year, data = DataSet)
 model7 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex + Year, data = DataSet)
 model8 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
-model9 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet)
-model10 <- lm(sizecorrected_bodymass_residuals~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
-model11 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
+model9 <- lm(sizecorrected_bodymass_residuals~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
 
 ```
 
 ### AICc Model Selection
 ```{r}
-AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
 #table of AIC results
-mynames1 <- paste("model", as.character(1:11), sep = "")
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+mynames1 <- paste("model", as.character(1:10), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
 # Generate AIC table
 myaicc1 <- aictab(models, modnames = mynames1)
@@ -180,15 +181,14 @@ print(myaicc1)
 
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year + Work:Year",
-                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year",
+aic_df$ModelName <- c("sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year",
                       "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Year",
                       "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work",
-                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Year",
                       "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Work:Sex",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Year",
                       "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex + Year",
                       "sizecorrected_bodymass_residuals~1",
-                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Work:Sex",
                       "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex",
                       "sizecorrected_bodymass_residuals~Gonad_Wt_g + Sex + Year + Sex:Year") 
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
@@ -204,7 +204,7 @@ write.csv(aic_df, file = "scbodymass_spawningpopulation/AICresults_SizeCorrected
 library(MuMIn)
 
 # List your models (already fit with na.action=na.fail)
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
 # Model averaging based on AICc, conditional averaging (default is full=TRUE)
 model_avg <- model.avg(models, rank = "AICc", full = TRUE)
@@ -236,16 +236,24 @@ as.data.frame(param_likelihoods)
 # Manually specify parameter likelihoods from sw(model_avg)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
-  "Gonad_Wt_g" = 0.988362806,
-  "SexM" = 0.161300584, 
-  "Year2020" = 0.896516269,
-  "Year2021" = 0.896516269, 
-  "SexM:Year2020" = 0.002146466,
-  "SexM:Year2021" = 0.002146466,
-  "Work" = 0.923032281,
-  "SexM:Work" = 0.008620303,
-  "Work:Year2020" = 0.479971481,
-  "Work:Year2021" = 0.479971481
+  "Gonad_Wt_g" = 1.000000,
+  "Work164.7" = 1.000000,
+  "Work171.6" = 1.000000,
+  "Work298.2" = 1.000000,
+  "Work416.8" = 1.000000,
+  "Work443.1" = 1.000000,
+  "Work471.1" = 1.000000,
+  "Year2020" = 0.8735617,
+  "Year2021" = 0.8735617, 
+  "SexM" = 0.3836566,
+  "SexM:Work164.7" = 4.068750e-03,
+  "SexM:Work171.6" = 4.068750e-03,
+  "SexM:Work298.2" = 4.068750e-03,
+  "SexM:Work416.8" = 4.068750e-03,
+  "SexM:Work443.1" = 4.068750e-03,
+  "SexM:Work471.1" = 4.068750e-03,
+  "SexM:Year2020" = 9.679284e-10,
+  "SexM:Year2021" = 9.679284e-10
 )
 
 

@@ -1,0 +1,243 @@
+---
+title: "AH_AICc_totalenergy~SP"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
+```
+
+### Loading Data
+```{r}
+rm(list = ls())
+library(AICcmodavg)
+library(lubridate)
+library(ggplot2)
+
+#data loading
+# bc19 <- read.csv("bodycomp_2019.csv")
+# bc20 <- read.csv("bodycomp_2020.csv")
+# bc21 <- read.csv("bodycomp_2021.csv")
+#need to bind all together for total body comp dataset, Upper River river only
+
+# bc_UR_total <- rbind(bc19[61:172,], bc20[61:120,], bc21[61:182,])
+# write.csv(bc_UR_total, "upperriver_bodycomp_all.csv")
+upperriver_bodycomp_all<-read.csv("upperriver_bodycomp_all.csv")[,-1]
+#all data is loaded now
+
+#need to add year to dataset
+str(upperriver_bodycomp_all)
+upperriver_bodycomp_all$Collection_Date <- as.Date(upperriver_bodycomp_all$Collection_Date)
+
+# Create a new column 'year' from the collection_date
+upperriver_bodycomp_all$Year <- year(upperriver_bodycomp_all$Collection_Date)
+str(upperriver_bodycomp_all)
+
+#replace blank cell in Sex with NA 
+upperriver_bodycomp_all$Sex[upperriver_bodycomp_all$Sex == ""] <- NA
+str(upperriver_bodycomp_all)
+
+write.csv(upperriver_bodycomp_all, "upperriver_bodycomp_all.csv")
+```
+
+### Add Total Energy as a Variable
+```{r}
+# Total energy = PDry_1 * Fish_Wt == mJ energy
+upperriver_bodycomp_all$EnergyPDry_1_mJ_g <- upperriver_bodycomp_all$EnergyPDry_1 / 1000
+upperriver_bodycomp_all$Fish_Wt_g <- upperriver_bodycomp_all$Fish_Wt * 1000
+upperriver_bodycomp_all$TotalEnergy_mJ <- upperriver_bodycomp_all$EnergyPDry_1_mJ_g * upperriver_bodycomp_all$Fish_Wt_g
+str(upperriver_bodycomp_all)
+
+write.csv(upperriver_bodycomp_all, "upperriver_bodycomp_TotalEnergy.csv")
+```
+
+
+### Import Data for models, check for NAs and eliminate as needed
+
+```{r, include = FALSE}
+rm(list = ls())
+upperriver_bodycomp_TotalEnergy <- "upperriver_bodycomp_TotalEnergy.csv"
+DataSet<-read.csv(upperriver_bodycomp_TotalEnergy)[,-1]
+
+##### For the Upper River Data, I want to elimiate Power Creek Cordova, Eyak Weir Cordova, Bone Creek, Klutina River, and Upper Klutina, and Copper Lake data points as they don't apply to my spawning populations of interest ####
+library(dplyr)
+
+# Use filter() to exclude the specific collection locations
+DataSet <- DataSet %>%
+  filter(!Collection_Location %in% c("Power Creek Cordova", "Eyak Weir Cordova", "Bone Creek", "Copper Lake", "Klutina River", "Upper Klutina"))
+
+#convert gonad_wt to grams from kilograms
+DataSet$Gonad_Wt_g <- DataSet$Gonad_Wt * 1000
+
+### Now, need to remove NAs that will mess up levels / model weight
+any(is.na(DataSet$Collection_Location))
+any(is.na(DataSet$Year))
+any(is.na(DataSet$Sex))
+DataSet[is.na(DataSet$Sex), ] #row 87 and 110 has no sex value, eliminate it for models
+#check gonad weight for NAs
+any(is.na(DataSet$Gonad_Wt_g))
+DataSet[is.na(DataSet$Gonad_Wt_g), ] #need to eliminate these rows or model selection will not work
+DataSet[is.na(DataSet$TotalEnergy_mJ), ] #Row 35 does not have a Total Energy value, so eliminate for analysis
+DataSet <- DataSet[-c(18,35,36,40,61,65,77,87,102,110,118,141,142,144,161,164,221, 222,224),] #excludes row missing sex file
+any(is.na(DataSet$Sex)) #FALSE
+any(is.na(DataSet$Gonad_Wt_g)) #FALSE
+any(is.na(DataSet$TotalEnergy_mJ))
+
+
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet) #220 observations and 82 variables
+
+#Make work metric (migratory difficulty metric where work = F x distance)
+DataSet$Elevation_m <- as.numeric(DataSet$Elevation_m)
+DataSet$Work <- round((DataSet$Collection_RiverMile_m * DataSet$Elevation_m) / (1000 * 1000), digits = 1) #in km^2
+str(DataSet) 
+
+
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+levels(DataSet$Collection_Location) # 7 unique locations
+DataSet$Year<- as.factor(DataSet$Year)
+levels(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+
+```
+
+### Making Models for TotalEnergy_mJ~SpawningPopulation, includes SpawnStatus
+```{r}
+# Models for reference
+totalenergy_SP_modelset <- "totalenergy_spawningpopulation/TotalEnergy~SP_modelset.csv"
+
+ModelSet<-read.csv(totalenergy_SP_modelset)
+DataSet$Work <- factor(DataSet$Work) #This is an important fix, otherwise its numeric but in fact its discrete factors
+
+model1 <- lm(TotalEnergy_mJ~1, data=DataSet)
+model2 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work, data = DataSet)
+model3 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Sex, data = DataSet)
+model4 <- lm(TotalEnergy_mJ~Gonad_Wt_g + Year, data = DataSet)
+model5 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex, data = DataSet)
+model6 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Year, data = DataSet)
+model7 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Sex + Year, data = DataSet)
+model8 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
+model9 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet)
+model10 <- lm(TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
+model11 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
+```
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+
+teModels <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+
+# Generate AIC table
+mynames_te <- paste("model", as.character(1:11), sep = "")
+te_aicc <- aictab(teModels, modnames = mynames_te)
+print(te_aicc) 
+
+# Convert AIC table to a data frame for easier manipulation
+TEaic_df <- as.data.frame(te_aicc)
+TEaic_df$ModelName <- c("TotalEnergy_mJ~ Gonad_Wt_g + Work + Year + Work:Year",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Year",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Work:Sex",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Work + Year",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Work",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Sex + Year",
+                        "TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Sex",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Year",
+                        "TotalEnergy_mJ~ 1")
+colnames(TEaic_df)[colnames(TEaic_df) == "Modnames"] <- "Model #"
+
+write.csv(TEaic_df, file = "totalenergy_spawningpopulation/AICresults_TotalEnergy~SpawningPopulation.csv", row.names = FALSE)
+
+```
+
+### Model Averaging and Parameter Likelihoods
+```{r}
+library(MuMIn)
+
+# List your models (already fit with na.action=na.fail)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+
+# Model averaging based on AICc, conditional averaging (default is full=TRUE)
+model_avg <- model.avg(models, rank = "AICc", full = TRUE)
+
+# Summary with coefficients, SE, CIs
+summary(model_avg)
+
+# Full averaged coefficients
+avg_coefs_full <- coef(model_avg, full = TRUE)
+
+# Full averaged confidence intervals
+avg_confint_full <- confint(model_avg, full = TRUE)
+
+# Full averaged variance-covariance matrix and SE
+avg_vcov_full <- vcov(model_avg, full = TRUE)
+avg_se_full <- sqrt(diag(avg_vcov_full))
+
+# Create tidy data frame with full averages
+coefs_df_full <- as.data.frame(avg_coefs_full)
+colnames(coefs_df_full) <- "Avg_Coef"
+coefs_df_full$CI_Lower <- avg_confint_full[, 1]
+coefs_df_full$CI_Upper <- avg_confint_full[, 2]
+coefs_df_full$SE <- avg_se_full
+
+# Calculate parameter importance (parameter likelihoods)
+param_likelihoods <- sw(model_avg)
+as.data.frame(param_likelihoods)
+
+# Manually specify parameter likelihoods from sw(model_avg)
+manual_likelihoods <- c(
+  "(Intercept)" = 1.0,
+  "Gonad_Wt_g" = 1.000000,
+  "Work164.7" = 1.000000,
+  "Work171.6" = 1.000000,
+  "Work298.2" = 1.000000,
+  "Work416.8" = 1.000000,
+  "Work443.1" = 1.000000,
+  "Work471.1" = 1.000000,
+  "Year2020" = 0.9999988,
+  "Year2021" = 0.9999988, 
+  "Work164.7:Year2020" = 0.9999079,    
+  "Work171.6:Year2020" = 0.9999079,  
+  "Work298.2:Year2020" = 0.9999079,
+  "Work416.8:Year2020" = 0.9999079,  
+  "Work443.1:Year2020" = 0.9999079, 
+  "Work471.1:Year2020" = 0.9999079,
+  "Work164.7:Year2021" = 0.9999079, 
+  "Work171.6:Year2021" = 0.9999079,
+  "Work298.2:Year2021" = 0.9999079,
+  "Work416.8:Year2021" = 0.9999079, 
+  "Work443.1:Year2021" = 0.9999079,  
+  "Work471.1:Year2021" = 0.9999079,
+  "SexM" = 9.212242e-05,
+  "SexM:Work164.7" = 7.952007e-09,
+  "SexM:Work171.6" = 7.952007e-09,
+  "SexM:Work298.2" = 7.952007e-09,
+  "SexM:Work416.8" = 7.952007e-09,
+  "SexM:Work443.1" = 7.952007e-09,
+  "SexM:Work471.1" = 7.952007e-09,
+  "SexM:Year2020" = 1.419933e-14,
+  "SexM:Year2021" = 1.419933e-14
+)
+
+
+# Add ParamLikelihoods by matching rownames
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
+
+# View final table
+print(coefs_df_full)
+
+write.csv(coefs_df_full, file = "totalenergy_spawningpopulation/TotalEnergy_SP_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
+
+```
