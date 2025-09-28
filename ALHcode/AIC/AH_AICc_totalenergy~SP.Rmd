@@ -127,26 +127,24 @@ model5 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex, data = DataSet)
 model6 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Year, data = DataSet)
 model7 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Sex + Year, data = DataSet)
 model8 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
-model9 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Year + Work:Year, data = DataSet)
-model10 <- lm(TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
-model11 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
+model9 <- lm(TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
 ```
 
 ### AICc Model Selection
 ```{r}
-AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
-teModels <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+teModels <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
 # Generate AIC table
-mynames_te <- paste("model", as.character(1:11), sep = "")
+mynames_te <- paste("model", as.character(1:10), sep = "")
 te_aicc <- aictab(teModels, modnames = mynames_te)
 print(te_aicc) 
 
 # Convert AIC table to a data frame for easier manipulation
 TEaic_df <- as.data.frame(te_aicc)
-TEaic_df$ModelName <- c("TotalEnergy_mJ~ Gonad_Wt_g + Work + Year + Work:Year",
-                        "TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Year",
+TEaic_df$ModelName <- c("TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Year",
                         "TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex",
                         "TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Work:Sex",
                         "TotalEnergy_mJ~ Gonad_Wt_g + Work + Year",
@@ -167,7 +165,7 @@ write.csv(TEaic_df, file = "totalenergy_spawningpopulation/AICresults_TotalEnerg
 library(MuMIn)
 
 # List your models (already fit with na.action=na.fail)
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
 # Model averaging based on AICc, conditional averaging (default is full=TRUE)
 model_avg <- model.avg(models, rank = "AICc", full = TRUE)
@@ -206,29 +204,17 @@ manual_likelihoods <- c(
   "Work416.8" = 1.000000,
   "Work443.1" = 1.000000,
   "Work471.1" = 1.000000,
-  "Year2020" = 0.9999988,
-  "Year2021" = 0.9999988, 
-  "Work164.7:Year2020" = 0.9999079,    
-  "Work171.6:Year2020" = 0.9999079,  
-  "Work298.2:Year2020" = 0.9999079,
-  "Work416.8:Year2020" = 0.9999079,  
-  "Work443.1:Year2020" = 0.9999079, 
-  "Work471.1:Year2020" = 0.9999079,
-  "Work164.7:Year2021" = 0.9999079, 
-  "Work171.6:Year2021" = 0.9999079,
-  "Work298.2:Year2021" = 0.9999079,
-  "Work416.8:Year2021" = 0.9999079, 
-  "Work443.1:Year2021" = 0.9999079,  
-  "Work471.1:Year2021" = 0.9999079,
-  "SexM" = 9.212242e-05,
-  "SexM:Work164.7" = 7.952007e-09,
-  "SexM:Work171.6" = 7.952007e-09,
-  "SexM:Work298.2" = 7.952007e-09,
-  "SexM:Work416.8" = 7.952007e-09,
-  "SexM:Work443.1" = 7.952007e-09,
-  "SexM:Work471.1" = 7.952007e-09,
-  "SexM:Year2020" = 1.419933e-14,
-  "SexM:Year2021" = 1.419933e-14
+  "Year2020" = 0.9872105,
+  "Year2021" = 0.9872105, 
+  "SexM" = 0.9999564,
+  "SexM:Work164.7" = 8.631624e-05,
+  "SexM:Work171.6" = 8.631624e-05,
+  "SexM:Work298.2" = 8.631624e-05,
+  "SexM:Work416.8" = 8.631624e-05,
+  "SexM:Work443.1" = 8.631624e-05,
+  "SexM:Work471.1" = 8.631624e-05,
+  "SexM:Year2020" = 1.541287e-10,
+  "SexM:Year2021" = 1.541287e-10
 )
 
 
