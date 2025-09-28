@@ -216,10 +216,6 @@ write.csv(coefs_df_full, "energydensity_spawningpopulation/Energydensity_Spawnin
 
 
 
-
-
-
-
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}
 paramestimates_energypdry <- "energydensity_spawningpopulation/energydensity_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv"
