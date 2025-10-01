@@ -117,18 +117,17 @@ str(DataSet)
 totalenergy_SP_modelset <- "totalenergy_spawningpopulation/TotalEnergy~SP_modelset.csv"
 
 ModelSet<-read.csv(totalenergy_SP_modelset)
-DataSet$Work <- factor(DataSet$Work) #This is an important fix, otherwise its numeric but in fact its discrete factors
 
 model1 <- lm(TotalEnergy_mJ~1, data=DataSet)
-model2 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work, data = DataSet)
+model2 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location, data = DataSet)
 model3 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Sex, data = DataSet)
 model4 <- lm(TotalEnergy_mJ~Gonad_Wt_g + Year, data = DataSet)
-model5 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex, data = DataSet)
-model6 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Year, data = DataSet)
+model5 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
+model6 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Year, data = DataSet)
 model7 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Sex + Year, data = DataSet)
-model8 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
+model8 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
 model9 <- lm(TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
+model10 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex + Year, data = DataSet)
 ```
 
 ### AICc Model Selection
@@ -144,16 +143,16 @@ print(te_aicc)
 
 # Convert AIC table to a data frame for easier manipulation
 TEaic_df <- as.data.frame(te_aicc)
-TEaic_df$ModelName <- c("TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Year",
-                        "TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex",
-                        "TotalEnergy_mJ~ Gonad_Wt_g + Work + Sex + Work:Sex",
-                        "TotalEnergy_mJ~ Gonad_Wt_g + Work + Year",
-                        "TotalEnergy_mJ~ Gonad_Wt_g + Work",
+TEaic_df$ModelName <- c("TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex + Year",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Year",
+                        "TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location",
                         "TotalEnergy_mJ~ Gonad_Wt_g + Sex + Year",
                         "TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year",
                         "TotalEnergy_mJ~ Gonad_Wt_g + Sex",
-                        "TotalEnergy_mJ~ Gonad_Wt_g + Year",
-                        "TotalEnergy_mJ~ 1")
+                        "TotalEnergy_mJ~Gonad_Wt_g + Year",
+                        "TotalEnergy_mJ~1")
 colnames(TEaic_df)[colnames(TEaic_df) == "Modnames"] <- "Model #"
 
 write.csv(TEaic_df, file = "totalenergy_spawningpopulation/AICresults_TotalEnergy~SpawningPopulation.csv", row.names = FALSE)
@@ -198,24 +197,25 @@ as.data.frame(param_likelihoods)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
   "Gonad_Wt_g" = 1.000000,
-  "Work164.7" = 1.000000,
-  "Work171.6" = 1.000000,
-  "Work298.2" = 1.000000,
-  "Work416.8" = 1.000000,
-  "Work443.1" = 1.000000,
-  "Work471.1" = 1.000000,
+  "Collection_LocationGulkana Hatchery" = 1.0000, 
+  "Collection_LocationLong Lake" = 1.0000,
+  "Collection_LocationMahlo" = 1.0000,
+  "Collection_LocationMentasta" = 1.0000,
+  "Collection_LocationSt Anne" = 1.0000,
+  "Collection_LocationTanada" = 1.0000,
   "Year2020" = 0.9872105,
   "Year2021" = 0.9872105, 
   "SexM" = 0.9999564,
-  "SexM:Work164.7" = 8.631624e-05,
-  "SexM:Work171.6" = 8.631624e-05,
-  "SexM:Work298.2" = 8.631624e-05,
-  "SexM:Work416.8" = 8.631624e-05,
-  "SexM:Work443.1" = 8.631624e-05,
-  "SexM:Work471.1" = 8.631624e-05,
   "SexM:Year2020" = 1.541287e-10,
-  "SexM:Year2021" = 1.541287e-10
+  "SexM:Year2021" = 1.541287e-10,
+  "Collection_LocationGulkana Hatchery:SexM" = 8.631624e-05,
+  "Collection_LocationLong Lake:SexM" = 8.631624e-05,
+  "Collection_LocationMahlo:SexM" = 8.631624e-05,
+  "Collection_LocationMentasta:SexM" = 8.631624e-05,
+  "Collection_LocationSt Anne:SexM" = 8.631624e-05,
+  "Collection_LocationTanada:SexM" = 8.631624e-05
 )
+
 
 
 # Add ParamLikelihoods by matching rownames

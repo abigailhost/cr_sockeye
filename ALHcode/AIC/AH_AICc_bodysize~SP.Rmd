@@ -393,18 +393,18 @@ bodysize_SP_modelset <- "bodysize_spawningpopulation/bodysize~SpawningPopulation
 
 ModelSet<-read.csv(bodysize_SP_modelset) 
 
-DataSet$Work <- factor(DataSet$Work) #This is an important fix, otherwise its numeric but in fact its discrete factors
+#DataSet$Work <- factor(DataSet$Work) #This is an important fix, otherwise its numeric but in fact its discrete factors
 
 model1 <- lm(bodysize_pc_g_mm~1, data=DataSet)
-model2 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work, data = DataSet)
+model2 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location, data = DataSet)
 model3 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Sex, data = DataSet)
 model4 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Year, data = DataSet)
-model5 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex, data = DataSet)
-model6 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Year, data = DataSet)
+model5 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
+model6 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location + Year, data = DataSet)
 model7 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Sex + Year, data = DataSet)
-model8 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
+model8 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
 model9 <- lm(bodysize_pc_g_mm~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
+model10 <- lm(bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location + Sex + Year, data = DataSet)
 ```
 
 ### AICc Model Selection
@@ -420,16 +420,16 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Year",
+aic_df$ModelName <- c("bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location + Sex + Year",
                       "bodysize_pc_g_mm~ Gonad_Wt_g + Sex + Year",
                       "bodysize_pc_g_mm~Gonad_Wt_g + Sex + Year + Sex:Year",
-                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location + Sex",
                       "bodysize_pc_g_mm~ Gonad_Wt_g + Sex",
-                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work + Sex + Work:Sex",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex",
                       "bodysize_pc_g_mm~ Gonad_Wt_g + Year",
-                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work + Year",
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location + Year",
                       "bodysize_pc_g_mm~1",
-                      "bodysize_pc_g_mm~ Gonad_Wt_g + Work")
+                      "bodysize_pc_g_mm~ Gonad_Wt_g + Collection_Location")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
@@ -476,23 +476,23 @@ as.data.frame(param_likelihoods)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
   "Gonad_Wt_g" = 1.000000,
-  "Work164.7" = 0.41159041,
-  "Work171.6" = 0.41159041,
-  "Work298.2" = 0.41159041,
-  "Work416.8" = 0.41159041,
-  "Work443.1" = 0.41159041,
-  "Work471.1" = 0.41159041,
+  "Collection_LocationGulkana Hatchery" = 0.41159041, 
+  "Collection_LocationLong Lake" = 0.41159041,
+  "Collection_LocationMahlo" = 0.41159041,
+  "Collection_LocationMentasta" = 0.41159041,
+  "Collection_LocationSt Anne" = 0.41159041,
+  "Collection_LocationTanada" = 0.41159041,
   "Year2020" = 0.96892340,
   "Year2021" = 0.96892340, 
-  "SexM" = 1.0000,
-  "SexM:Work164.7" = 0.00140456,
-  "SexM:Work171.6" = 0.00140456,
-  "SexM:Work298.2" = 0.00140456,
-  "SexM:Work416.8" = 0.00140456,
-  "SexM:Work443.1" = 0.00140456,
-  "SexM:Work471.1" = 0.00140456,
+  "SexM" = 1.00000000,
   "SexM:Year2020" = 0.25346865,
-  "SexM:Year2021" = 0.25346865
+  "SexM:Year2021" = 0.25346865,
+  "Collection_LocationGulkana Hatchery:SexM" = 0.00140456,
+  "Collection_LocationLong Lake:SexM" = 0.00140456,
+  "Collection_LocationMahlo:SexM" = 0.00140456,
+  "Collection_LocationMentasta:SexM" = 0.00140456,
+  "Collection_LocationSt Anne:SexM" = 0.00140456,
+  "Collection_LocationTanada:SexM" = 0.00140456
 )
 
 

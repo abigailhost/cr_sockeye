@@ -151,19 +151,19 @@ scBodyMass_SP_modelset <- "scbodymass_spawningpopulation/SizeCorrectedBodyMass~S
 
 ModelSet<-read.csv(scBodyMass_SP_modelset)
 
-DataSet$Work <- factor(DataSet$Work) #This is an important fix, otherwise its numeric but in fact its discrete factors
+#DataSet$Work <- factor(DataSet$Work) #This is an important fix, otherwise its numeric but in fact its discrete factors
 
 #models
 model1 <- lm(sizecorrected_bodymass_residuals~1, data=DataSet)
-model2 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work, data = DataSet)
+model2 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location, data = DataSet)
 model3 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex, data = DataSet)
 model4 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Year, data = DataSet)
-model5 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex, data = DataSet)
-model6 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year, data = DataSet)
+model5 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
+model6 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location + Year, data = DataSet)
 model7 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex + Year, data = DataSet)
-model8 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Work:Sex, data = DataSet)
+model8 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
 model9 <- lm(sizecorrected_bodymass_residuals~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Year, data = DataSet)
+model10 <- lm(sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location + Sex + Year, data = DataSet)
 
 ```
 
@@ -181,13 +181,13 @@ print(myaicc1)
 
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Year",
-                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Year",
-                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work",
-                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex",
-                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Work + Sex + Work:Sex",
+aic_df$ModelName <- c("sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location + Year",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location + Sex + Year",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location + Sex",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex",
                       "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Year",
-                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex + Year",
+                      "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Collection_Location + Year + Collection_Location:Year",
                       "sizecorrected_bodymass_residuals~1",
                       "sizecorrected_bodymass_residuals~ Gonad_Wt_g + Sex",
                       "sizecorrected_bodymass_residuals~Gonad_Wt_g + Sex + Year + Sex:Year") 
@@ -237,25 +237,24 @@ as.data.frame(param_likelihoods)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
   "Gonad_Wt_g" = 1.000000,
-  "Work164.7" = 1.000000,
-  "Work171.6" = 1.000000,
-  "Work298.2" = 1.000000,
-  "Work416.8" = 1.000000,
-  "Work443.1" = 1.000000,
-  "Work471.1" = 1.000000,
+  "Collection_LocationGulkana Hatchery" = 1.0000, 
+  "Collection_LocationLong Lake" = 1.0000,
+  "Collection_LocationMahlo" = 1.0000,
+  "Collection_LocationMentasta" = 1.0000,
+  "Collection_LocationSt Anne" = 1.0000,
+  "Collection_LocationTanada" = 1.0000,
   "Year2020" = 0.8735617,
   "Year2021" = 0.8735617, 
   "SexM" = 0.3836566,
-  "SexM:Work164.7" = 4.068750e-03,
-  "SexM:Work171.6" = 4.068750e-03,
-  "SexM:Work298.2" = 4.068750e-03,
-  "SexM:Work416.8" = 4.068750e-03,
-  "SexM:Work443.1" = 4.068750e-03,
-  "SexM:Work471.1" = 4.068750e-03,
   "SexM:Year2020" = 9.679284e-10,
-  "SexM:Year2021" = 9.679284e-10
+  "SexM:Year2021" = 9.679284e-10,
+  "Collection_LocationGulkana Hatchery:SexM" = 4.068750e-03,
+  "Collection_LocationLong Lake:SexM" = 4.068750e-03,
+  "Collection_LocationMahlo:SexM" = 4.068750e-03,
+  "Collection_LocationMentasta:SexM" = 4.068750e-03,
+  "Collection_LocationSt Anne:SexM" = 4.068750e-03,
+  "Collection_LocationTanada:SexM" = 4.068750e-03
 )
-
 
 
 # Add ParamLikelihoods by matching rownames
@@ -263,8 +262,6 @@ coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
 
 # View final table
 print(coefs_df_full)
-
-
 
 write.csv(coefs_df_full, "scbodymass_spawningpopulation/scBodyMass_SpawningPopulation_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
