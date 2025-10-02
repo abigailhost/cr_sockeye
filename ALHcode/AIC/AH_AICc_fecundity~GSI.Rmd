@@ -101,52 +101,34 @@ model1 <- lm(Fecun_num_by_wt1~1, data=DataSetF)
 model2 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc, data=DataSetF)
 model3 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1, data=DataSetF)
 model4 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + Group_Assignment, data=DataSetF)
-model5 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + Year, data=DataSetF)
-model6 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1, data=DataSetF)
-model7 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Group_Assignment, data=DataSetF)
-model8 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Year, data=DataSetF)
-model9 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Group_Assignment, data=DataSetF)
-model10 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*Group_Assignment, data=DataSetF)
-model11 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Year, data=DataSetF)
-model12 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + Group_Assignment + Year, data=DataSetF)
-model13 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Group_Assignment, data=DataSetF)
-model14 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year, data=DataSetF)
-model15 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Group_Assignment + Year, data=DataSetF)
-model16 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m +  EnergyPDry_1 + Group_Assignment + Year, data=DataSetF)
-model17 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Group_Assignment + Year, data=DataSetF)
+model5 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1, data=DataSetF)
+model6 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Group_Assignment, data=DataSetF)
+model7 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Group_Assignment, data=DataSetF)
+model8 <- lm(Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Group_Assignment, data=DataSetF)
 
 ```
 
 ### AICc Model Selection
 ```{r}
-AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17)
+AIC(model1, model2, model3, model4, model5, model6, model7, model8)
 
 #table of AIC results
-mynames1 <- paste("model", as.character(1:17), sep = "")
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17)
+mynames1 <- paste("model", as.character(1:8), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8)
 
 # Generate AIC table
 myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Year",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc",
+aic_df$ModelName <- c("Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc",
                       "Fecun_num_by_wt1~1",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Year",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Group_Assignment",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + Year",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Year",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + Group_Assignment",
                       "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Group_Assignment",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + Group_Assignment + Year",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Group_Assignment",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + Group_Assignment + Year",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + bodysize_pc + EnergyPDry_1 + Group_Assignment + Year",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m +  EnergyPDry_1 + Group_Assignment + Year",
-                      "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1*Group_Assignment")
+                      "Fecun_num_by_wt1~Collection_RiverMile_m + EnergyPDry_1 + Group_Assignment")
 
 
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
@@ -162,7 +144,7 @@ write.csv(aic_df, file = "fecundity_GSI/AICresults_Fecundity~GSI.csv", row.names
 library(MuMIn)
 
 # List your models (already fit with na.action=na.fail)
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8)
 
 # Model averaging based on AICc, conditional averaging (default is full=TRUE)
 model_avg <- model.avg(models, rank = "AICc", full = TRUE)
@@ -194,28 +176,18 @@ as.data.frame(param_likelihoods)
 # Manually specify parameter likelihoods from sw(model_avg)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
-  "Collection_RiverMile_m" = 0.8866484,
-  "Group_AssignmentChitina" = 0.09255629,
-  "Group_AssignmentGulkana" = 0.09255629,
-  "Group_AssignmentGulkanaHatchery" = 0.09255629,
-  "Group_AssignmentKlutinaLake" = 0.09255629,
-  "Group_AssignmentKlutinaTonsinaOutlet" = 0.09255629,
-  "Group_AssignmentLowerGroups" = 0.09255629,
-  "Group_AssignmentSlana" = 0.09255629,
-  "Group_AssignmentTanadaCopperLakes" = 0.09255629,
-  "Group_AssignmentTazlina" = 0.09255629,
-  "Year2021" = 0.4047266,
-  "bodysize_pc" = 0.7857386,
-  "EnergyPDry_1" = 0.1160500,
-  "Group_AssignmentChitina" = 0.00000001600119, 
-  "EnergyPDry_1:Group_AssignmentChitina" = 0.00000001600119, 
-  "EnergyPDry_1:Group_AssignmentGulkana" = 0.00000001600119,
-  "EnergyPDry_1:Group_AssignmentGulkanaHatchery" = 0.00000001600119,
-  "EnergyPDry_1:Group_AssignmentKlutinaLake" = 0.00000001600119,
-  "EnergyPDry_1:Group_AssignmentKlutinaTonsinaOutlet" = 0.00000001600119,
-  "EnergyPDry_1:Group_AssignmentSlana" = 0.00000001600119,
-  "EnergyPDry_1:Group_AssignmentTanadaCopperLakes" = 0.00000001600119,
-  "EnergyPDry_1:Group_AssignmentTazlina" = 0.00000001600119
+  "Collection_RiverMile_m" = 0.8134145,
+  "Group_AssignmentChitina" = 0.1724891,
+  "Group_AssignmentGulkana" = 0.1724891,
+  "Group_AssignmentGulkanaHatchery" = 0.1724891,
+  "Group_AssignmentKlutinaLake" = 0.1724891,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 0.1724891,
+  "Group_AssignmentLowerGroups" = 0.1724891,
+  "Group_AssignmentSlana" = 0.1724891,
+  "Group_AssignmentTanadaCopperLakes" = 0.1724891,
+  "Group_AssignmentTazlina" = 0.1724891,
+  "bodysize_pc" = 0.7315382,
+  "EnergyPDry_1" = 0.2111615
 )
 
 

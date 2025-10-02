@@ -208,24 +208,26 @@ ModelSet<-read.csv(bodysize_GSI_modelset)
 
 model1 <- lm(bodysize_pc_g_mm~1, data=DataSet)
 model2 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment, data = DataSet)
-model3 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+model3 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
 
 ```
 
 ### AICc Model Selection
 ```{r}
-AIC(model1, model2, model3)
+AIC(model1, model2, model3, model4)
 
 #table of AIC results
-mynames1 <- paste("model", as.character(1:3), sep = "")
-models <- list(model1, model2, model3)
+mynames1 <- paste("model", as.character(1:4), sep = "")
+models <- list(model1, model2, model3, model4)
 
 # Generate AIC table
 myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex",
+aic_df$ModelName <- c("bodysize_pc_g_mm~Collection_RiverMile_m + Sex",
+                      "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment + Sex",
                       "bodysize_pc_g_mm~Collection_RiverMile_m + Group_Assignment",
                       "bodysize_pc_g_mm~1")
 
@@ -245,7 +247,7 @@ write.csv(aic_df, file = "bodysize_GSI/AICresults_bodysize~GSI.csv", row.names =
 library(MuMIn)
 
 # List your models (already fit with na.action=na.fail)
-models <- list(model1, model2, model3)
+models <- list(model1, model2, model3, model4)
 
 # Model averaging based on AICc, conditional averaging (default is full=TRUE)
 model_avg <- model.avg(models, rank = "AICc", full = TRUE)
@@ -277,17 +279,17 @@ as.data.frame(param_likelihoods)
 # Manually specify parameter likelihoods from sw(model_avg)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
-  "Collection_RiverMile_m" = 0.9805830,
-  "Group_AssignmentChitina" = 0.9805830,
-  "Group_AssignmentGulkana" = 0.9805830,
-  "Group_AssignmentGulkanaHatchery" = 0.9805830,
-  "Group_AssignmentKlutinaLake" = 0.9805830,
-  "Group_AssignmentKlutinaTonsinaOutlet" = 0.9805830,
-  "Group_AssignmentLowerGroups" = 0.9805830,
-  "Group_AssignmentSlana" = 0.9805830,
-  "Group_AssignmentTanadaCopperLakes" = 0.9805830,
-  "Group_AssignmentTazlina" = 0.9805830,
-  "SexM" = 0.7810483
+  "Collection_RiverMile_m" = 0.1658772,
+  "Group_AssignmentChitina" = 0.1658772,
+  "Group_AssignmentGulkana" = 0.1658772,
+  "Group_AssignmentGulkanaHatchery" = 0.1658772,
+  "Group_AssignmentKlutinaLake" = 0.1658772,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 0.1658772,
+  "Group_AssignmentLowerGroups" = 0.1658772,
+  "Group_AssignmentSlana" = 0.1658772,
+  "Group_AssignmentTanadaCopperLakes" = 0.1658772,
+  "Group_AssignmentTazlina" = 0.1658772,
+  "SexM" = 0.9629617
 )
 
 
