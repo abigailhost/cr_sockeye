@@ -279,7 +279,7 @@ as.data.frame(param_likelihoods)
 # Manually specify parameter likelihoods from sw(model_avg)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
-  "Collection_RiverMile_m" = 0.1658772,
+  "Collection_RiverMile_m" = 0.9967154,
   "Group_AssignmentChitina" = 0.1658772,
   "Group_AssignmentGulkana" = 0.1658772,
   "Group_AssignmentGulkanaHatchery" = 0.1658772,
@@ -306,7 +306,7 @@ write.csv(coefs_df_full, file = "bodysize_GSI/bodysize_GSI_ModelAvg_Coefs_withLi
 
 ### Estimates Figure
 ```{r}
-# Figure that displays parameter estimates + CI for each parameter in teh model set
+# Figure that displays parameter estimates + CI for each parameter in the model set
 paramestimates_bodyGSI <- "bodysize_GSI/bodysize_GSI_ModelAvg_Coefs_withLikelihoods.csv"
 
 estimates_body<-read.csv(paramestimates_bodyGSI)
@@ -348,6 +348,96 @@ ggplot(estimates_body, aes(x = Avg_Coef, y = X)) +
   theme_minimal() +
   theme(axis.title = element_text(size = 24), 
         axis.text = element_text(size = 24))
+
+
+
+```
+
+### Characterizing Group Assignment (GSI) for run-timing groups
+```{r}
+DataSet$RunTimingGroup <- factor(
+  DataSet$RunTimingGroup,
+  levels = c("Early", "Middle", "Late")
+)
+# Table of counts
+table(DataSet$Group_Assignment, DataSet$RunTimingGroup)
+
+
+#Color palette for group assignment
+my_colors <- c(
+  "#774762FF", "#D9AF6BFF", "#AF6458FF", "#736F4CFF", "#526A83FF", "#625377FF", "#68855CFF", "#9C9C5EFF", "#A06177FF", "#467378FF"
+)
+#Visual aid of counts
+ggplot(DataSet, aes(x = RunTimingGroup, fill = Group_Assignment)) +
+  geom_bar(position = "stack") +
+  theme_minimal() +
+  labs(
+    title = "GSI Distribution Within Run Timing Groups",
+    x = "Run Timing Group",
+    y = "Count",
+    fill = "GSI Group"
+  ) + 
+  scale_fill_manual(values = my_colors) + 
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+
+ggplot(DataSet, aes(x = RunTimingGroup, fill = Group_Assignment)) +
+  geom_bar(position = "fill") + # fill makes it proportional
+  scale_fill_manual(values = my_colors) +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal() +
+  labs(
+    title = "Proportion of GSI Groups by Run Timing",
+    x = "Run Timing Group",
+    y = "Proportion",
+    fill = "GSI Group"
+  ) + 
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+#Table summary
+library(dplyr)
+
+library(dplyr)
+
+GSI_summary_by_group <- DataSet %>%
+  group_by(Group_Assignment, RunTimingGroup) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Group_Assignment) %>%
+  mutate(Proportion = Count / sum(Count))
+
+
+# View it
+print(GSI_summary_by_run)
+library(knitr)
+GSI_summary_by_group %>%
+  kable(
+    digits = 3,
+    format = "html",
+    caption = "GSI Summary Grouped by GSI (Group_Assignment)"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  row_spec(0, bold = TRUE, background = "white")
+
 
 
 
