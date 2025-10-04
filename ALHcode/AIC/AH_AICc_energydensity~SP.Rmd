@@ -124,7 +124,6 @@ model10 <- lm(EnergyPDry_1~ Gonad_Wt_g + Collection_Location + Sex + Year, data 
 ```
 
 ### AICc Model Selection
-
 ```{r}
 AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
 
@@ -224,6 +223,101 @@ write.csv(coefs_df_full, "energydensity_spawningpopulation/Energydensity_Spawnin
 
 ```
 
+### Using summed weighted parameter estimates for energy density by CL ~ work (successful size for migration, as continuous variable)
+```{r}
+# Step 1: Extract intercept
+intercept <- coefs_df_full["(Intercept)", "Avg_Coef"]
+
+# Step 2: Extract Collection_Location effects
+location_effects <- coefs_df_full[grep("^Collection_Location", rownames(coefs_df_full)), ]
+location_effects <- location_effects[!grepl(":", rownames(location_effects)), ]  # remove interaction terms
+
+# Extract location names (remove "Collection_Location" from row names)
+location_effects$Location <- gsub("Collection_Location", "", rownames(location_effects))
+
+# Step 3: Add intercept to each to get estimated body size
+location_effects$Estimated_EnergyPDry <- intercept + location_effects$Avg_Coef
+
+# Step 4: Add back the reference location (intercept only)
+ref_location <- levels(DataSet$Collection_Location)[1]  # Assumes first level is the reference
+ref_row <- data.frame(
+  Avg_Coef = intercept,
+  CI_Lower = coefs_df_full["(Intercept)", "CI_Lower"],
+  CI_Upper = coefs_df_full["(Intercept)", "CI_Upper"],
+  SE = coefs_df_full["(Intercept)", "SE"],
+  ParamLikelihood = coefs_df_full["(Intercept)", "ParamLikelihood"],
+  Location = ref_location,
+  Estimated_EnergyPDry = intercept
+)
+
+# Step 5: Combine
+location_estimates <- rbind(ref_row, location_effects)
+rownames(location_estimates) <- NULL
+location_estimates <- location_estimates[, c("Location", setdiff(names(location_estimates), "Location"))]
+
+# Step 6: Compute average Work per location
+library(dplyr)
+avg_work <- DataSet %>%
+  group_by(Collection_Location) %>%
+  summarise(Avg_Work = mean(Work, na.rm = TRUE))
+
+# Step 7: Merge with estimates
+location_estimates <- merge(location_estimates, avg_work, by.x = "Location", by.y = "Collection_Location")
+
+# Step 8: Linear regression of estimated body size ~ work
+ed_work_model <- lm(Estimated_EnergyPDry ~ Avg_Work, data = location_estimates)
+summary(ed_work_model)
+
+# Step 9: Visualization
+library(ggplot2)
+ggplot(location_estimates, aes(x = Avg_Work, y = Estimated_EnergyPDry, label = Location)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.1, size = 3) +
+  labs(title = "Model-Averaged Estimated Energy Content (mJ/kg) vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Energy Content (mJ/kg)") +
+  theme_minimal() + 
+   theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+
+#Remove Long Lake from the dataset
+location_estimates_noLL <- location_estimates %>%
+  filter(!Location %in% c("Long Lake"))
+
+ed_work_model2 <- lm(Estimated_EnergyPDry ~ Avg_Work, data = location_estimates_noLL)
+summary(ed_work_model2)
+
+ggplot(location_estimates_noLL, aes(x = Avg_Work, y = Estimated_EnergyPDry, label = Location)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.1, size = 3) +
+  labs(title = "Model-Averaged Estimated Energy Content vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Energy Content (mJ/kg)") +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+  
+
+
+
+
+```
+
 
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
@@ -250,27 +344,12 @@ ggplot(paramestimates_energy, aes(x = Avg_Coef, y = Parameter)) +
 
 ```
 
-### Visualizing Best Selected Models from above, for pre-spawn fish
-```{r}
-prespawn_data <- DataSet[DataSet$SpawnStatus == 0, ]
-ggplot(prespawn_data, aes(x = Work, y = EnergyPDry_1)) +
-  geom_point(alpha = 0.5, color = "darkblue") +
-  geom_smooth(method = "loess", color = "red") +
-  facet_wrap(~ Year) +
-  theme_minimal() +
-  labs(title = "Energy vs Work Faceted by Year") #can I visualize this without long lake? 
 
-prespawn_data_noLL <- prespawn_data %>%
-  filter(!Collection_Location %in% c("Long Lake"))
 
-ggplot(prespawn_data_noLL, aes(x = Work, y = EnergyPDry_1)) +
-  geom_point(alpha = 0.5, color = "darkblue") +
-  geom_smooth(method = "lm", color = "red") +
-  facet_wrap(~ Year) +
-  theme_minimal() +
-  labs(title = "Energy vs Work Faceted by Year")
 
-```
+
+
+
 
 ### Figures for Copper River Workshop February 2025
 ```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}

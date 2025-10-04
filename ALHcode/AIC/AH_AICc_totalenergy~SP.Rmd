@@ -227,3 +227,99 @@ print(coefs_df_full)
 write.csv(coefs_df_full, file = "totalenergy_spawningpopulation/TotalEnergy_SP_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
 ```
+
+
+### Using summed weighted parameter estimates for total energy by CL ~ work (successful size for migration, as continuous variable)
+```{r}
+# Step 1: Extract intercept
+intercept <- coefs_df_full["(Intercept)", "Avg_Coef"]
+
+# Step 2: Extract Collection_Location effects
+location_effects <- coefs_df_full[grep("^Collection_Location", rownames(coefs_df_full)), ]
+location_effects <- location_effects[!grepl(":", rownames(location_effects)), ]  # remove interaction terms
+
+# Extract location names (remove "Collection_Location" from row names)
+location_effects$Location <- gsub("Collection_Location", "", rownames(location_effects))
+
+# Step 3: Add intercept to each to get estimated body size
+location_effects$Estimated_TotalEnergy <- intercept + location_effects$Avg_Coef
+
+# Step 4: Add back the reference location (intercept only)
+ref_location <- levels(DataSet$Collection_Location)[1]  # Assumes first level is the reference
+ref_row <- data.frame(
+  Avg_Coef = intercept,
+  CI_Lower = coefs_df_full["(Intercept)", "CI_Lower"],
+  CI_Upper = coefs_df_full["(Intercept)", "CI_Upper"],
+  SE = coefs_df_full["(Intercept)", "SE"],
+  ParamLikelihood = coefs_df_full["(Intercept)", "ParamLikelihood"],
+  Location = ref_location,
+  Estimated_TotalEnergy = intercept
+)
+
+# Step 5: Combine
+location_estimates <- rbind(ref_row, location_effects)
+rownames(location_estimates) <- NULL
+location_estimates <- location_estimates[, c("Location", setdiff(names(location_estimates), "Location"))]
+
+# Step 6: Compute average Work per location
+library(dplyr)
+avg_work <- DataSet %>%
+  group_by(Collection_Location) %>%
+  summarise(Avg_Work = mean(Work, na.rm = TRUE))
+
+# Step 7: Merge with estimates
+location_estimates <- merge(location_estimates, avg_work, by.x = "Location", by.y = "Collection_Location")
+
+# Step 8: Linear regression of estimated body size ~ work
+te_work_model <- lm(Estimated_TotalEnergy ~ Avg_Work, data = location_estimates)
+summary(te_work_model)
+
+# Step 9: Visualization
+library(ggplot2)
+ggplot(location_estimates, aes(x = Avg_Work, y = Estimated_TotalEnergy, label = Location)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.1, size = 3) +
+  labs(title = "Model-Averaged Estimated Total Energy vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Total Energy (mJ)") +
+  theme_minimal() + 
+   theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+
+#Remove Long Lake from the dataset
+location_estimates_noLL <- location_estimates %>%
+  filter(!Location %in% c("Long Lake"))
+
+te_work_model2 <- lm(Estimated_TotalEnergy ~ Avg_Work, data = location_estimates_noLL)
+summary(te_work_model2)
+
+ggplot(location_estimates_noLL, aes(x = Avg_Work, y = Estimated_TotalEnergy, label = Location)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.1, size = 3) +
+  labs(title = "Model-Averaged Estimated Total Energy vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Total Energy (mJ)") +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+  
+
+
+
+
+```
