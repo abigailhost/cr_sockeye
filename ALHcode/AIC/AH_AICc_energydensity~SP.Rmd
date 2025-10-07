@@ -313,9 +313,6 @@ ggplot(location_estimates_noLL, aes(x = Avg_Work, y = Estimated_EnergyPDry, labe
 )
   
 
-
-
-
 ```
 
 
