@@ -54,14 +54,19 @@ DataSetF <- subset(DataSet, Sex == "F")
 
 ## Calculating Fecundity for the DataSetF 
 ```{r}
-DataSetF$Fecun_num_by_wt1 <- (DataSetF$Fem_Fecun_1_num/DataSetF$Fem_Fecun_1_wt)*(DataSetF$Gonad_Wt * 1000)
-
-#convert gonad_wt to grams from kilograms
+# convert gonad_wt to grams from kilograms
 DataSetF$Gonad_Wt_g <- DataSetF$Gonad_Wt * 1000
 
+# filter out rows where gonad weight is zero or missing
+DataSetF <- subset(DataSetF, Gonad_Wt_g > 0 & !is.na(Gonad_Wt_g))
+
+# now calculate fecundity
+DataSetF$Fecun_num_by_wt1 <- (DataSetF$Fem_Fecun_1_num * DataSetF$Gonad_Wt_g) / DataSetF$Fem_Fecun_1_wt
+
+# calculate Work
 DataSetF$Elevation_m <- as.numeric(DataSetF$Elevation_m)
-DataSetF$Work <- round((DataSetF$Collection_RiverMile_m * DataSetF$Elevation_m) / (1000 * 1000), digits = 1) #in km^2
-str(DataSetF) 
+DataSetF$Work <- round((DataSetF$Collection_RiverMile_m * DataSetF$Elevation_m) / (1000 * 1000), digits = 1) # in km^2
+
 
 # View DataSet.
 head(DataSetF)
@@ -110,20 +115,20 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("Fecun_num_by_wt1~Gonad_Wt_g + EnergyPDry_1*Collection_Location",
-                      "Fecun_num_by_wt1~Gonad_Wt_g + Collection_Location + Year",
-                      "Fecun_num_by_wt1~Gonad_Wt_g + EnergyPDry_1 + Collection_Location",
+aic_df$ModelName <- c("Fecun_num_by_wt1~Gonad_Wt_g + EnergyPDry_1 + Collection_Location",
                       "Fecun_num_by_wt1~Gonad_Wt_g + Collection_Location",
-                      "Fecun_num_by_wt1~Gonad_Wt_g +  EnergyPDry_1 + Collection_Location + Year",
-                      "Fecun_num_by_wt1~Gonad_Wt_g + EnergyPDry_1",
-                      "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm + Collection_Location + Year",
+                      "Fecun_num_by_wt1~Gonad_Wt_g + EnergyPDry_1*Collection_Location",
+                      "Fecun_num_by_wt1~Gonad_Wt_g + Collection_Location + Year",
                       "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1 + Collection_Location",
-                      "Fecun_num_by_wt1~Gonad_Wt_g + Year",
                       "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm + Collection_Location",
+                      "Fecun_num_by_wt1~Gonad_Wt_g +  EnergyPDry_1 + Collection_Location + Year",
+                      "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm + Collection_Location + Year",
                       "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1 + Collection_Location + Year",
+                      "Fecun_num_by_wt1~Gonad_Wt_g + EnergyPDry_1",
+                      "Fecun_num_by_wt1~Gonad_Wt_g + Year",
                       "Fecun_num_by_wt1~Gonad_Wt_g + EnergyPDry_1 + Year",
-                      "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm",
                       "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm + Year",
+                      "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm",
                       "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1",
                       "Fecun_num_by_wt1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1 + Year",
                       "Fecun_num_by_wt1~1")
@@ -172,22 +177,22 @@ as.data.frame(param_likelihoods)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
   "Gonad_Wt_g" = 1.00000000,
-  "bodysize_pc_g_mm" = 0.08940954, 
-  "Year2020" = 0.17262801,
-  "Year2021" = 0.17262801,
-  "EnergyPDry_1" = 0.81904065, 
-  "Collection_LocationGulkana Hatchery" = 0.92543157,
-  "Collection_LocationLong Lake" = 0.92543157,
-  "Collection_LocationMahlo" = 0.92543157,
-  "Collection_LocationMentasta" = 0.92543157,
-  "Collection_LocationSt Anne" = 0.92543157, 
-  "Collection_LocationTanada" = 0.92543157,
-  "Collection_LocationGulkana Hatchery:EnergyPDry_1" = 0.64803524,
-  "Collection_LocationLong Lake:EnergyPDry_1" = 0.64803524,
-  "Collection_LocationMahlo:EnergyPDry_1" = 0.64803524,
-  "Collection_LocationMentasta:EnergyPDry_1" = 0.64803524,
-  "Collection_LocationSt Anne:EnergyPDry_1" = 0.64803524,
-  "Collection_LocationTanada:EnergyPDry_1" = 0.64803524
+  "bodysize_pc_g_mm" = 0.1840747, 
+  "Year2020" = 0.1897182,
+  "Year2021" = 0.1897182,
+  "EnergyPDry_1" = 0.5900938, 
+  "Collection_LocationGulkana Hatchery" = 0.9435282,
+  "Collection_LocationLong Lake" = 0.9435282,
+  "Collection_LocationMahlo" = 0.9435282,
+  "Collection_LocationMentasta" = 0.9435282,
+  "Collection_LocationSt Anne" = 0.9435282, 
+  "Collection_LocationTanada" = 0.9435282,
+  "Collection_LocationGulkana Hatchery:EnergyPDry_1" = 0.1796916,
+  "Collection_LocationLong Lake:EnergyPDry_1" = 0.1796916,
+  "Collection_LocationMahlo:EnergyPDry_1" = 0.1796916,
+  "Collection_LocationMentasta:EnergyPDry_1" = 0.1796916,
+  "Collection_LocationSt Anne:EnergyPDry_1" = 0.1796916,
+  "Collection_LocationTanada:EnergyPDry_1" = 0.1796916
 )
 
 # Add ParamLikelihoods by matching rownames
@@ -242,15 +247,15 @@ avg_work <- DataSetF %>%
 location_estimates <- merge(location_estimates, avg_work, by.x = "Location", by.y = "Collection_Location")
 
 # Step 8: Linear regression of estimated body size ~ work
-ed_work_model <- lm(Estimated_Fecundity ~ Avg_Work, data = location_estimates)
-summary(ed_work_model)
+fec_work_model <- lm(Estimated_Fecundity ~ Avg_Work, data = location_estimates)
+summary(fec_work_model)
 
 # Step 9: Visualization
 library(ggplot2)
 ggplot(location_estimates, aes(x = Avg_Work, y = Estimated_Fecundity, label = Location)) +
-  geom_point(size = 3) +
+  geom_point(size = 5) +
   geom_smooth(method = "lm", se = TRUE, color = "blue") +
-  geom_text(nudge_y = 0.1, size = 3) +
+  geom_text(nudge_y = 100, size = 5) +
   labs(title = "Model-Averaged Estimated Fecundity vs. Migration Work",
        x = "Migration Work (km²)", y = "Estimated Fecundity") +
   theme_minimal() + 
@@ -269,8 +274,8 @@ ggplot(location_estimates, aes(x = Avg_Work, y = Estimated_Fecundity, label = Lo
 location_estimates_noMN <- location_estimates %>%
   filter(!Location %in% c("Mentasta"))
 
-ed_work_model2 <- lm(Estimated_Fecundity ~ Avg_Work, data = location_estimates_noMN)
-summary(ed_work_model2)
+fec_work_model2 <- lm(Estimated_Fecundity ~ Avg_Work, data = location_estimates_noMN)
+summary(fec_work_model2)
 
 ggplot(location_estimates_noMN, aes(x = Avg_Work, y = Estimated_Fecundity, label = Location)) +
   geom_point(size = 3) +
