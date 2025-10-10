@@ -1,0 +1,361 @@
+---
+title: "AH_AICc_eggsize~SP"
+author: "Abby Host"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
+```
+
+### Loading Data
+```{r}
+rm(list = ls())
+library(AICcmodavg)
+library(lubridate)
+library(ggplot2)
+
+#data loading, use the bodysize_pc data because it will be a variable of interest
+upperriver_bodycomp_PCscores <- "upperriver_bodycomp_PCscores.csv"
+
+# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
+DataSet<-read.csv(upperriver_bodycomp_PCscores)[,-1]
+```
+
+### Removing NAs and subsetting female fish for eggsize
+```{r}
+### Removing NAs that will mess up levels / model weight
+any(is.na(DataSet$Collection_Location))
+any(is.na(DataSet$Group_Assignment))
+any(is.na(DataSet$Year))
+any(is.na(DataSet$Sex)) # All false
+
+# View DataSet.
+head(DataSet)
+summary(DataSet)
+nrow(DataSet)
+str(DataSet)
+
+#make response variables factors
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$Group_Assignment <- as.factor(DataSet$Group_Assignment)
+levels(DataSet$Group_Assignment) #6 levels
+
+
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet) #collection_rivermile_m is numeric
+
+DataSetF <- subset(DataSet, Sex == "F") #120 observations, 88 variables
+
+```
+
+### Calculating Work for dataset
+```{r}
+# convert gonad_wt to grams from kilograms
+DataSetF$Gonad_Wt_g <- DataSetF$Gonad_Wt * 1000
+
+DataSetF$Fem_Egg_Sz_1
+
+# calculate Work
+DataSetF$Elevation_m <- as.numeric(DataSetF$Elevation_m)
+DataSetF$Work <- round((DataSetF$Collection_RiverMile_m * DataSetF$Elevation_m) / (1000 * 1000), digits = 1) # in km^2
+
+DataSetF <- subset(DataSetF, Fem_Egg_Sz_1 > 0 & !is.na(Fem_Egg_Sz_1) & !is.na(Gonad_Wt_g))
+
+# View DataSet.
+head(DataSetF)
+summary(DataSetF)
+nrow(DataSetF)
+str(DataSetF)
+```
+
+### Making Models for fecundity~RunTimingGroup, includes collection location
+```{r}
+# Models for reference
+eggsize_SP_modelset <- "eggsize_spawningpopulation/eggsize~SpawningPopulation_modelset.csv"
+
+ModelSet<-read.csv(eggsize_SP_modelset)
+
+model1 <- lm(Fem_Egg_Sz_1~1, data=DataSetF)
+model2 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm, data=DataSetF)
+model3 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + EnergyPDry_1, data=DataSetF)
+model4 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + Collection_Location, data=DataSetF)
+model5 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + Year, data=DataSetF)
+model6 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1, data=DataSetF)
+model7 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + Collection_Location, data=DataSetF)
+model8 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + Year, data=DataSetF)
+model9 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + EnergyPDry_1 + Collection_Location, data=DataSetF)
+model10 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + EnergyPDry_1*Collection_Location, data=DataSetF)
+model11 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + EnergyPDry_1 + Year, data=DataSetF)
+model12 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + Collection_Location + Year, data=DataSetF)
+model13 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1 + Collection_Location, data=DataSetF)
+model14 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1 + Year, data=DataSetF)
+model15 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + Collection_Location + Year, data=DataSetF)
+model16 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g +  EnergyPDry_1 + Collection_Location + Year, data=DataSetF)
+model17 <- lm(Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1 + Collection_Location + Year, data=DataSetF)
+```
+
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:17), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1 + Collection_Location",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1 + Collection_Location + Year",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + EnergyPDry_1*Collection_Location",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + Collection_Location",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + Collection_Location + Year",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + EnergyPDry_1 + Collection_Location",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + Collection_Location",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g +  EnergyPDry_1 + Collection_Location + Year",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + Collection_Location + Year",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + EnergyPDry_1 + Year",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + EnergyPDry_1",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + EnergyPDry_1 + Year",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + bodysize_pc_g_mm + Year",
+                      "Fem_Egg_Sz_1~1",
+                      "Fem_Egg_Sz_1~Gonad_Wt_g + Year")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "eggsize_spawningpopulation/AICresults_eggsize~SpawningPopulation.csv", row.names = FALSE)
+
+```
+
+### Model Averaging
+```{r}
+library(MuMIn)
+
+# List your models (already fit with na.action=na.fail)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17)
+
+# Model averaging based on AICc, conditional averaging (default is full=TRUE)
+model_avg <- model.avg(models, rank = "AICc", full = TRUE)
+
+# Summary with coefficients, SE, CIs
+summary(model_avg)
+
+# Full averaged coefficients
+avg_coefs_full <- coef(model_avg, full = TRUE)
+
+# Full averaged confidence intervals
+avg_confint_full <- confint(model_avg, full = TRUE)
+
+# Full averaged variance-covariance matrix and SE
+avg_vcov_full <- vcov(model_avg, full = TRUE)
+avg_se_full <- sqrt(diag(avg_vcov_full))
+
+# Create tidy data frame with full averages
+coefs_df_full <- as.data.frame(avg_coefs_full)
+colnames(coefs_df_full) <- "Avg_Coef"
+coefs_df_full$CI_Lower <- avg_confint_full[, 1]
+coefs_df_full$CI_Upper <- avg_confint_full[, 2]
+coefs_df_full$SE <- avg_se_full
+
+# Calculate parameter importance (parameter likelihoods)
+param_likelihoods <- sw(model_avg)
+as.data.frame(param_likelihoods)
+
+# Manually specify parameter likelihoods from sw(model_avg)
+manual_likelihoods <- c(
+  "(Intercept)" = 1.0,
+  "Gonad_Wt_g" = 1.00000000,
+  "bodysize_pc_g_mm" = 0.98919326, 
+  "Year2020" = 0.13409132,
+  "Year2021" = 0.13409132,
+  "EnergyPDry_1" = 0.99842920, 
+  "Collection_LocationGulkana Hatchery" = 1.00000000,
+  "Collection_LocationLong Lake" = 1.00000000,
+  "Collection_LocationMahlo" = 1.00000000,
+  "Collection_LocationMentasta" = 1.00000000,
+  "Collection_LocationSt Anne" = 1.00000000, 
+  "Collection_LocationTanada" = 1.00000000,
+  "Collection_LocationGulkana Hatchery:EnergyPDry_1" = 0.01080452,
+  "Collection_LocationLong Lake:EnergyPDry_1" = 0.01080452,
+  "Collection_LocationMahlo:EnergyPDry_1" = 0.01080452,
+  "Collection_LocationMentasta:EnergyPDry_1" = 0.01080452,
+  "Collection_LocationSt Anne:EnergyPDry_1" = 0.01080452,
+  "Collection_LocationTanada:EnergyPDry_1" = 0.01080452
+)
+
+# Add ParamLikelihoods by matching rownames
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
+
+# View final table
+print(coefs_df_full)
+
+write.csv(coefs_df_full, file = "eggsize_spawningpopulation/eggsize~spawningpopulation_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
+
+```
+
+### Using summed weighted parameter estimates for egg size by CL ~ work (successful size for migration, as continuous variable)
+```{r}
+# Step 1: Extract intercept
+intercept <- coefs_df_full["(Intercept)", "Avg_Coef"]
+
+# Step 2: Extract Collection_Location effects
+location_effects <- coefs_df_full[grep("^Collection_Location", rownames(coefs_df_full)), ]
+location_effects <- location_effects[!grepl(":", rownames(location_effects)), ]  # remove interaction terms
+
+# Extract location names (remove "Collection_Location" from row names)
+location_effects$Location <- gsub("Collection_Location", "", rownames(location_effects))
+
+# Step 3: Add intercept to each to get estimated body size
+location_effects$Estimated_EggSize <- intercept + location_effects$Avg_Coef
+
+# Step 4: Add back the reference location (intercept only)
+ref_location <- levels(DataSet$Collection_Location)[1]  # Assumes first level is the reference
+ref_row <- data.frame(
+  Avg_Coef = intercept,
+  CI_Lower = coefs_df_full["(Intercept)", "CI_Lower"],
+  CI_Upper = coefs_df_full["(Intercept)", "CI_Upper"],
+  SE = coefs_df_full["(Intercept)", "SE"],
+  ParamLikelihood = coefs_df_full["(Intercept)", "ParamLikelihood"],
+  Location = ref_location,
+  Estimated_EggSize = intercept
+)
+
+# Step 5: Combine
+location_estimates <- rbind(ref_row, location_effects)
+rownames(location_estimates) <- NULL
+location_estimates <- location_estimates[, c("Location", setdiff(names(location_estimates), "Location"))]
+
+# Step 6: Compute average Work per location
+library(dplyr)
+avg_work <- DataSetF %>%
+  group_by(Collection_Location) %>%
+  summarise(Avg_Work = mean(Work, na.rm = TRUE))
+
+# Step 7: Merge with estimates
+location_estimates <- merge(location_estimates, avg_work, by.x = "Location", by.y = "Collection_Location")
+
+# Step 8: Linear regression of estimated body size ~ work
+egg_work_model <- lm(Estimated_EggSize ~ Avg_Work, data = location_estimates)
+summary(egg_work_model)
+
+# Step 9: Visualization
+library(ggplot2)
+ggplot(location_estimates, aes(x = Avg_Work, y = Estimated_EggSize, label = Location)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.1, size = 5) +
+  labs(title = "Model-Averaged Estimated Egg Size vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Egg Size (mm)") +
+  theme_minimal() + 
+   theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+
+#Remove Long Lake from the dataset
+location_estimates_noLL <- location_estimates %>%
+  filter(!Location %in% c("Long Lake"))
+
+egg_work_model2 <- lm(Estimated_EggSize ~ Avg_Work, data = location_estimates_noLL)
+summary(egg_work_model2)
+
+ggplot(location_estimates_noLL, aes(x = Avg_Work, y = Estimated_EggSize, label = Location)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.1, size = 5) +
+  labs(title = "Model-Averaged Estimated Egg Size vs. Migration Work",
+       x = "Migration Work (km²)", y = "Egg Size (mm)") +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+
+
+egg_energy_model2 <- lm(Fem_Egg_Sz_1 ~ EnergyPDry_1, data = DataSetF)
+summary(egg_energy_model2)
+
+ggplot(DataSetF, aes(x = EnergyPDry_1, y = Fem_Egg_Sz_1)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue")  +
+  labs(title = "Estimated Egg Size vs. Energy Content",
+       x = "Energy Content (mJ/kg)", y = "Egg Size (mm)") +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+  
+```
+
+
+
+
+### Estimates Figure
+```{r}
+# Figure that displays parameter estimates + CI for each parameter in the model set
+paramestimates_eggSP <- "eggsize_spawningpopulation/eggsize~spawningpopulation_models_CoefEstimates_withLikelihoods.csv"
+
+paramestimates_eggSP<-read.csv(paramestimates_eggSP)
+str(paramestimates_eggSP)
+
+levels(factor(paramestimates_eggSP$X))
+paramestimates_eggSP$X <- factor(paramestimates_eggSP$X, 
+                           levels = rev(c("(Intercept)",
+                                          "Gonad_Wt_g",
+                                          "bodysize_pc_g_mm",
+                                          "EnergyPDry_1",
+                                          "Year2020",
+                                          "Year2021",
+                                          "Collection_LocationGulkana Hatchery",
+                                          "Collection_LocationTanada",
+                                          "Collection_LocationMentasta",
+                                          "Collection_LocationMahlo",
+                                          "Collection_LocationSt Anne",
+                                          "Collection_LocationLong Lake",
+                                          "Collection_LocationGulkana Hatchery:EnergyPDry_1",
+                                          "Collection_LocationMentasta:EnergyPDry_1",
+                                          "Collection_LocationTanada:EnergyPDry_1",
+                                          "Collection_LocationMahlo:EnergyPDry_1",
+                                          "Collection_LocationSt Anne:EnergyPDry_1",
+                                          "Collection_LocationLong Lake:EnergyPDry_1")))
+
+
+
+ggplot(paramestimates_eggSP, aes(x = Avg_Coef, y = X)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
+
+
+
+```

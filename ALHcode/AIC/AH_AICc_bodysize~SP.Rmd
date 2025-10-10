@@ -508,48 +508,6 @@ write.csv(coefs_df_full, file = "bodysize_spawningpopulation/bodysize_spawningpo
 ```
 
 
-
-
-
-### Figure that displays parameter estimates + CI for each parameter in the model set
-```{r}
-paramestimates_bodysize <- "bodysize_spawningpopulation/bodysize_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv"
-
-paramestimates_bodysize<-read.csv(paramestimates_bodysize)
-str(paramestimates_bodysize)
-
-levels(factor(paramestimates_bodysize$Parameter))
-paramestimates_bodysize$Parameter <- factor(paramestimates_bodysize$Parameter, 
-                           levels = rev(factor(paramestimates_bodysize$Parameter)))
-
-
-library(ggplot2)
-ggplot(paramestimates_bodysize, aes(x = Avg_Coef, y = Parameter)) + 
-  geom_point(size = 3) +  # For the coefficient estimate as dots
-  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
-  labs(x = "Parameter Estimate", y = "Parameter") +
-  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
-  theme_minimal() +
-  theme(axis.title = element_text(size = 24), 
-        axis.text = element_text(size = 24))
-
-library(dplyr)
-paramestimates_bodysize_filtered <- paramestimates_bodysize %>%
-  filter(!Parameter %in% c("Gonad_Wt_g"))  # Filter out specific levels
-
-bodysize_plot <- ggplot(paramestimates_bodysize_filtered, aes(x = Avg_Coef, y = Parameter)) + 
-  geom_point(size = 3) +  # For the coefficient estimate as dots
-  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
-  labs(x = "Parameter Estimate", y = "Parameter") +
-  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
-  theme_minimal() +
-  theme(axis.title = element_text(size = 24), 
-        axis.text = element_text(size = 24))
-
-ggsave("bodysize_spawningpopulation/BodySize_ParamEstimates_Plot.png", plot=bodysize_plot, height=8, width=12, units="in")
-```
-
-
 ### Using summed weighted parameter estimates for body size by CL ~ work (successful size for migration, as continuous variable)
 ```{r}
 # Step 1: Extract intercept
@@ -616,4 +574,43 @@ ggplot(location_estimates, aes(x = Avg_Work, y = Estimated_BodySize, label = Loc
 
 
 
+```
+
+
+### Figure that displays parameter estimates + CI for each parameter in the model set
+```{r}
+paramestimates_bodysize <- "bodysize_spawningpopulation/bodysize_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv"
+
+paramestimates_bodysize<-read.csv(paramestimates_bodysize)
+str(paramestimates_bodysize)
+
+levels(factor(paramestimates_bodysize$Parameter))
+paramestimates_bodysize$Parameter <- factor(paramestimates_bodysize$Parameter, 
+                           levels = rev(factor(paramestimates_bodysize$Parameter)))
+
+
+library(ggplot2)
+ggplot(paramestimates_bodysize, aes(x = Avg_Coef, y = Parameter)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
+
+library(dplyr)
+paramestimates_bodysize_filtered <- paramestimates_bodysize %>%
+  filter(!Parameter %in% c("Gonad_Wt_g"))  # Filter out specific levels
+
+bodysize_plot <- ggplot(paramestimates_bodysize_filtered, aes(x = Avg_Coef, y = Parameter)) + 
+  geom_point(size = 3) +  # For the coefficient estimate as dots
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
+  labs(x = "Parameter Estimate", y = "Parameter") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  theme_minimal() +
+  theme(axis.title = element_text(size = 24), 
+        axis.text = element_text(size = 24))
+
+ggsave("bodysize_spawningpopulation/BodySize_ParamEstimates_Plot.png", plot=bodysize_plot, height=8, width=12, units="in")
 ```

@@ -205,7 +205,7 @@ write.csv(coefs_df_full, file = "fecundity_spawningpopulation/fecundity~spawning
 
 ```
 
-### Using summed weighted parameter estimates for energy density by CL ~ work (successful size for migration, as continuous variable)
+### Using summed weighted parameter estimates for fecundity by CL ~ work (successful size for migration, as continuous variable)
 ```{r}
 # Step 1: Extract intercept
 intercept <- coefs_df_full["(Intercept)", "Avg_Coef"]
