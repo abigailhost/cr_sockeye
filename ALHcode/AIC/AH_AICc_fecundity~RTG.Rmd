@@ -220,4 +220,89 @@ fecundity_plot <- ggplot(paramestimates_fecundity_filtered, aes(x = Avg_Coef, y 
 ggsave("fecundity_runtiminggroup/Fecundity_ParamEstimates_Plot.png", plot=fecundity_plot, height=12, width=12, units="in")
 
 
+#egg vs fecundity
+ggplot(DataSetF, aes(x = Fem_Egg_Sz_1, y = Fecun_num_by_wt1)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue")  +
+  labs(title = "Fecundity vs. Egg Size",
+       x = "Egg Size (mm)", y = "Fecundity") +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+#body vs fecundity
+ggplot(DataSetF, aes(x = bodysize_pc, y = Fecun_num_by_wt1)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue")  +
+  labs(title = "Fecundity vs. Body Size",
+       x = "Body Size (mJ/kg)", y = "Fecundity") +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+#fecundity vs energy
+ggplot(DataSetF, aes(x = EnergyPDry_1, y = Fecun_num_by_wt1)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue")  +
+  labs(title = "Fecundity vs. Energy",
+       x = "Energy (mJ/kg)", y = "Fecundity") +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+#energy vs egg size
+ggplot(DataSetF, aes(x = EnergyPDry_1, y = Fem_Egg_Sz_1)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue")  +
+  labs(title = "Egg Size vs. Energy",
+       x = "Energy (mJ/kg)", y = "Egg Size") +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+#body size vs egg size
+ggplot(DataSetF, aes(x = bodysize_pc, y = Fem_Egg_Sz_1)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue")  +
+  labs(title = "Egg Size vs. Body Size",
+       x = "Body Size (PC1)", y = "Egg Size") +
+  theme_minimal() +
+  theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
 ```

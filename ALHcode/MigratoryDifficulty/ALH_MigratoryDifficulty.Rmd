@@ -9,35 +9,96 @@ output: word_document
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
 ```
 
-### Pete's initial code all run in CR_2 for elevation data
+### Collection Locations
 ```{r}
 # Reset R, clear all objects
 rm(list=ls()) 
 
 # Set WD
-DataSet<- read.csv("Spawning_Distances_Final_Table.csv")
-DataSet$elevation_M <- as.numeric(DataSet$elevation_M)
+DataSet<- read.csv("CollectionLocations.csv")
 str(DataSet)
 unique(DataSet$Collection)
 
+DataSet <- DataSet %>%
+  filter(!Collection %in% c("klutina river"))
 
+DataSet <- DataSet %>%
+  filter(!Collection %in% c("copper lake"))
 
-#Required packages
-library(sf)
-library(elevatr)
-library(tmap)
-library(raster)
-library(plyr)
-library(readxl)
-library(lubridate)
-library(tmap)
-library(RColorBrewer)
-library(ggplot2)
-library(scales)
-library(dplyr)
-library(classInt)
+unique(DataSet$Collection)
 
 ```
+
+### Map for Manuscript
+
+``` {r}
+# Load libraries, install as needed
+library(leaflet)
+library(dplyr)
+library(ggplot2)
+library(ggmap)
+library(dplyr)
+library(sf)
+library(tmap)
+
+
+# Set factor levels for consistent legend order
+DataSet$Collection <- factor(
+  DataSet$Collection,
+  levels = c(
+    "baird canyon", "canyon creek", "chitina airport", "long lake",
+    "upper klutina", "st anne", "mahlo", "mentasta", "tanada",
+    "gulkana hatchery", "fish creek gulkana"
+  )
+)
+
+# Define color palette (named vector)
+pal_colors <- c(
+  "baird canyon" = "#7C7C7CFF",
+  "canyon creek" = "black",
+  "chitina airport" = "#800000FF",
+  "long lake" = "#AF6458FF",
+  "upper klutina" = "#736F4CFF",
+  "st anne" = "#BA6E1DFF",
+  "mahlo" = "#205F4BFF",
+  "mentasta" = "#68855CFF",
+  "tanada" = "#9C9C5EFF",
+  "gulkana hatchery" = "#A06177FF",
+  "fish creek gulkana" = "#467378FF"
+)
+
+# Create a color mapping function for leaflet
+pal <- colorFactor(palette = pal_colors, domain = DataSet$Collection)
+
+# Create the leaflet map
+leaflet_map <- leaflet(DataSet) %>%
+  addProviderTiles(providers$Esri.WorldTopoMap) %>%
+  addCircleMarkers(
+    lng = ~dd_long,
+    lat = ~dd_lat,
+    radius = 8,
+    color = ~pal(Collection),
+    fillOpacity = 1,
+    stroke = FALSE,
+    popup = ~paste("<b>Collection Location:</b>", Collection),
+    label = ~Collection,
+    labelOptions = labelOptions(noHide = FALSE, direction = "top")
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    pal = pal,
+    values = ~Collection,
+    title = "Collection Location",
+    opacity = 1
+  )
+
+# Display map
+leaflet_map
+```
+
+
+
+
 
 ### Metrics for Migratory Difficulty
 ```{r}
@@ -154,6 +215,8 @@ leaflet_map1
 
 
 ```
+
+
 
 
 ## Spawning Population Maps - Distance (m) and Elevation (m) as units of migratory difficulty
