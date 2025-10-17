@@ -240,8 +240,8 @@ location_estimates <- location_estimates[, c("Location", setdiff(names(location_
 # Step 6: Compute average Work per location
 library(dplyr)
 avg_work <- DataSetF %>%
-  group_by(Collection_Location) %>%
-  summarise(Avg_Work = mean(Work, na.rm = TRUE))
+  dplyr::group_by(Collection_Location) %>%
+  dplyr::summarise(Avg_Work = mean(Work, na.rm = TRUE), .groups = "drop")
 
 # Step 7: Merge with estimates
 location_estimates <- merge(location_estimates, avg_work, by.x = "Location", by.y = "Collection_Location")
@@ -271,13 +271,13 @@ ggplot(location_estimates, aes(x = Avg_Work, y = Estimated_Fecundity, label = Lo
 
 
 #Remove Long Lake from the dataset
-location_estimates_noMN <- location_estimates %>%
-  filter(!Location %in% c("Mentasta"))
+location_estimates_noLL <- location_estimates %>%
+  filter(!Location %in% c("Long Lake"))
 
-fec_work_model2 <- lm(Estimated_Fecundity ~ Avg_Work, data = location_estimates_noMN)
+fec_work_model2 <- lm(Estimated_Fecundity ~ Avg_Work, data = location_estimates_noLL)
 summary(fec_work_model2)
 
-ggplot(location_estimates_noMN, aes(x = Avg_Work, y = Estimated_Fecundity, label = Location)) +
+ggplot(location_estimates_noLL, aes(x = Avg_Work, y = Estimated_Fecundity, label = Location)) +
   geom_point(size = 3) +
   geom_smooth(method = "lm", se = TRUE, color = "blue") +
   geom_text(nudge_y = 0.1, size = 3) +

@@ -258,8 +258,8 @@ location_estimates <- location_estimates[, c("Location", setdiff(names(location_
 # Step 6: Compute average Work per location
 library(dplyr)
 avg_work <- DataSet %>%
-  group_by(Collection_Location) %>%
-  summarise(Avg_Work = mean(Work, na.rm = TRUE))
+  dplyr::group_by(Collection_Location) %>%
+  dplyr::summarise(Avg_Work = mean(Work, na.rm = TRUE), .groups = "drop")
 
 # Step 7: Merge with estimates
 location_estimates <- merge(location_estimates, avg_work, by.x = "Location", by.y = "Collection_Location")

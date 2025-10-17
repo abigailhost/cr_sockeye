@@ -541,10 +541,14 @@ rownames(location_estimates) <- NULL
 location_estimates <- location_estimates[, c("Location", setdiff(names(location_estimates), "Location"))]
 
 # Step 6: Compute average Work per location
+install.packages("dplyr")
 library(dplyr)
+
+# Check unique values
+unique(DataSet$Collection_Location)
 avg_work <- DataSet %>%
-  group_by(Collection_Location) %>%
-  summarise(Avg_Work = mean(Work, na.rm = TRUE))
+  dplyr::group_by(Collection_Location) %>%
+  dplyr::summarise(Avg_Work = mean(Work, na.rm = TRUE), .groups = "drop")
 
 # Step 7: Merge with estimates
 location_estimates <- merge(location_estimates, avg_work, by.x = "Location", by.y = "Collection_Location")
