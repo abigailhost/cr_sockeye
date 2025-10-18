@@ -24,12 +24,12 @@ library(lubridate)
 library(ggplot2)
 
 #data loading
-gsi20 <- read.csv("GSI_lowerriver20.csv")[,-1]
-gsi21 <- read.csv("GSI_lowerriver21.csv")
+# gsi20 <- read.csv("GSI_lowerriver20.csv")[,-1]
+# gsi21 <- read.csv("GSI_lowerriver21.csv")
 #need to bind all together for total body comp GSI dataset, lower river only
 
-gsi_LR_total <- rbind(gsi20[1:60,], gsi21[1:60,])
-write.csv(gsi_LR_total, "lowerriver_GSI_all.csv")
+# gsi_LR_total <- rbind(gsi20[1:60,], gsi21[1:60,])
+# write.csv(gsi_LR_total, "lowerriver_GSI_all.csv")
 lowerriver_GSI_all<-read.csv("lowerriver_GSI_all.csv")[,-1]
 #all data is loaded now
 #Year already included as a variable/column
@@ -48,7 +48,7 @@ rm(list = ls())
 lowerriver_GSI_all <- "lowerriver_GSI_all.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
-DataSet<-read.csv(lowerriver_GSI_all)[,-1] #83 variables, 120 observations b/c one row with NA sex is removed
+DataSet<-read.csv(lowerriver_GSI_all)[,-1] #84 variables, 120 observations b/c one row with NA sex is removed
 
 
 ### Removing NAs that will mess up levels / model weight
@@ -56,7 +56,7 @@ any(is.na(DataSet$Collection_Location))
 any(is.na(DataSet$Group_Assignment))
 any(is.na(DataSet$Year))
 any(is.na(DataSet$Sex))
-DataSet[is.na(DataSet$Sex), ] #row 115 has no sex value, eliminate it for models
+DataSet[is.na(DataSet$Sex), ] #row 55 has no sex value, eliminate it for models
 DataSet <- DataSet[-55,] #excludes row missing sex file
 any(is.na(DataSet$Sex)) 
 
@@ -87,7 +87,8 @@ levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "insufficie
 
 # Then drop the insufficient genotypes
 DataSet <- subset(DataSet, Group_Assignment != "insufficient_genotypes")
-DataSet$Group_Assignment <- droplevels(DataSet$Group_Assignment)
+DataSet <- subset(DataSet, Group_Assignment != "LowerGroups")
+DataSet$Group_Assignment <- droplevels(DataSet$Group_Assignment) #105 observations, 84 variables, 9 group assignments
 
 # Confirm new levels
 levels(DataSet$Group_Assignment)
@@ -179,16 +180,15 @@ as.data.frame(param_likelihoods)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
   "Collection_RiverMile_m" = 1.0000000,
-  "Group_AssignmentChitina" = 0.9953162,
-  "Group_AssignmentGulkana" = 0.9953162,
-  "Group_AssignmentGulkanaHatchery" = 0.9953162,
-  "Group_AssignmentKlutinaLake" = 0.9953162,
-  "Group_AssignmentKlutinaTonsinaOutlet" = 0.9953162,
-  "Group_AssignmentLowerGroups" = 0.9953162,
-  "Group_AssignmentSlana" = 0.9953162,
-  "Group_AssignmentTanadaCopperLakes" = 0.9953162,
-  "Group_AssignmentTazlina" = 0.9953162,
-  "SexM" = 0.4988705)
+  "Group_AssignmentChitina" = 0.9978756,
+  "Group_AssignmentGulkana" = 0.9978756,
+  "Group_AssignmentGulkanaHatchery" = 0.9978756,
+  "Group_AssignmentKlutinaLake" = 0.9978756,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 0.9978756,
+  "Group_AssignmentSlana" = 0.9978756,
+  "Group_AssignmentTanadaCopperLakes" = 0.9978756,
+  "Group_AssignmentTazlina" = 0.9978756,
+  "SexM" = 0.5006762	)
 
 # Add ParamLikelihoods by matching rownames
 coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
@@ -222,6 +222,105 @@ write.csv(coefs_df_full, "energydensity_GSI/EnergyPDry_1_GSI_ModelAvg_Coefs_with
 # coefs_table
 
 ```
+### Using summed weighted parameter estimates for body size by GSI ~ work (successful size for migration, as continuous variable)
+```{r}
+# Step 1: Extract intercept
+intercept <- coefs_df_full["(Intercept)", "Avg_Coef"]
+
+# Step 2: Extract Group_Assignment effects
+GSI_effects <- coefs_df_full[grep("^Group_Assignment", rownames(coefs_df_full)), ]
+GSI_effects <- GSI_effects[!grepl(":", rownames(GSI_effects)), ]  # remove interaction terms
+
+# Extract location names (remove "Collection_Location" from row names)
+GSI_effects$GSI <- gsub("Group_Assignment", "", rownames(GSI_effects))
+
+# Step 3: Add intercept to each to get estimated body size
+GSI_effects$Estimated_EnergyDensity <- intercept + GSI_effects$Avg_Coef
+
+# Step 4: Add back the reference location (intercept only)
+ref_location <- levels(DataSet$Group_Assignment)[1]  # Assumes first level is the reference
+ref_row <- data.frame(
+  Avg_Coef = intercept,
+  CI_Lower = coefs_df_full["(Intercept)", "CI_Lower"],
+  CI_Upper = coefs_df_full["(Intercept)", "CI_Upper"],
+  SE = coefs_df_full["(Intercept)", "SE"],
+  ParamLikelihood = coefs_df_full["(Intercept)", "ParamLikelihood"],
+  GSI = ref_location,
+  Estimated_EnergyDensity = intercept
+)
+
+# Step 5: Combine
+GSI_estimates <- rbind(ref_row, GSI_effects)
+rownames(GSI_estimates) <- NULL
+GSI_estimates <- GSI_estimates[, c("GSI", setdiff(names(GSI_estimates), "GSI"))]
+
+# Step 6: Compute average Work per location
+library(dplyr)
+
+# Check unique values
+unique(DataSet$Group_Assignment)
+avg_work <- DataSet %>%
+  dplyr::group_by(Group_Assignment) %>%
+  dplyr::summarise(Avg_Work = mean(Work_km2, na.rm = TRUE), .groups = "drop")
+
+# Step 7: Merge with estimates
+GSI_estimates <- merge(GSI_estimates, avg_work, by.x = "GSI", by.y = "Group_Assignment")
+
+# Step 8: Linear regression of estimated body size ~ work
+energydensity_work_model <- lm(Estimated_EnergyDensity ~ Avg_Work, data = GSI_estimates)
+summary(energydensity_work_model)
+
+# Step 9: Visualization
+library(ggplot2)
+ggplot(GSI_estimates, aes(x = Avg_Work, y = Estimated_EnergyDensity, label = GSI)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.05, size = 3) +
+  labs(title = "Model-Averaged Estimated Energy Density vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Energy Density (mJ/kg)") +
+  theme_minimal() + 
+   theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+
+#Remove Chitina
+GSI_estimates_noChitina <- GSI_estimates %>%
+  filter(!GSI %in% c("Chitina"))
+
+# Linear regression of estimated body size ~ work, no chitina
+energydensity_work_model_noChitina <- lm(Estimated_EnergyDensity ~ Avg_Work, data = GSI_estimates_noChitina)
+summary(energydensity_work_model_noChitina)
+
+# Step 9: Visualization
+library(ggplot2)
+ggplot(GSI_estimates_noChitina, aes(x = Avg_Work, y = Estimated_EnergyDensity, label = GSI)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.05, size = 3) +
+  labs(title = "Model-Averaged Estimated Energy Density vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Energy Density (mJ/kg)") +
+  theme_minimal() + 
+   theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+
+```
+
+
 ### Estimates Figure
 ```{r}
 # Figure that displays parameter estimates + CI for each parameter in teh model set
