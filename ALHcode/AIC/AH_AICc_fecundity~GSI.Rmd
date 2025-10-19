@@ -21,10 +21,10 @@ library(lubridate)
 library(ggplot2)
 
 #data loading, use the bodysize_pc data because it will be a variable of interest
-lowerriver_bodycomp_PCscores <- "lowerriver_GSI_PCscores.csv"
+lowerriver_GSI_PCscores <- "lowerriver_GSI_PCscores.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
-DataSet<-read.csv(lowerriver_bodycomp_PCscores)[,-1]
+DataSet<-read.csv(lowerriver_GSI_PCscores)[,-1]
 ```
 
 ### Removing NAs and subsetting female fish for fecundity
@@ -62,10 +62,11 @@ levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "insufficie
 
 # Then drop the insufficient genotypes
 DataSet <- subset(DataSet, Group_Assignment != "insufficient_genotypes")
+DataSet <- subset(DataSet, Group_Assignment != "LowerGroups")
 DataSet$Group_Assignment <- droplevels(DataSet$Group_Assignment)
 
 # Confirm new levels
-levels(DataSet$Group_Assignment) #should have 10 levels
+levels(DataSet$Group_Assignment) #should have 9 levels
 
 
 DataSet$Year<- as.factor(DataSet$Year)
@@ -198,6 +199,132 @@ coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
 print(coefs_df_full)
 
 write.csv(coefs_df_full, "fecundity_GSI/Fecundity_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
+
+
+```
+
+### Using summed weighted parameter estimates for total energy by GSI ~ work (successful size for migration, as continuous variable)
+```{r}
+# Step 1: Extract intercept
+intercept <- coefs_df_full["(Intercept)", "Avg_Coef"]
+
+# Step 2: Extract Group_Assignment effects
+GSI_effects <- coefs_df_full[grep("^Group_Assignment", rownames(coefs_df_full)), ]
+GSI_effects <- GSI_effects[!grepl(":", rownames(GSI_effects)), ]  # remove interaction terms
+
+# Extract location names (remove "Collection_Location" from row names)
+GSI_effects$GSI <- gsub("Group_Assignment", "", rownames(GSI_effects))
+
+# Step 3: Add intercept to each to get estimated body size
+GSI_effects$Estimated_Fecundity <- intercept + GSI_effects$Avg_Coef
+
+# Step 4: Add back the reference location (intercept only)
+ref_location <- levels(DataSet$Group_Assignment)[1]  # Assumes first level is the reference
+ref_row <- data.frame(
+  Avg_Coef = intercept,
+  CI_Lower = coefs_df_full["(Intercept)", "CI_Lower"],
+  CI_Upper = coefs_df_full["(Intercept)", "CI_Upper"],
+  SE = coefs_df_full["(Intercept)", "SE"],
+  ParamLikelihood = coefs_df_full["(Intercept)", "ParamLikelihood"],
+  GSI = ref_location,
+  Estimated_Fecundity = intercept
+)
+
+# Step 5: Combine
+GSI_estimates <- rbind(ref_row, GSI_effects)
+rownames(GSI_estimates) <- NULL
+GSI_estimates <- GSI_estimates[, c("GSI", setdiff(names(GSI_estimates), "GSI"))]
+
+# Step 6: Compute average Work per location
+library(dplyr)
+
+# Check unique values
+unique(DataSet$Group_Assignment)
+avg_work <- DataSet %>%
+  dplyr::group_by(Group_Assignment) %>%
+  dplyr::summarise(Avg_Work = mean(Work_km2, na.rm = TRUE), .groups = "drop")
+
+# Step 7: Merge with estimates
+GSI_estimates <- merge(GSI_estimates, avg_work, by.x = "GSI", by.y = "Group_Assignment")
+
+# Step 8: Linear regression of estimated body size ~ work
+fecundity_work_model <- lm(Estimated_Fecundity ~ Avg_Work, data = GSI_estimates)
+summary(fecundity_work_model)
+
+# Step 9: Visualization
+library(ggplot2)
+ggplot(GSI_estimates, aes(x = Avg_Work, y = Estimated_Fecundity, label = GSI)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.05, size = 3) +
+  labs(title = "Model-Averaged Estimated Fecundity vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Fecundity") +
+  theme_minimal() + 
+   theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+
+#Remove Chitina
+GSI_estimates_noChitina <- GSI_estimates %>%
+  filter(!GSI %in% c("Chitina"))
+
+# Linear regression of estimated body size ~ work, no chitina
+fecundity_work_model_noChitina <- lm(Estimated_Fecundity ~ Avg_Work, data = GSI_estimates_noChitina)
+summary(fecundity_work_model_noChitina) #R squared decreases, so not a necessary removal
+
+# Step 9: Visualization
+library(ggplot2)
+ggplot(GSI_estimates_noChitina, aes(x = Avg_Work, y = Estimated_Fecundity, label = GSI)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.05, size = 3) +
+  labs(title = "Model-Averaged Estimated Fecundity vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Fecundity") +
+  theme_minimal() + 
+   theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
+
+
+#Remove Gulkana Hatchery
+GSI_estimates_noGH <- GSI_estimates %>%
+  filter(!GSI %in% c("GulkanaHatchery"))
+
+# Linear regression of estimated body size ~ work, no chitina
+fecundity_work_model_noGH <- lm(Estimated_Fecundity ~ Avg_Work, data = GSI_estimates_noGH)
+summary(fecundity_work_model_noGH) #R squared increases significantly for fit
+
+# Step 9: Visualization
+library(ggplot2)
+ggplot(GSI_estimates_noGH, aes(x = Avg_Work, y = Estimated_Fecundity, label = GSI)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  geom_text(nudge_y = 0.05, size = 3) +
+  labs(title = "Model-Averaged Estimated Fecundity vs. Migration Work",
+       x = "Migration Work (km²)", y = "Estimated Fecundity") +
+  theme_minimal() + 
+   theme(
+  plot.title = element_text(size = 16, face = "bold"),
+  axis.title.x = element_text(size = 16, face = "bold"),
+  axis.title.y = element_text(size = 16, face = "bold"),
+  axis.text.x = element_text(size = 16),
+  axis.text.y = element_text(size = 16),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 16)
+)
 
 
 ```

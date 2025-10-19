@@ -222,7 +222,7 @@ write.csv(coefs_df_full, "energydensity_GSI/EnergyPDry_1_GSI_ModelAvg_Coefs_with
 # coefs_table
 
 ```
-### Using summed weighted parameter estimates for body size by GSI ~ work (successful size for migration, as continuous variable)
+### Using summed weighted parameter estimates for energy density by GSI ~ work (successful size for migration, as continuous variable)
 ```{r}
 # Step 1: Extract intercept
 intercept <- coefs_df_full["(Intercept)", "Avg_Coef"]

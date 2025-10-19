@@ -24,21 +24,21 @@ library(lubridate)
 library(ggplot2)
 
 #data loading
-gsi20 <- read.csv("GSI_lowerriver20.csv")[,-1]
-gsi21 <- read.csv("GSI_lowerriver21.csv")
+# gsi20 <- read.csv("GSI_lowerriver20.csv")[,-1]
+# gsi21 <- read.csv("GSI_lowerriver21.csv")
 #need to bind all together for total body comp GSI dataset, lower river only
 
-gsi_LR_total <- rbind(gsi20[1:60,], gsi21[1:60,])
-write.csv(gsi_LR_total, "lowerriver_GSI_all.csv")
-lowerriver_GSI_all<-read.csv("lowerriver_GSI_all.csv")[,-1]
+# gsi_LR_total <- rbind(gsi20[1:60,], gsi21[1:60,])
+# write.csv(gsi_LR_total, "lowerriver_GSI_all.csv")
+# lowerriver_GSI_all<-read.csv("lowerriver_GSI_all.csv")[,-1]
 #all data is loaded now
 #Year already included as a variable/column
 
 #replace blank cell in Sex with NA 
-lowerriver_GSI_all$Sex[lowerriver_GSI_all$Sex == ""] <- NA
-str(lowerriver_GSI_all)
+# lowerriver_GSI_all$Sex[lowerriver_GSI_all$Sex == ""] <- NA
+#str(lowerriver_GSI_all)
 
-write.csv(lowerriver_GSI_all, "lowerriver_GSI_all.csv")
+# write.csv(lowerriver_GSI_all, "lowerriver_GSI_all.csv")
 
 ```
 
@@ -113,10 +113,11 @@ levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "insufficie
 
 # Then drop the insufficient genotypes
 DataSet <- subset(DataSet, Group_Assignment != "insufficient_genotypes")
+DataSet <- subset(DataSet, Group_Assignment != "LowerGroups")
 DataSet$Group_Assignment <- droplevels(DataSet$Group_Assignment)
 
 # Confirm new levels
-levels(DataSet$Group_Assignment) #should have 10 levels
+levels(DataSet$Group_Assignment) #should have 9 levels
 
 
 DataSet$Year<- as.factor(DataSet$Year)
@@ -206,17 +207,16 @@ as.data.frame(param_likelihoods)
 # Manually specify parameter likelihoods from sw(model_avg)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
-  "Collection_RiverMile_m" = 0.9985172,
-  "Group_AssignmentChitina" = 0.3855516,
-  "Group_AssignmentGulkana" = 0.3855516,
-  "Group_AssignmentGulkanaHatchery" = 0.3855516,
-  "Group_AssignmentKlutinaLake" = 0.3855516,
-  "Group_AssignmentKlutinaTonsinaOutlet" = 0.3855516,
-  "Group_AssignmentLowerGroups" = 0.3855516,
-  "Group_AssignmentSlana" = 0.3855516,
-  "Group_AssignmentTanadaCopperLakes" = 0.3855516,
-  "Group_AssignmentTazlina" = 0.3855516,
-  "SexM" = 0.9455296
+  "Collection_RiverMile_m" = 0.9990083,
+  "Group_AssignmentChitina" = 0.5131580,
+  "Group_AssignmentGulkana" = 0.5131580,
+  "Group_AssignmentGulkanaHatchery" = 0.5131580,
+  "Group_AssignmentKlutinaLake" = 0.5131580,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 0.5131580,
+  "Group_AssignmentSlana" = 0.5131580,
+  "Group_AssignmentTanadaCopperLakes" = 0.5131580,
+  "Group_AssignmentTazlina" = 0.5131580,
+  "SexM" = 0.9281743
 )
 
 
