@@ -235,6 +235,8 @@ GSI_estimates <- rbind(ref_row, GSI_effects)
 rownames(GSI_estimates) <- NULL
 GSI_estimates <- GSI_estimates[, c("GSI", setdiff(names(GSI_estimates), "GSI"))]
 
+#write.csv(GSI_estimates, "fecundity_GSI/FecundityEstimates_GroupAssignments.csv", row.names = TRUE)
+
 # Step 6: Compute average Work per location
 library(dplyr)
 
