@@ -209,11 +209,6 @@ ggsave(
 )
 ```
 
-### Variation in body condition according to Run Timing Group
-```{r coef_plot2, echo=FALSE, fig.width=16, fig.height=10, fig.align='center'}
-plot(coef_plot2)
-```
-
 
 #Genetic Stock Coefficient Plots
 ```{r, include = FALSE}
@@ -411,9 +406,4 @@ ggsave(
   height = 12,                    # height in inches
   dpi = 300                        # resolution (higher = better quality)
 )
-```
-
-### Variation in body condition according to Run Timing Group
-```{r coef_plot2, echo=FALSE, fig.width=12, fig.height=8, fig.align='center'}
-plot(coef_plot2)
 ```
