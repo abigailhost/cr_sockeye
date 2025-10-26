@@ -407,3 +407,20 @@ ggsave(
   dpi = 300                        # resolution (higher = better quality)
 )
 ```
+
+
+#Collection Location Coefficient Plots
+```{r, include = FALSE}
+library(dplyr)
+library(ggplot2)
+
+rm(list = ls())
+#body size, energy, total energy side by side
+body <- read.csv("bodysize_spawningpopulation/bodysize_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv")
+energy_mJkg <- read.csv("energydensity_spawningpopulation/energydensity_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv")
+energy_mJ <- read.csv("totalenergy_spawningpopulation/TotalEnergy_SP_ModelAvg_Coefs_withLikelihoods.csv")
+
+
+
+```
+
