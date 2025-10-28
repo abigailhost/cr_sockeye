@@ -98,6 +98,8 @@ DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
 str(DataSet) #collection_rivermile_m is numeric
 
+DataSet$EnergyPDry_1_mJ_g <- DataSet$EnergyPDry_1 / 1000
+
 ```
 
 ### Making Models for EnergyPDry_1~GSI,
@@ -107,10 +109,10 @@ energydensity_GSI_modelset <- "energydensity_GSI/EnergyPDry_1~GSI_modelset.csv"
 
 ModelSet<-read.csv(energydensity_GSI_modelset)
 
-model1 <- lm(EnergyPDry_1~1, data=DataSet)
-model2 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment, data = DataSet)
-model3 <- lm(EnergyPDry_1~Collection_RiverMile_m + Sex, data = DataSet)
-model4 <- lm(EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+model1 <- lm(EnergyPDry_1_mJ_g~1, data=DataSet)
+model2 <- lm(EnergyPDry_1_mJ_g~Collection_RiverMile_m + Group_Assignment, data = DataSet)
+model3 <- lm(EnergyPDry_1_mJ_g~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(EnergyPDry_1_mJ_g~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
 
 
 ```
@@ -128,10 +130,10 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("EnergyPDry_1~Collection_RiverMile_m + Group_Assignment",
-                      "EnergyPDry_1~Collection_RiverMile_m + Group_Assignment + Sex",
-                      "EnergyPDry_1~Collection_RiverMile_m + Sex",
-                      "EnergyPDry_1~1")
+aic_df$ModelName <- c("EnergyPDry_1_mJ_g~Collection_RiverMile_m + Group_Assignment",
+                      "EnergyPDry_1_mJ_g~Collection_RiverMile_m + Group_Assignment + Sex",
+                      "EnergyPDry_1_mJ_g~Collection_RiverMile_m + Sex",
+                      "EnergyPDry_1_mJ_g~1")
 
 
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
@@ -198,29 +200,6 @@ print(coefs_df_full)
 
 write.csv(coefs_df_full, "energydensity_GSI/EnergyPDry_1_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
-
-# ---- Step 10: Table for coefficients and threshold for parameter likelihoods ----
-# threshold <- 0.1  # Set threshold for importance
-
-# Add a new column to coefs_df that marks important vs non-important parameters
-# coefs_df$Importance <- ifelse(coefs_df$ParamLikelihood > threshold, "Important", "Non-Important")
-
-# ---- Color Code Important Parameters with Color Blind Friendly Colors ----
-# Light green for important, light gray for non-important
-# library(kableExtra)
-
-# Create the table without adding duplicate headers
-# coefs_table <- coefs_df %>%
- #  arrange(desc(ParamLikelihood)) %>%
-  # kable("html", escape = FALSE, align = c("l", "r", "r", "r", "r", "r", "l")) %>%
-  # Apply color coding based on importance
- #  kable_styling(bootstrap_options = c("striped", "hover")) %>%
- # = row_spec(which(coefs_df$Importance == "Important"), background = "lightgreen", color = "black") %>%
-  # row_spec(which(coefs_df$Importance == "Non-Important"), background = "lightgray", color = "black") # Adjust column width if needed
-
-# Print or save the table
-# coefs_table
-
 ```
 ### Using summed weighted parameter estimates for energy density by GSI ~ work (successful size for migration, as continuous variable)
 ```{r}
@@ -275,9 +254,9 @@ library(ggplot2)
 ggplot(GSI_estimates, aes(x = Avg_Work, y = Estimated_EnergyDensity, label = GSI)) +
   geom_point(size = 3) +
   geom_smooth(method = "lm", se = TRUE, color = "blue") +
-  geom_text(nudge_y = 0.05, size = 3) +
+  geom_text(nudge_y = 0.00008, size = 3) +
   labs(title = "Model-Averaged Estimated Energy Density vs. Migration Work",
-       x = "Migration Work (km²)", y = "Estimated Energy Density (mJ/kg)") +
+       x = "Migration Work (km²)", y = "Estimated Energy Density (mJ/g)") +
   theme_minimal() + 
    theme(
   plot.title = element_text(size = 16, face = "bold"),
@@ -290,34 +269,14 @@ ggplot(GSI_estimates, aes(x = Avg_Work, y = Estimated_EnergyDensity, label = GSI
 )
 
 
-#Remove Chitina
-GSI_estimates_noChitina <- GSI_estimates %>%
-  filter(!GSI %in% c("Chitina"))
 
-# Linear regression of estimated body size ~ work, no chitina
-energydensity_work_model_noChitina <- lm(Estimated_EnergyDensity ~ Avg_Work, data = GSI_estimates_noChitina)
-summary(energydensity_work_model_noChitina)
+```
 
-# Step 9: Visualization
-library(ggplot2)
-ggplot(GSI_estimates_noChitina, aes(x = Avg_Work, y = Estimated_EnergyDensity, label = GSI)) +
-  geom_point(size = 3) +
-  geom_smooth(method = "lm", se = TRUE, color = "blue") +
-  geom_text(nudge_y = 0.05, size = 3) +
-  labs(title = "Model-Averaged Estimated Energy Density vs. Migration Work",
-       x = "Migration Work (km²)", y = "Estimated Energy Density (mJ/kg)") +
-  theme_minimal() + 
-   theme(
-  plot.title = element_text(size = 16, face = "bold"),
-  axis.title.x = element_text(size = 16, face = "bold"),
-  axis.title.y = element_text(size = 16, face = "bold"),
-  axis.text.x = element_text(size = 16),
-  axis.text.y = element_text(size = 16),
-  legend.title = element_text(size = 16, face = "bold"),
-  legend.text = element_text(size = 16)
-)
-
-
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
 ```
 
 

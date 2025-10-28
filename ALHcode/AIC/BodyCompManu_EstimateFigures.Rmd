@@ -200,13 +200,13 @@ coef_plot2
 
 
 # Save coef_plot2 as a jpeg
-ggsave(
-  filename = "coef_plot2.jpeg",    # output file name
-  plot = coef_plot2,              # the ggplot object
-  width = 12,                     # width in inches
-  height = 6,                    # height in inches
-  dpi = 300                        # resolution (higher = better quality)
-)
+#ggsave(
+ # filename = "coef_plot2.jpeg",    # output file name
+#  plot = coef_plot2,              # the ggplot object
+ # width = 12,                     # width in inches
+#  height = 6,                    # height in inches
+ # dpi = 300                        # resolution (higher = better quality)
+#)
 ```
 
 
@@ -399,13 +399,13 @@ coef_plot2
 
 
 # Save coef_plot2 as a jpeg
-ggsave(
-  filename = "coef_plot2.jpeg",    # output file name
-  plot = coef_plot2,              # the ggplot object
-  width = 16,                     # width in inches
-  height = 12,                    # height in inches
-  dpi = 300                        # resolution (higher = better quality)
-)
+#ggsave(
+ # filename = "coef_plot2.jpeg",    # output file name
+  #plot = coef_plot2,              # the ggplot object
+  #width = 16,                     # width in inches
+  #height = 12,                    # height in inches
+  #dpi = 300                        # resolution (higher = better quality)
+#)
 ```
 
 

@@ -22,13 +22,13 @@ library(AICcmodavg)
 library(lubridate)
 
 #data loading
-bc19 <- read.csv("bodycomp_2019.csv")
-bc20 <- read.csv("bodycomp_2020.csv")
-bc21 <- read.csv("bodycomp_2021.csv")
+#bc19 <- read.csv("bodycomp_2019.csv")
+#bc20 <- read.csv("bodycomp_2020.csv")
+#bc21 <- read.csv("bodycomp_2021.csv")
 #need to bind all together for total body comp dataset, lower river only
 
-bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
-write.csv(bc_LR_total, "lowerriver_bodycomp_all.csv")
+#bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
+#write.csv(bc_LR_total, "lowerriver_bodycomp_all.csv")
 lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
 #all data is loaded now
 
@@ -190,52 +190,11 @@ print(coefs_df_full)
 write.csv(coefs_df_full, file = "energydensity_runtiminggroup/EnergyPDry_1~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
 ```
 
-### Parameter Likelihoods
+### Calculating actual parameter estimates according to intercept
 ```{r}
-models <- list(edModel1, edModel2, edModel3, edModel4, edModel5, edModel6, edModel7, edModel8, edModel9, edModel10)
-
-# Assign model names
-model_names <- paste0("Model_", seq_along(models))
-
-# Compute AICc and model weights
-aic_table <- aictab(cand.set = models, modnames = model_names)
-weights <- aic_table$AICcWt  # Extract AICc weights
-
-# Extract model coefficients
-param_names <- unique(unlist(sapply(models, function(m) names(coef(m)))))
-
-# Compute parameter likelihoods
-param_likelihoods <- sapply(param_names, function(param) {
-  # Identify models that include this parameter
-  models_with_param <- sapply(models, function(m) param %in% names(coef(m)))
-  
-  # Sum AICc weights for models that include this parameter
-  sum(weights[models_with_param])
-})
-
-# Format output as a data frame
-param_likelihoods_df <- data.frame(Parameter = param_names, WeightedLikelihood = param_likelihoods)
-
-# Make sure that coefs_df has a column with the parameter names
-coefs_df$Parameter <- rownames(coefs_df)  # Add the parameter names to the dataframe
-coefs_df <- coefs_df[, c("Parameter", "Avg_Coef", "CI_Lower", "CI_Upper", "SE")]
-
-
-# Now, we will merge coefs_df with param_likelihoods_df by 'Parameter' to add the likelihoods
-coefs_df <- merge(coefs_df, param_likelihoods_df, by = "Parameter", all.x = TRUE)
-
-# Print the updated dataframe to see the result
-print(coefs_df)
-
-colnames(coefs_df)[colnames(coefs_df) == "WeightedLikelihood"] <- "ParamLikelihood"
-
-coefs_df <- coefs_df %>%
-  arrange(desc(ParamLikelihood)) #arrange dataframe in descending order according to ParamLikelihoods
-
-# Optionally, write the results to a CSV file
-write.csv(coefs_df, file = "energydensity_runtiminggroup/EnergyPDry_1~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
-
-
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
 ```
 
 

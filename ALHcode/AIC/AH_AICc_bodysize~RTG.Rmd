@@ -291,6 +291,12 @@ print(coefs_df_full)
 write.csv(coefs_df_full, file = "bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
 ```
 
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
 
 
 
