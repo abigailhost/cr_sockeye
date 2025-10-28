@@ -14,8 +14,6 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE
 #' =====================================================
 
 
-NOTE!!!! Need to ensure what level of assignment likelihood we are using for inclusion in GSI analysis!
-
 ### Loading Data
 ```{r}
 rm(list = ls())
@@ -303,6 +301,13 @@ print(coefs_df_full)
 write.csv(coefs_df_full, file = "bodysize_GSI/bodysize_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
 ```
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
+
 
 ### Using summed weighted parameter estimates for body size by GSI ~ work (successful size for migration, as continuous variable)
 ```{r}

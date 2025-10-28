@@ -371,7 +371,7 @@ coef_plot2 <- ggplot(AllData, aes(x = Avg_Coef, y = X, color = Trait)) +
   facet_wrap(~Trait, ncol = 3, scales = "free_x") +
   scale_fill_manual(values = colors) +
   scale_color_manual(values = colors) +
-  scale_x_continuous(labels = scales::label_number(accuracy = 0.1)) +
+  scale_x_continuous(labels = scales::label_number(accuracy = 0.001)) +
   labs(x = "Coefficient Estimate", y = "Main Effect Parameter") +
   theme_minimal(base_size = 16) +
   theme(
@@ -399,13 +399,13 @@ coef_plot2
 
 
 # Save coef_plot2 as a jpeg
-#ggsave(
- # filename = "coef_plot2.jpeg",    # output file name
-  #plot = coef_plot2,              # the ggplot object
-  #width = 16,                     # width in inches
-  #height = 12,                    # height in inches
-  #dpi = 300                        # resolution (higher = better quality)
-#)
+ggsave(
+  filename = "coef_plot2.jpeg",    # output file name
+  plot = coef_plot2,              # the ggplot object
+  width = 18,                     # width in inches
+  height = 12,                    # height in inches
+  dpi = 300                        # resolution (higher = better quality)
+)
 ```
 
 

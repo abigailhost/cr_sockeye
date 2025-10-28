@@ -20,13 +20,13 @@ library(AICcmodavg)
 library(lubridate)
 
 #data loading
-bc19 <- read.csv("bodycomp_2019.csv")
-bc20 <- read.csv("bodycomp_2020.csv")
-bc21 <- read.csv("bodycomp_2021.csv")
+#bc19 <- read.csv("bodycomp_2019.csv")
+#bc20 <- read.csv("bodycomp_2020.csv")
+#bc21 <- read.csv("bodycomp_2021.csv")
 #need to bind all together for total body comp dataset, lower river only
 
-bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
-write.csv(bc_LR_total, "lowerriver_bodycomp_all.csv")
+#bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
+#write.csv(bc_LR_total, "lowerriver_bodycomp_all.csv")
 lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
 #all data is loaded now
 
@@ -191,7 +191,12 @@ print(coefs_df_full)
 
 write.csv(coefs_df_full, file = "totalenergy_runtiminggroup/TotalEnergy~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
 ```
-
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}
