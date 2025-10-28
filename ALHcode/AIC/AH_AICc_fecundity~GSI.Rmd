@@ -331,6 +331,13 @@ ggplot(GSI_estimates_noGH, aes(x = Avg_Work, y = Estimated_Fecundity, label = GS
 
 ```
 
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
+
 ### Estimates Figure
 ```{r}
 # Figure that displays parameter estimates + CI for each parameter in teh model set

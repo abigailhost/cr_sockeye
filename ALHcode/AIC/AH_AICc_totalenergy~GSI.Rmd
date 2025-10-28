@@ -211,31 +211,6 @@ print(coefs_df_full)
 
 write.csv(coefs_df_full, file = "totalenergy_GSI/TotalEnergy_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
-
-
-
-# ---- Step 10: Table for coefficients and threshold for parameter likelihoods ----
-# threshold <- 0.1  # Set threshold for importance
-
-# Add a new column to coefs_df that marks important vs non-important parameters
-# coefs_df$Importance <- ifelse(coefs_df$ParamLikelihood > threshold, "Important", "Non-Important")
-
-# ---- Color Code Important Parameters with Color Blind Friendly Colors ----
-# Light green for important, light gray for non-important
-# library(kableExtra)
-
-# Create the table without adding duplicate headers
-#coefs_table <- coefs_df %>%
-  #arrange(desc(ParamLikelihood)) %>%
-  #kable("html", escape = FALSE, align = c("l", "r", "r", "r", "r", "r", "l")) %>%
-  # Apply color coding based on importance
-  #kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  #row_spec(which(coefs_df$Importance == "Important"), background = "lightgreen", color = "black") %>%
-  #row_spec(which(coefs_df$Importance == "Non-Important"), background = "lightgray", color = "black") # Adjust column width if needed
-
-# Print or save the table
-#coefs_table
-
 ```
 ### Using summed weighted parameter estimates for total energy by GSI ~ work (successful size for migration, as continuous variable)
 ```{r}
@@ -335,6 +310,12 @@ ggplot(GSI_estimates_noChitina, aes(x = Avg_Work, y = Estimated_TotalEnergy, lab
 
 ```
 
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
 
 ### Estimates Figure
 ```{r}

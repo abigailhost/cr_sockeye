@@ -201,6 +201,7 @@ print(coefs_df_full)
 write.csv(coefs_df_full, "energydensity_GSI/EnergyPDry_1_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
 ```
+
 ### Using summed weighted parameter estimates for energy density by GSI ~ work (successful size for migration, as continuous variable)
 ```{r}
 # Step 1: Extract intercept
@@ -270,6 +271,12 @@ ggplot(GSI_estimates, aes(x = Avg_Work, y = Estimated_EnergyDensity, label = GSI
 
 
 
+```
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
 ```
 
 ### Calculating actual parameter estimates according to intercept
