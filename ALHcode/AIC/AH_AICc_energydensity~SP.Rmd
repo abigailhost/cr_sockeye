@@ -97,6 +97,8 @@ levels(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
 str(DataSet)
 
+DataSet$EnergyPDry_1_mJ_g <- DataSet$EnergyPDry_1 / 1000
+
 
 ```
 
@@ -110,16 +112,16 @@ ModelSet<-read.csv(energypdry_SP_modelset)
 # DataSet$Work <- factor(DataSet$Work) #This is an important fix, otherwise its numeric but in fact its discrete factors
 
 
-model1 <- lm(EnergyPDry_1~1, data=DataSet)
-model2 <- lm(EnergyPDry_1~ Gonad_Wt_g + Collection_Location, data = DataSet)
-model3 <- lm(EnergyPDry_1~ Gonad_Wt_g + Sex, data = DataSet)
-model4 <- lm(EnergyPDry_1~Gonad_Wt_g + Year, data = DataSet)
-model5 <- lm(EnergyPDry_1~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
-model6 <- lm(EnergyPDry_1~ Gonad_Wt_g + Collection_Location + Year, data = DataSet)
-model7 <- lm(EnergyPDry_1~ Gonad_Wt_g + Sex + Year, data = DataSet)
-model8 <- lm(EnergyPDry_1~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
-model9 <- lm(EnergyPDry_1~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(EnergyPDry_1~ Gonad_Wt_g + Collection_Location + Sex + Year, data = DataSet)
+model1 <- lm(EnergyPDry_1_mJ_g~1, data=DataSet)
+model2 <- lm(EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location, data = DataSet)
+model3 <- lm(EnergyPDry_1_mJ_g~ Gonad_Wt_g + Sex, data = DataSet)
+model4 <- lm(EnergyPDry_1_mJ_g~Gonad_Wt_g + Year, data = DataSet)
+model5 <- lm(EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
+model6 <- lm(EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location + Year, data = DataSet)
+model7 <- lm(EnergyPDry_1_mJ_g~ Gonad_Wt_g + Sex + Year, data = DataSet)
+model8 <- lm(EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
+model9 <- lm(EnergyPDry_1_mJ_g~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location + Sex + Year, data = DataSet)
 
 ```
 
@@ -136,16 +138,16 @@ print(ed_aicc)
 
 # Convert AIC table to a data frame for easier manipulation
 EDaic_df <- as.data.frame(ed_aicc)
-EDaic_df$ModelName <- c("EnergyPDry_1~ Gonad_Wt_g + Collection_Location + Sex + Year",
-                        "EnergyPDry_1~ Gonad_Wt_g + Collection_Location + Year",
-                        "EnergyPDry_1~ Gonad_Wt_g + Collection_Location + Sex",
-                        "EnergyPDry_1~ Gonad_Wt_g + Collection_Location",
-                        "EnergyPDry_1~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex",
-                        "EnergyPDry_1~ Gonad_Wt_g + Sex + Year",
-                        "EnergyPDry_1~Gonad_Wt_g + Sex + Year + Sex:Year",
-                        "EnergyPDry_1~Gonad_Wt_g + Year",
-                        "EnergyPDry_1~ Gonad_Wt_g + Sex",
-                        "EnergyPDry_1~1")
+EDaic_df$ModelName <- c("EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location + Sex + Year",
+                        "EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location + Year",
+                        "EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location + Sex",
+                        "EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location",
+                        "EnergyPDry_1_mJ_g~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex",
+                        "EnergyPDry_1_mJ_g~ Gonad_Wt_g + Sex + Year",
+                        "EnergyPDry_1_mJ_g~Gonad_Wt_g + Sex + Year + Sex:Year",
+                        "EnergyPDry_1_mJ_g~Gonad_Wt_g + Year",
+                        "EnergyPDry_1_mJ_g~ Gonad_Wt_g + Sex",
+                        "EnergyPDry_1_mJ_g~1")
 colnames(EDaic_df)[colnames(EDaic_df) == "Modnames"] <- "Model #"
 
 write.csv(EDaic_df, file = "energydensity_spawningpopulation/AICresults_EnergyPDry_1~SpawningPopulation.csv", row.names = FALSE)
@@ -315,7 +317,12 @@ ggplot(location_estimates_noLL, aes(x = Avg_Work, y = Estimated_EnergyPDry, labe
 
 ```
 
-
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}

@@ -582,6 +582,12 @@ ggplot(location_estimates, aes(x = Avg_Work, y = Estimated_BodySize, label = Loc
 
 ```
 
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
 
 ### Figure that displays parameter estimates + CI for each parameter in the model set
 ```{r}
