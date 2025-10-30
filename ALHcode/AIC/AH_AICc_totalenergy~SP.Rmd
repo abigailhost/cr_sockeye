@@ -323,3 +323,10 @@ ggplot(location_estimates_noLL, aes(x = Avg_Work, y = Estimated_TotalEnergy, lab
 
 
 ```
+
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
