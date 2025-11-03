@@ -407,6 +407,31 @@ coefs_df_full$Actual_Param <- with(coefs_df_full,
 coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
 ```
 
+### Julian Day figure for body size across date, with GSI
+```{r}
+library(lubridate)
+DataSet$JulianDay <- yday(DataSet$Collection_Date)
+
+library(ggplot2)
+library(scales)
+
+ggplot(DataSet, aes(x = JulianDay, 
+                    y = bodysize_pc_g_mm,
+                    color = Group_Assignment)) +   # <-- move it here
+  geom_point(size = 3) +
+  labs(x = "Collection Date",
+       y = "Estimated Body Size (PC Score)",
+       color = "Group Assignment") + # adds legend title
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+
+```
+
+
 ### Estimates Figure
 ```{r}
 # Figure that displays parameter estimates + CI for each parameter in the model set
