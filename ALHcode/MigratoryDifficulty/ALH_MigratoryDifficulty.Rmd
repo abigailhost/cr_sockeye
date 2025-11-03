@@ -25,12 +25,33 @@ DataSet <- DataSet %>%
 DataSet <- DataSet %>%
   filter(!Collection %in% c("copper lake"))
 
+DataSet <- DataSet %>%
+  filter(!Collection %in% c("upper klutina"))
+
+
 unique(DataSet$Collection)
+DataSet$Collection <- as.factor(DataSet$Collection)
+
+levels(DataSet$Collection)[levels(DataSet$Collection) == "fish creek gulkana"] <- "Fish Creek Gulkana"
+levels(DataSet$Collection)[levels(DataSet$Collection) == "gulkana hatchery"] <- "Gulkana Hatchery"
+levels(DataSet$Collection)[levels(DataSet$Collection) == "mentasta"] <- "Mentasta"
+levels(DataSet$Collection)[levels(DataSet$Collection) == "tanada"] <- "Tanada"
+levels(DataSet$Collection)[levels(DataSet$Collection) == "mahlo"] <- "Mahlo"
+levels(DataSet$Collection)[levels(DataSet$Collection) == "long lake"] <- "Long Lake"
+levels(DataSet$Collection)[levels(DataSet$Collection) == "st anne"] <- "St Anne"
+levels(DataSet$Collection)[levels(DataSet$Collection) == "canyon creek"] <- "Canyon Creek"
+levels(DataSet$Collection)[levels(DataSet$Collection) == "baird canyon"] <- "Baird Canyon"
+levels(DataSet$Collection)[levels(DataSet$Collection) == "chitina airport"] <- "Chitina Airport"
+
+levels(DataSet$Collection)
+
+
+
+
 
 ```
 
 ### Map for Manuscript
-
 ``` {r}
 # Load libraries, install as needed
 library(leaflet)
@@ -46,25 +67,24 @@ library(tmap)
 DataSet$Collection <- factor(
   DataSet$Collection,
   levels = c(
-    "baird canyon", "canyon creek", "chitina airport", "long lake",
-    "upper klutina", "st anne", "mahlo", "mentasta", "tanada",
-    "gulkana hatchery", "fish creek gulkana"
+    "Baird Canyon", "Canyon Creek", "Chitina Airport", "Long Lake", "St Anne", "Mahlo", "Mentasta", "Tanada",
+    "Gulkana Hatchery", "Fish Creek Gulkana"
   )
 )
 
+# colors to use: "#1E8E99FF", "#51C3CCFF", "#99F9FFFF", "#CCFEFFFF", "#E5FFFFFF", "#FFE5CCFF","#FFAD65FF", "#FF8E32FF", ,"#CC5800FF","#993F00FF","#F76D5EFF", "#D82632FF", "#A50021FF" ======== cool colors are lower river, warm colors are upper watershed
 # Define color palette (named vector)
 pal_colors <- c(
-  "baird canyon" = "#7C7C7CFF",
-  "canyon creek" = "black",
-  "chitina airport" = "#800000FF",
-  "long lake" = "#AF6458FF",
-  "upper klutina" = "#736F4CFF",
-  "st anne" = "#BA6E1DFF",
-  "mahlo" = "#205F4BFF",
-  "mentasta" = "#68855CFF",
-  "tanada" = "#9C9C5EFF",
-  "gulkana hatchery" = "#A06177FF",
-  "fish creek gulkana" = "#467378FF"
+  "Baird Canyon" = "#9CA9BAFF",
+  "Canyon Creek" = "#5480B5FF",
+  "Chitina Airport" = "#345084FF",
+  "Long Lake" = "#FFE5CCFF",
+  "St Anne" = "#FFAD65FF",
+  "Mahlo" = "#FF8E32FF",
+  "Mentasta" = "#CC5800FF",
+  "Tanada" = "#993F00FF",
+  "Gulkana Hatchery" = "#D82632FF",
+  "Fish Creek Gulkana" = "#A50021FF"
 )
 
 # Create a color mapping function for leaflet
