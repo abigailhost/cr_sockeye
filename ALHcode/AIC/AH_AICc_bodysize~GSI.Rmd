@@ -490,12 +490,12 @@ DataSet$RunTimingGroup <- factor(
 # Table of counts
 table(DataSet$Group_Assignment, DataSet$RunTimingGroup)
 
+DataSet <- subset(DataSet, Group_Assignment != "LowerGroups")
 
 
 DataSet$Group_Assignment <- factor(
   DataSet$Group_Assignment,
-  levels = c("LowerGroups",
-             "Bremner",
+  levels = c("Bremner",
              "Chitina",
              "KlutinaLake",
              "KlutinaTonsinaOutlet",
@@ -509,12 +509,19 @@ DataSet$Group_Assignment <- factor(
 
 
 #Color palette for group assignment
-my_colors <- c(
-  "#774762FF", "#D9AF6BFF", "#AF6458FF", "#736F4CFF", "#526A83FF", "#625377FF", "#68855CFF", "#9C9C5EFF", "#A06177FF", "#467378FF"
-)
+my_colors <- c("Bremner" = "#E0B300",
+               "Chitina" = "#FFE5CCFF",
+               "Gulkana" = "#A50021FF",
+               "GulkanaHatchery" = "#D82632FF",
+               "Tazlina" = "#FF5C5C",
+               "Slana" = "#CC5800FF",
+               "KlutinaLake" = "#FF8E32FF",
+               "KlutinaTonsinaOutlet" = "#E56B00",
+               "TanadaCopperLakes" = "#993F00FF")
+
 #Visual aid of counts
-ggplot(DataSet, aes(x = RunTimingGroup, fill = Group_Assignment)) +
-  geom_bar(position = "stack") +
+GSI_runtiming <- ggplot(DataSet, aes(x = RunTimingGroup, fill = Group_Assignment)) +
+  geom_bar(stat = "count", position = position_dodge()) +
   theme_minimal() +
   labs(
     title = "GSI Distribution Within Run Timing Groups",
@@ -524,35 +531,22 @@ ggplot(DataSet, aes(x = RunTimingGroup, fill = Group_Assignment)) +
   ) + 
   scale_fill_manual(values = my_colors) + 
   theme(
-  plot.title = element_text(size = 16, face = "bold"),
-  axis.title.x = element_text(size = 16, face = "bold"),
-  axis.title.y = element_text(size = 16, face = "bold"),
-  axis.text.x = element_text(size = 16),
-  axis.text.y = element_text(size = 16),
-  legend.title = element_text(size = 16, face = "bold"),
-  legend.text = element_text(size = 16)
-)
+    plot.title = element_text(size = 30, face = "bold"),
+    axis.title.x = element_text(size = 26, face = "bold"),
+    axis.title.y = element_text(size = 26, face = "bold"),
+    axis.text.x = element_text(size = 22),
+    axis.text.y = element_text(size = 22),
+    legend.title = element_text(size = 26, face = "bold"),
+    legend.text = element_text(size = 22),
+    legend.key.size = unit(1.5, "cm")
+  )
 
-
-ggplot(DataSet, aes(x = RunTimingGroup, fill = Group_Assignment)) +
-  geom_bar(position = "fill") + # fill makes it proportional
-  scale_fill_manual(values = my_colors) +
-  scale_y_continuous(labels = scales::percent) +
-  theme_minimal() +
-  labs(
-    title = "Proportion of GSI Groups by Run Timing",
-    x = "Run Timing Group",
-    y = "Proportion",
-    fill = "GSI Group"
-  ) + 
-  theme(
-  plot.title = element_text(size = 16, face = "bold"),
-  axis.title.x = element_text(size = 16, face = "bold"),
-  axis.title.y = element_text(size = 16, face = "bold"),
-  axis.text.x = element_text(size = 16),
-  axis.text.y = element_text(size = 16),
-  legend.title = element_text(size = 16, face = "bold"),
-  legend.text = element_text(size = 16)
+ggsave(
+  filename = "AICFigures/RTG_GSI_Distribution.jpeg",    # output file name
+  plot = GSI_runtiming,              # the ggplot object
+  width = 18,                     # width in inches
+  height = 12,                    # height in inches
+  dpi = 300                        # resolution (higher = better quality)
 )
 
 #Table summary
