@@ -6,7 +6,18 @@ bodydata <- read.csv("ALHcode/AIC/lowerriver_bodycomp_PCscores.csv")[-1]
 
 riverflow <- read.csv("ALHcode/odata/million_dollar_bridge_discharge_data_1988-2025.csv")
 
+#fineness vs body size PC score
+bodydata <- bodydata %>%
+  group_by(Sex) %>%
+  mutate(fineness = Fish_Leng_1 / Fish_Wdth)
 
+body_fineness <- lm(bodysize_pc_g_mm ~ fineness, data = bodydata)
+summary(body_fineness)
+
+ggplot(bodydata, aes(x = fineness, y = bodysize_pc_g_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") #checking any relationship between fineness and body size are 
+  
 str(bodydata)
 library(dplyr)
 
@@ -54,7 +65,7 @@ date_flow_groups <- list(
 )
 
 find("select")
-detach("package:raster", unload = TRUE)
+#detach("package:raster", unload = TRUE)
 
 
 flow_summary <- lapply(names(date_flow_groups), function(name) {

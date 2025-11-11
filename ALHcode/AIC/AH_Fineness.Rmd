@@ -11,36 +11,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
 ```
 
-### Loading Data for AICc code for fineness~RunTimingGroup models
-```{r, include = FALSE}
-rm(list = ls())
-library(AICcmodavg)
-library(lubridate)
-
-#data loading
-bc19 <- read.csv("bodycomp_2019.csv")
-bc20 <- read.csv("bodycomp_2020.csv")
-bc21 <- read.csv("bodycomp_2021.csv")
-#need to bind all together for total body comp dataset, lower river only
-
-bc_LR_total <- rbind(bc19[1:60,], bc20[1:60,], bc21[1:60,])
-write.csv(bc_LR_total, "lowerriver_bodycomp_all.csv")
-lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
-#all data is loaded now
-
-#need to add year to dataset
-lowerriver_bodycomp_all$Collection_Date <- as.Date(lowerriver_bodycomp_all$Collection_Date)
-
-# Create a new column 'year' from the collection_date
-lowerriver_bodycomp_all$Year <- year(lowerriver_bodycomp_all$Collection_Date)
-
-#replace blank cell in Sex with NA 
-lowerriver_bodycomp_all$Sex[lowerriver_bodycomp_all$Sex == ""] <- NA
-str(lowerriver_bodycomp_all)
-
-write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")
-
-```
 
 ### Checking for NAs for PC score
 ```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
@@ -237,7 +207,6 @@ write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_fineness.csv")
 ```
 
 ### Import Data for models
-
 ```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
 rm(list = ls())
 lowerriver_bodycomp_fineness <- "lowerriver_bodycomp_fineness.csv"
@@ -261,24 +230,6 @@ str(DataSet)
 mean(DataSet$fineness)
 
 ```
-### Calculating Means for Tables within results
-```{r}
-# Load dplyr library for data manipulation
-library(dplyr)
-
-# Calculate the mean fineness ratio by RunTimingGroup and Year
-mean_fineness_by_group_year <- DataSet %>%
-  group_by(RunTimingGroup, Year) %>%
-  summarise(mean_fineness = mean(fineness, na.rm = TRUE))
-
-# Print the results
-print(mean_fineness_by_group_year)
-
-
-
-
-```
-
 
 ```{r}
 str(DataSet)
@@ -292,11 +243,115 @@ library(ggplot2)
 ggplot(DataSet, aes(x = RunTimingGroup, y = fineness, fill = RunTimingGroup)) +
   geom_boxplot() + 
   stat_summary(fun = mean, geom = "text", aes(label = round(..y.., 2)), 
-               color = "black", size = 4) +  # Add mean as a red point
-  facet_grid(Sex ~ Year)
+               color = "black", size = 4) 
 #Shapes that are short and wide have a low fineness ratio, those that are long and narrow have high fineness ratios.
 
 
+
+
+```
+
+
+### Fineness in Upper River
+```{r}
+DataSet <- read.csv("upperriver_bodycomp_PCscores.csv")
+#checking NA
+any(is.na(DataSet$Fish_Leng_1_mm))
+any(is.na(DataSet$Fish_Ht_mm))
+any(is.na(DataSet$Fish_Grth_mm)) #No NA's
+any(is.na(DataSet$Fish_Wdth)) #True, need to determine how many values
+DataSet[is.na(DataSet$Fish_Wdth), ] #12 rows need to be filled in
+
+DataSet$Fish_Wdth_mm <- DataSet$Fish_Wdth*10
+
+
+# Subset the data for female F fish only
+DataSetF <- DataSet[DataSet$Sex == "F", ]
+
+summary(lm(Fish_Wdth_mm ~ bodysize_pc_g_mm, data = DataSetF)) #R = 0.4102
+summary(lm(Fish_Wdth_mm ~ Fish_Wt_g, data = DataSetF)) #R =  0.5268, so use this for predicting
+summary(lm(Fish_Wdth_mm ~ Fish_Grth_mm, data = DataSetF)) # Adjusted R-squared:  0.4942
+
+
+width_F_lm <- lm(Fish_Wdth_mm ~ Fish_Wt_g, data = DataSetF)
+summary(width_F_lm) # R squared  0.6396
+plot(width_F_lm)
+
+
+predicted_values_widthF_mm <- predict(width_F_lm, newdata = DataSetF)
+
+DataSetF$Predicted_Fish_Wdth_mm <- predicted_values_widthF_mm # Add these predictions back to your dataset
+
+
+ggplot(DataSetF, aes(x = Predicted_Fish_Wdth_mm, y = Fish_Wdth_mm)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Wdth_mm, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Female Fish",
+       x = "Predicted Fish Width",
+       y = "Fish Width") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Wdth_mm with predicted values
+DataSetF$Fish_Wdth_mm[is.na(DataSetF$Fish_Wdth_mm)] <- DataSetF$Predicted_Fish_Wdth_mm[is.na(DataSetF$Fish_Wdth_mm)]
+## so now, the female subset has predicted values replacing the NAs for Wdth
+
+
+
+#Now, same for the male data
+DataSetM <- DataSet[DataSet$Sex == "M", ] #subset of M from total data set
+
+Wdth_M_lm <- lm(Fish_Wdth_mm ~ Fish_Wt_g, data = DataSetM) #making linear regression
+summary(Wdth_M_lm) 
+plot(Wdth_M_lm)
+predicted_values_WdthM_mm <- predict(Wdth_M_lm, newdata = DataSetM) #predicting width values from male subset data
+DataSetM$Predicted_Fish_Wdth_mm <- predicted_values_WdthM_mm
+
+ggplot(DataSetM, aes(x = Predicted_Fish_Wdth_mm, y = Fish_Wdth_mm)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Wdth_mm, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Male Fish Width",
+       x = "Predicted Fish Width",
+       y = "Fish Width") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Leng_1 with predicted values
+DataSetM$Fish_Wdth_mm[is.na(DataSetM$Fish_Wdth_mm)] <- DataSetM$Predicted_Fish_Wdth_mm[is.na(DataSetM$Fish_Wdth_mm)]
+## so now, the male subset has predicted values replacing the NAs 
+
+DataSet <- rbind(DataSetM, DataSetF)
+
+
+### Calculating Upper River Fineness
+DataSet <- DataSet %>%
+  group_by(Sex) %>%
+  mutate(fineness = Fish_Leng_1_mm / Fish_Wdth_mm)
+
+str(DataSet$fineness) 
+
+# Create new data file that includes fineness data in the upper river fish
+write.csv(DataSet, "upperriver_bodycomp_fineness.csv")
+
+DataSet$Collection_Location <- factor(DataSet$Collection_Location)
+levels(DataSet$Collection_Location)
+
+
+DataSet$Collection_Location <- factor(DataSet$Collection_Location,
+                             levels = c("Long Lake",
+                                        "St Anne",
+                                        "Mahlo",
+                                        "Mentasta",
+                                        "Tanada",
+                                        "Gulkana Hatchery",
+                                        "Fish Creek Gulkana"))
+
+library(ggplot2)
+ggplot(DataSet, aes(x = Collection_Location, y = fineness, fill = Collection_Location)) +
+  geom_boxplot() + 
+  stat_summary(fun = mean, geom = "text", aes(label = round(..y.., 2)), 
+               color = "black", size = 4) 
+#Shapes that are short and wide have a low fineness ratio, those that are long and narrow have high fineness ratios.
 
 
 ```

@@ -82,3 +82,8 @@ merged_data <- dplyr::left_join(
 # Check the result
 print(merged_data) #now data is all merged nicely together
 
+
+ggplot(merged_data, aes(x = mean_flow_cfs, y = mean_fineness)) +
+  geom_point() +
+  facet_wrap(~Year, scales = "free_x")
+  
