@@ -274,14 +274,14 @@ work.condition <- ggplot() +
     data = GSI_all %>% filter(GSI != "GulkanaHatchery"),
     aes(x = Avg_Work, y = Estimate, color = GSI),
     shape = 16,
-    size = 10
+    size = 12
   ) +
   # Chitina as X
   geom_point(
     data = GSI_all %>% filter(GSI == "GulkanaHatchery"),
     aes(x = Avg_Work, y = Estimate, color = GSI),
     shape = 4,
-    size = 10,
+    size = 12,
     stroke = 1.5
   ) +
   # Facet by trait
@@ -1152,6 +1152,9 @@ colors_SP <- c(
   "Tanada" = "#993F00FF")
 
 SP_egg$Facet <- "Egg Size"
+
+eggmodel <- lm(SP_noLLnoGH$Estimated_EggSize ~ SP_noLLnoGH$Avg_Work)
+summary(eggmodel)
 
 work.egg <- ggplot() +
   # Regression lines manually colored by facet

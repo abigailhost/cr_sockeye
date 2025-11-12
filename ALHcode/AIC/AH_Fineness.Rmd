@@ -15,161 +15,34 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE
 ### Checking for NAs for PC score
 ```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
 rm(list = ls())
-lowerriver_bodycomp_all <- "lowerriver_bodycomp_all.csv"
-lowerriver_bodycomp_all<-read.csv("lowerriver_bodycomp_all.csv")[,-1]
+DataSet <- read.csv("lowerriver_GSI_PCscores.csv")
+str(DataSet)
+DataSet$Fish_Wdth_mm <- DataSet$Fish_Wdth * 10
+str(DataSet)
 
-### Removing NAs that will mess up levels / model weight
-any(is.na(lowerriver_bodycomp_all$Collection_Location))
-any(is.na(lowerriver_bodycomp_all$RunTimingGroup))
-any(is.na(lowerriver_bodycomp_all$Year))
-any(is.na(lowerriver_bodycomp_all$Sex))
-lowerriver_bodycomp_all[is.na(lowerriver_bodycomp_all$Sex), ] #row 115 has no sex value, eliminate it for models
-lowerriver_bodycomp_all <- lowerriver_bodycomp_all[-115,] #excludes row missing sex file
-any(is.na(lowerriver_bodycomp_all$Sex))
-
-#checking NA
-any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
-any(is.na(lowerriver_bodycomp_all$Fish_Ht))
-any(is.na(lowerriver_bodycomp_all$Fish_Grth)) #Na's present, will need to omit them for PC score
-lowerriver_bodycomp_all[is.na(lowerriver_bodycomp_all$Fish_Grth), ] #64
-```
-
-### Estimate Girth Values for NA rows
-```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
-library(ggplot2)
-ggplot(lowerriver_bodycomp_all, aes(x=Fish_Leng_1, y = Fish_Grth)) + 
-  geom_point() #length relationship to girth
-
-girth_leng_lm <- lm(Fish_Grth ~ Fish_Leng_1, data = lowerriver_bodycomp_all)
-summary(girth_leng_lm) # Adjusted R-squared:  0.3044 
-
-# Subset the data for female F fish only
-allfemale_lowerriver_bodycomp <- lowerriver_bodycomp_all[lowerriver_bodycomp_all$Sex == "F", ]
-
-# Perform PCA on the subset of female F fish
-pca_model_allF <- princomp(allfemale_lowerriver_bodycomp[,c(12,14,16)], cor=T, scores=T, covmat = NULL)
-
-summary(pca_model_allF, loadings=T, cutoff=0.001) #summary of PC analysis
-
-# Create a new dataframe with PCA scores for the female F fish subset
-allfemale_lowerriver_bodycomp <- cbind(allfemale_lowerriver_bodycomp, pca_model_allF$scores[, 1])  # First principal component
-
-# Create the linear model for predicting Fish_Grth based on the first principal component
-girth_pc_lm <- lm(Fish_Grth ~ pca_model_allF$scores[, 1], data = allfemale_lowerriver_bodycomp)
-
-# View the summary of the linear model
-summary(girth_pc_lm) #R squared value is 0.6942
-plot(girth_pc_lm)
+#eliminate unnecessary group assignments
+# Standardize levels
+DataSet$Group_Assignment <- factor(DataSet$Group_Assignment)
+levels(DataSet$Group_Assignment)
 
 
-predicted_values <- predict(girth_pc_lm, newdata = allfemale_lowerriver_bodycomp)
+# Clean up levels manually
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "Gulkana "] <- "Gulkana"
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "Gulkanahatchery"] <- "GulkanaHatchery"
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "KlutinaTonsinaOutlets"] <- "KlutinaTonsinaOutlet"
+levels(DataSet$Group_Assignment)[levels(DataSet$Group_Assignment) == "insufficient genotypes"] <- "insufficient_genotypes"
 
-allfemale_lowerriver_bodycomp$Predicted_Fish_Grth <- predicted_values # Add these predictions back to your dataset
-View(allfemale_lowerriver_bodycomp)
+# Then drop the insufficient genotypes
+DataSet <- subset(DataSet, Group_Assignment != "insufficient_genotypes")
+DataSet <- subset(DataSet, Group_Assignment != "LowerGroups")
+DataSet$Group_Assignment <- droplevels(DataSet$Group_Assignment)
 
-### the predicted value for row 64 when all female fish is Fish_Grth = 30.00935
-
-#plot the original data and the predicted values to see how well the model fits
-ggplot(allfemale_lowerriver_bodycomp, aes(x = Predicted_Fish_Grth, y = Fish_Grth)) +
-  geom_point(aes(color = "Observed")) +
-  geom_point(aes(y = Predicted_Fish_Grth, color = "Predicted")) +
-  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
-  labs(title = "Observed vs Predicted Fish Growth",
-       x = "Comparison PC",
-       y = "Fish Growth") +
-  theme_minimal() 
-
-###### Now, back to using lowerriver_bodycomp_all #######
-lowerriver_bodycomp_all$Fish_Grth[is.na(lowerriver_bodycomp_all$Fish_Grth)] <- 30.00935
-any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
-any(is.na(lowerriver_bodycomp_all$Fish_Ht))
-any(is.na(lowerriver_bodycomp_all$Fish_Grth)) # no longer an NA present
-```
-
-### Estimating Fish_Wdth values for 2019, can I do this by sex?
-```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
-#Should I estimate via length, girth, height, or via PC score?
-wdth_leng_lm <- lm(Fish_Wdth ~ Fish_Leng_1, data = lowerriver_bodycomp_all)
-summary(wdth_leng_lm) # Adjusted R-squared: 0.4258
-
-          ### OR ###
-
-wdth_grth_lm <- lm(Fish_Wdth ~ Fish_Grth, data = lowerriver_bodycomp_all)
-summary(wdth_grth_lm) # Adjusted R-squared:  0.2273 
-
-          ### OR ###
-
-wdth_ht_lm <- lm(Fish_Wdth ~ Fish_Ht, data = lowerriver_bodycomp_all)
-summary(wdth_ht_lm) #Adjusted R-squared:  0.4984 
-
-          ### OR ###
-
-pca_model_wdth <- princomp(lowerriver_bodycomp_all[,c(12,14,16, 19)], cor=T, scores=T, covmat = NULL)
-lowerriver_bodycomp_wdth <- cbind(lowerriver_bodycomp_all, pca_model_wdth$scores[, 1])  # First principal component
-
-# Create the linear model for predicting Fish_Grth based on the first principal component
-wdth_pc_lm <- lm(Fish_Wdth ~ pca_model_wdth$scores[, 1], data = lowerriver_bodycomp_wdth)
-summary(wdth_pc_lm) #Adjusted R-squared:  0.418 
+# Confirm new levels
+levels(DataSet$Group_Assignment)
 
 
-
-### SO, Fish_Ht has the higheat r-squared value and should be used for the estimates, now need to separate F and M data for estimating Wdth
-allfemaleWdth_lowerriver_bodycomp <- lowerriver_bodycomp_all[lowerriver_bodycomp_all$Sex == "F", ] #subset of F from total data set
-
-F_wdth_Ht_lm <- lm(Fish_Wdth ~ Fish_Ht, data = allfemaleWdth_lowerriver_bodycomp) #making linear regression
-summary(F_wdth_Ht_lm)
-plot(F_wdth_Ht_lm)
-predicted_F_wdth_values <- predict(F_wdth_Ht_lm, newdata = allfemaleWdth_lowerriver_bodycomp) #predicting width values from female subset data
-allfemaleWdth_lowerriver_bodycomp$Predicted_Fish_Wdth <- predicted_F_wdth_values
-
-ggplot(allfemaleWdth_lowerriver_bodycomp, aes(x = Predicted_Fish_Wdth, y = Fish_Wdth)) +
-  geom_point(aes(color = "Observed")) +
-  geom_point(aes(y = Predicted_Fish_Wdth, color = "Predicted")) +
-  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
-  labs(title = "Observed vs Predicted Female Fish Growth",
-       x = "Comparison PC",
-       y = "Fish Growth") +
-  theme_minimal() 
-
-# Replace NAs in Fish_Wdth with predicted values
-allfemaleWdth_lowerriver_bodycomp$Fish_Wdth[is.na(allfemaleWdth_lowerriver_bodycomp$Fish_Wdth)] <- allfemaleWdth_lowerriver_bodycomp$Predicted_Fish_Wdth[is.na(allfemaleWdth_lowerriver_bodycomp$Fish_Wdth)]
-## so now, the female subset has predicted values replacing the NAs 
-
-
-
-
-#Now, same for the male data
-allmaleWdth_lowerriver_bodycomp <- lowerriver_bodycomp_all[lowerriver_bodycomp_all$Sex == "M", ] #subset of M from total data set
-
-M_wdth_Ht_lm <- lm(Fish_Wdth ~ Fish_Ht, data = allmaleWdth_lowerriver_bodycomp) #making linear regression
-summary(M_wdth_Ht_lm)
-plot(M_wdth_Ht_lm)
-predicted_M_wdth_values <- predict(M_wdth_Ht_lm, newdata = allmaleWdth_lowerriver_bodycomp) #predicting width values from male subset data
-allmaleWdth_lowerriver_bodycomp$Predicted_Fish_Wdth <- predicted_M_wdth_values
-
-ggplot(allmaleWdth_lowerriver_bodycomp, aes(x = Predicted_Fish_Wdth, y = Fish_Wdth)) +
-  geom_point(aes(color = "Observed")) +
-  geom_point(aes(y = Predicted_Fish_Wdth, color = "Predicted")) +
-  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
-  labs(title = "Observed vs Predicted Male Fish Growth",
-       x = "Comparison PC",
-       y = "Fish Growth") +
-  theme_minimal() 
-
-# Replace NAs in Fish_Wdth with predicted values
-allmaleWdth_lowerriver_bodycomp$Fish_Wdth[is.na(allmaleWdth_lowerriver_bodycomp$Fish_Wdth)] <- allmaleWdth_lowerriver_bodycomp$Predicted_Fish_Wdth[is.na(allmaleWdth_lowerriver_bodycomp$Fish_Wdth)]
-## so now, the male subset has predicted values replacing the NAs 
-
-### Now, combine the two data sets back into one, called lowerriver_bodycomp_all ###
-lowerriver_bodycomp_all <- rbind(allfemaleWdth_lowerriver_bodycomp, allmaleWdth_lowerriver_bodycomp)
-
-
-
-#check NAs
-any(is.na(lowerriver_bodycomp_all$Fish_Leng_2))
-any(is.na(lowerriver_bodycomp_all$Fish_Ht))
-any(is.na(lowerriver_bodycomp_all$Fish_Wdth))
-any(is.na(lowerriver_bodycomp_all$Fish_Grth))# no longer an NA present
+#check width values to determine if need to estimate
+any(is.na(DataSet$Fish_Wdth_mm)) #False, so have all width values I need
 
 ```
 
@@ -177,31 +50,24 @@ any(is.na(lowerriver_bodycomp_all$Fish_Grth))# no longer an NA present
 ```{r}
 ### Fineness Ratio = A fish's "fineness ratio" refers to the ratio of its body length to its maximum cross-sectional diameter
 
-#Fineness Ratio 2: fish length / fish width *** "body length to its maximum cross-sectional diameter" ***
-# lowerriver_bodycomp_all$fineness_2 <- (lowerriver_bodycomp_all$Fish_Leng_1) / (lowerriver_bodycomp_all$Fish_Wdth)
-
-# str(lowerriver_bodycomp_all$fineness_2) #fineness_1 is numeric
-# mean(lowerriver_bodycomp_all$fineness_2) #7.786 is the average here
-
-
 #Need to calculate fineness according to sex
 library(dplyr)
 # Fineness Ratio 2: fish length / fish width, dependent on sex
-lowerriver_bodycomp_all <- lowerriver_bodycomp_all %>%
+DataSet <- DataSet %>%
   group_by(Sex) %>%
-  mutate(fineness = Fish_Leng_1 / Fish_Wdth)
+  mutate(fineness = Fish_Leng_1_mm / Fish_Wdth_mm)
 
-str(lowerriver_bodycomp_all$fineness) #fineness_2 is numeric
+str(DataSet$fineness) #fineness_2 is numeric
 
 # View the mean fineness ratio by sex
-mean_fineness <- lowerriver_bodycomp_all %>%
+mean_fineness <- DataSet %>%
   group_by(Sex) %>%
   summarise(mean_fineness = mean(fineness, na.rm = TRUE))
 
 print(mean_fineness)
 
 # Create new data file that includes fineness data in the dataset for models
-write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_fineness.csv")
+write.csv(DataSet, "lowerriver_bodycomp_fineness.csv")
 
 
 ```
@@ -221,7 +87,7 @@ nrow(DataSet)
 str(DataSet)
 
 #make response variables factors
-DataSet$Collection_Location <- as.factor(DataSet$Collection_Location) 
+DataSet$Group_Assignment <- as.factor(DataSet$Group_Assignment) 
 DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
 DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
@@ -229,9 +95,9 @@ str(DataSet)
 
 mean(DataSet$fineness)
 
-```
 
-```{r}
+
+# ======================== Figures for fineness ratio ==========================
 str(DataSet)
 
 DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
@@ -246,10 +112,56 @@ ggplot(DataSet, aes(x = RunTimingGroup, y = fineness, fill = RunTimingGroup)) +
                color = "black", size = 4) 
 #Shapes that are short and wide have a low fineness ratio, those that are long and narrow have high fineness ratios.
 
+levels(DataSet$Group_Assignment)
 
+DataSet$Group_Assignment <- factor(DataSet$Group_Assignment,
+                             levels = c("KlutinaTonsinaOutlet",
+                                        "KlutinaLake",
+                                        "Chitina",
+                                        "TanadaCopperLakes",
+                                        "Gulkana",
+                                        "Slana",
+                                        "Tazlina",
+                                        "Bremner",
+                                        "GulkanaHatchery"))
 
+colors_GSI <- c(
+  "Bremner" = "#E0B300",   
+  "Chitina" = "#FFE5CCFF", #"black" if need to remove 
+  "Gulkana" = "#A50021FF",   
+  "GulkanaHatchery" = "#D32826FF", #black when need to remove when included 
+  "Tazlina" = "#FF5C5C",   # reddish
+  "Slana" = "#CC5800FF",
+  "KlutinaLake" = "#FF8E32FF", 
+  "KlutinaTonsinaOutlet" = "#E56B00", 
+  "TanadaCopperLakes" = "#993F00FF")
+
+ggplot(DataSet, aes(x = Group_Assignment, y = fineness, fill = Group_Assignment)) +
+  geom_boxplot() + 
+  stat_summary(fun = mean, geom = "text", aes(label = round(..y.., 2)), 
+               color = "black", size = 4) +
+  scale_fill_manual(values = colors_GSI)
+
+library(lubridate)
+DataSet$JulianDay <- yday(DataSet$Collection_Date)
+
+ggplot(DataSet, aes(x = JulianDay, 
+                    y = fineness,
+                    color = Group_Assignment)) +   # <-- move it here
+  geom_point(size = 3) +
+  labs(x = "Collection Date",
+       y = "Fineness",
+       color = "Group Assignment") + # adds legend title
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values = colors_GSI) +
+  facet_wrap(~Year, scales = "free_x") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ```
+
 
 
 ### Fineness in Upper River
@@ -330,9 +242,12 @@ DataSet <- DataSet %>%
 
 str(DataSet$fineness) 
 
+
 # Create new data file that includes fineness data in the upper river fish
 write.csv(DataSet, "upperriver_bodycomp_fineness.csv")
 
+
+# =============== Plotting Fineness Ratio for Upper River =======================
 DataSet$Collection_Location <- factor(DataSet$Collection_Location)
 levels(DataSet$Collection_Location)
 
@@ -346,12 +261,23 @@ DataSet$Collection_Location <- factor(DataSet$Collection_Location,
                                         "Gulkana Hatchery",
                                         "Fish Creek Gulkana"))
 
+colors_SP <- c(
+  "Long Lake" = "#FFE5CCFF", #black when not included
+  "Fish Creek Gulkana" = "#A50021FF",   
+  "Gulkana Hatchery" = "#D82632FF", 
+  "St Anne" = "#FFAD65FF",   # reddish
+  "Mahlo" = "#FF8E32FF",
+  "Mentasta" = "#CC5800FF", 
+  "Tanada" = "#993F00FF")
+
 library(ggplot2)
 ggplot(DataSet, aes(x = Collection_Location, y = fineness, fill = Collection_Location)) +
   geom_boxplot() + 
   stat_summary(fun = mean, geom = "text", aes(label = round(..y.., 2)), 
-               color = "black", size = 4) 
+               color = "black", size = 4) +
+  scale_fill_manual(values = colors_SP)
 #Shapes that are short and wide have a low fineness ratio, those that are long and narrow have high fineness ratios.
+
 
 
 ```
