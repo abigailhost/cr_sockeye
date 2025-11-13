@@ -11,6 +11,101 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE)
 ```
 
+### Checking for NAs for PC score
+```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+rm(list = ls())
+DataSet <- read.csv("lowerriver_bodycomp_PCscores.csv")
+str(DataSet)
+DataSet$Fish_Wdth_mm <- DataSet$Fish_Wdth * 10
+DataSet$Fish_Wt_g <- DataSet$Fish_Wt * 1000
+str(DataSet)
+
+#eliminate unnecessary group assignments
+# Standardize levels
+DataSet$Collection_Location <- factor(DataSet$Collection_Location)
+levels(DataSet$Collection_Location)
+
+
+
+#check width values to determine if need to estimate
+any(is.na(DataSet$Fish_Wdth_mm)) #True, need to estimate for lower river data
+DataSet[is.na(DataSet$Fish_Wdth_mm), ]
+
+
+
+###=================== Estimate Width Values ====================
+
+# Subset the data for female F fish only
+DataSetF <- DataSet[DataSet$Sex == "F", ]
+summary(lm(Fish_Wdth_mm ~ Fish_Wt_g, data = DataSetF)) #R = 0.3731
+
+
+Wdth_F_lm <- lm(Fish_Wdth_mm ~ Fish_Wt_g, data = DataSetF)
+summary(Wdth_F_lm) # R squared  0.64
+plot(Wdth_F_lm)
+
+
+predicted_values_WdthF <- predict(Wdth_F_lm, newdata = DataSetF)
+
+DataSetF$Predicted_Fish_Wdth_mm <- predicted_values_WdthF # Add these predictions back to your dataset
+
+
+ggplot(DataSetF, aes(x = Predicted_Fish_Wdth_mm, y = Fish_Wdth_mm)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Wdth_mm, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Female Fish Wdth",
+       x = "Predicted Fish Width",
+       y = "Fish Width") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Grth with predicted values
+DataSetF$Fish_Wdth_mm[is.na(DataSetF$Fish_Wdth_mm)] <- DataSetF$Predicted_Fish_Wdth_mm[is.na(DataSetF$Fish_Wdth_mm)]
+## so now, the female subset has predicted values replacing the NAs for Grth
+
+
+#Now, same for the male data
+DataSetM <- DataSet[DataSet$Sex == "M", ] #subset of M from total data set
+
+Wdth_M_lm <- lm(Fish_Wdth_mm ~ Fish_Wt_g, data = DataSetM) #making linear regression
+summary(Wdth_M_lm) # R squared is 0.6141
+plot(Wdth_M_lm)
+predicted_values_WdthM <- predict(Wdth_M_lm, newdata = DataSetM) #predicting width values from male subset data
+DataSetM$Predicted_Fish_Wdth_mm <- predicted_values_WdthM
+
+ggplot(DataSetM, aes(x = Predicted_Fish_Wdth_mm, y = Fish_Wdth_mm)) +
+  geom_point(aes(color = "Observed")) +
+  geom_point(aes(y = Predicted_Fish_Wdth_mm, color = "Predicted")) +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted" = "red")) +
+  labs(title = "Observed vs Predicted Male Fish Width",
+       x = "Predicted Fish Width",
+       y = "Fish Width") +
+  theme_minimal() 
+
+# Replace NAs in Fish_Wdth with predicted values
+DataSetM$Fish_Wdth_mm[is.na(DataSetM$Fish_Wdth_mm)] <- DataSetM$Predicted_Fish_Wdth_mm[is.na(DataSetM$Fish_Wdth_mm)]
+## so now, the male subset has predicted values replacing the NAs 
+
+### Now, combine the two data sets back into one, called lowerriver_bodycomp_all ###
+DataSet <- rbind(DataSetF, DataSetM)
+
+#Check Leng_1 NAs
+any(is.na(DataSet$Fish_Leng_1_mm)) #FALSE
+any(is.na(DataSet$Fish_Wdth_mm)) #FALSE
+
+
+DataSet <- DataSet %>%
+  group_by(Sex) %>%
+  mutate(fineness = Fish_Leng_1_mm / Fish_Wdth_mm)
+
+str(DataSet$fineness) #fineness_2 is numeric
+
+#Now, run AIC again but PC1 scores are the response variable / numeric
+write.csv(DataSet, "lowerriver_bodycomp_fineness.csv")
+
+```
+
+
 
 ### Checking for NAs for PC score
 ```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
@@ -67,7 +162,7 @@ mean_fineness <- DataSet %>%
 print(mean_fineness)
 
 # Create new data file that includes fineness data in the dataset for models
-write.csv(DataSet, "lowerriver_bodycomp_fineness.csv")
+write.csv(DataSet, "lowerriver_GSI_fineness.csv")
 
 
 ```
@@ -75,7 +170,7 @@ write.csv(DataSet, "lowerriver_bodycomp_fineness.csv")
 ### Import Data for models
 ```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
 rm(list = ls())
-lowerriver_bodycomp_fineness <- "lowerriver_bodycomp_fineness.csv"
+lowerriver_bodycomp_fineness <- "lowerriver_GSI_fineness.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
 DataSet<-read.csv(lowerriver_bodycomp_fineness)[,-1]
@@ -154,7 +249,6 @@ ggplot(DataSet, aes(x = JulianDay,
        color = "Group Assignment") + # adds legend title
   geom_smooth(method = "lm", se = FALSE) +
   scale_color_manual(values = colors_GSI) +
-  facet_wrap(~Year, scales = "free_x") +
   theme_bw() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1)
