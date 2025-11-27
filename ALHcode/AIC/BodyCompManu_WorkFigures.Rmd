@@ -204,32 +204,40 @@ GSI_TE   <- GSI_TE %>% mutate(Type = "Total Energy",
                               Estimate = Estimated_TotalEnergy)
 GSI_all <- bind_rows(GSI_body, GSI_ED, GSI_TE)
 
+GSI_all$GSI<-as.factor(GSI_all$GSI)
+
+levels(GSI_all$GSI)[levels(GSI_all$GSI) == "TanadaCopperLakes"] <- "Tanada Copper Lakes"
+levels(GSI_all$GSI)[levels(GSI_all$GSI) == "GulkanaHatchery"] <- "Gulkana Hatchery"
+levels(GSI_all$GSI)[levels(GSI_all$GSI) == "KlutinaTonsinaOutlet"] <- "Klutina Tonsina Outlet"
+levels(GSI_all$GSI)[levels(GSI_all$GSI) == "KlutinaLake"] <- "Klutina Lake"
 
 # Data excluding Gulkana Hatchery for regression fits (early migration)
-GSI_noGulkanaHatchery <- GSI_all %>% filter(GSI != "GulkanaHatchery")
+GSI_noGulkanaHatchery <- GSI_all %>% filter(GSI != "Gulkana Hatchery")
+
+
 
 
 colors_GSI <- c(
   "Bremner" = "#E0B300",   
   "Chitina" = "#FFE5CCFF", #"black" if need to remove
   "Gulkana" = "#A50021FF",   
-  "GulkanaHatchery" = "black", #"D82632FF" when included 
+  "Gulkana Hatchery" = "black", #"D82632FF" when included 
   "Tazlina" = "#FF5C5C",   # reddish
   "Slana" = "#CC5800FF",
-  "KlutinaLake" = "#FF8E32FF", 
-  "KlutinaTonsinaOutlet" = "#E56B00", 
-  "TanadaCopperLakes" = "#993F00FF")
+  "Klutina Lake" = "#FF8E32FF", 
+  "Klutina Tonsina Outlet" = "#E56B00", 
+  "Tanada Copper Lakes" = "#993F00FF")
 
 GSI_all$GSI <- factor(GSI_all$GSI,
                  levels = c("Bremner",
                             "Chitina",
-                            "KlutinaTonsinaOutlet",
-                            "KlutinaLake",
+                            "Klutina Tonsina Outlet",
+                            "Klutina Lake",
                             "Tazlina",
                             "Slana",
                             "Gulkana",
-                            "TanadaCopperLakes",
-                            "GulkanaHatchery"))
+                            "Tanada Copper Lakes",
+                            "Gulkana Hatchery"))
 
 work.condition <- ggplot() +
   # Regression lines manually colored by facet
@@ -269,16 +277,16 @@ work.condition <- ggplot() +
     inherit.aes = FALSE,
     show.legend = FALSE
   )  +
-  # Points for all stocks except Chitina
+  # Points for all stocks except GH
   geom_point(
-    data = GSI_all %>% filter(GSI != "GulkanaHatchery"),
+    data = GSI_all %>% filter(GSI != "Gulkana Hatchery"),
     aes(x = Avg_Work, y = Estimate, color = GSI),
     shape = 16,
     size = 12
   ) +
-  # Chitina as X
+  # GH as X
   geom_point(
-    data = GSI_all %>% filter(GSI == "GulkanaHatchery"),
+    data = GSI_all %>% filter(GSI == "Gulkana Hatchery"),
     aes(x = Avg_Work, y = Estimate, color = GSI),
     shape = 4,
     size = 12,
@@ -306,7 +314,7 @@ work.condition <- ggplot() +
     axis.title.y = element_text(size = 30, face = "bold", margin = margin(r = 15)),
     #legend edits
     legend.title = element_text(size =24, face = "bold"),
-    legend.text = element_text(size =20),
+    legend.text = element_text(size =24),
     # Axis text
     axis.text = element_text(size = 24, color = "black"),
     # Panel border
@@ -371,15 +379,17 @@ GSI.work.condition <- work.condition +
   inherit.aes = FALSE,
   hjust = -0.1,  # pushes inside from left
   vjust = 1.5,   # pushes down from top
-  size = 8
+  size = 10
 ) +
   geom_text(
     data = facet_labels,
     aes(x = x, y = y, label = label),
     hjust = 2, vjust = -1,     # push inward from the edges
-    size = 12, fontface = "bold",  # adjust size/style
+    size = 16, fontface = "bold",  # adjust size/style
     inherit.aes = FALSE
   )
+
+GSI.work.condition
 
 
 ggsave(
@@ -397,27 +407,49 @@ ggsave(
 library(AICcmodavg)
 
 # ========= body size ========
-str(GSI_body)
-bodymodel_null <- lm(Estimated_BodySize ~ 1, data = GSI_noGulkanaHatchery)
-bodymodel1 <- lm(Estimated_BodySize ~ Avg_Work, data = GSI_noGulkanaHatchery)
-summary(bodymodel_null)
+str(GSI_noGulkanaHatchery)
+bodymodel1 <- lm(Estimated_BodySize ~ 1, data = GSI_noGulkanaHatchery)
+bodymodel2 <- lm(Estimated_BodySize ~ Avg_Work, data = GSI_noGulkanaHatchery)
 summary(bodymodel1)
-AIC(bodymodel_null, bodymodel1) #AIC
+summary(bodymodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(bodymodel1, bodymodel2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+
 
 # ======== energy density =======
 str(GSI_ED)
-EDmodel_null <- lm(Estimated_EnergyDensity ~ 1, data = GSI_noGulkanaHatchery)
-EDmodel1 <- lm(Estimated_EnergyDensity ~ Avg_Work, data = GSI_noGulkanaHatchery)
-summary(EDmodel_null)
+EDmodel1 <- lm(Estimated_EnergyDensity ~ 1, data = GSI_noGulkanaHatchery)
+EDmodel2 <- lm(Estimated_EnergyDensity ~ Avg_Work, data = GSI_noGulkanaHatchery)
 summary(EDmodel1)
-AIC(EDmodel_null, EDmodel1) #AIC --- including work in the model significantly improves the fit for Energy Density — unlike in previous body size example, where the null model was preferred.
+summary(EDmodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(EDmodel1, EDmodel2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
 
 # ======= total energy =========
 str(GSI_TE)
-TEmodel_null <- lm(Estimated_TotalEnergy ~ 1, data = GSI_noGulkanaHatchery)
-TEmodel1 <- lm(Estimated_TotalEnergy ~ Avg_Work, data = GSI_noGulkanaHatchery)
-summary(TEmodel1)
-AIC(TEmodel_null, TEmodel1)
+TEmodel1 <- lm(Estimated_TotalEnergy ~ 1, data = GSI_noGulkanaHatchery)
+TEmodel2 <- lm(Estimated_TotalEnergy ~ Avg_Work, data = GSI_noGulkanaHatchery)
+summary(TEmodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(TEmodel1, TEmodel2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
 
 ```
 
@@ -510,19 +542,27 @@ str(GSI_fecundity) #final fecundity dataframe for work regressions
 
 #================== Now, make figures of regressions for early migratory work ===================
 str(GSI_fecundity)
+
+GSI_fecundity$GSI<-as.factor(GSI_fecundity$GSI)
+
+levels(GSI_fecundity$GSI)[levels(GSI_fecundity$GSI) == "TanadaCopperLakes"] <- "Tanada Copper Lakes"
+levels(GSI_fecundity$GSI)[levels(GSI_fecundity$GSI) == "GulkanaHatchery"] <- "Gulkana Hatchery"
+levels(GSI_fecundity$GSI)[levels(GSI_fecundity$GSI) == "KlutinaTonsinaOutlet"] <- "Klutina Tonsina Outlet"
+levels(GSI_fecundity$GSI)[levels(GSI_fecundity$GSI) == "KlutinaLake"] <- "Klutina Lake"
+
 GSI_fecundity$GSI <- factor(GSI_fecundity$GSI,
                  levels = c("Bremner",
                             "Chitina",
-                            "KlutinaTonsinaOutlet",
-                            "KlutinaLake",
+                            "Klutina Tonsina Outlet",
+                            "Klutina Lake",
                             "Tazlina",
                             "Slana",
                             "Gulkana",
-                            "TanadaCopperLakes",
-                            "GulkanaHatchery"))
+                            "Tanada Copper Lakes",
+                            "Gulkana Hatchery"))
 
 # Data excluding Gulkana Hathcery for regression fits
-GSI_noGulkanaHatchery <- GSI_fecundity %>% filter(GSI != "GulkanaHatchery")
+GSI_noGulkanaHatchery <- GSI_fecundity %>% filter(GSI != "Gulkana Hatchery")
 
 #fecundity color is = "#0072B2"
 
@@ -530,12 +570,12 @@ colors_GSI <- c(
   "Bremner" = "#E0B300",   
   "Chitina" = "#FFE5CCFF", #"black" if need to remove 
   "Gulkana" = "#A50021FF",   
-  "GulkanaHatchery" = "black", #D32826FF when included 
+  "Gulkana Hatchery" = "black", #D32826FF when included 
   "Tazlina" = "#FF5C5C",   # reddish
   "Slana" = "#CC5800FF",
-  "KlutinaLake" = "#FF8E32FF", 
-  "KlutinaTonsinaOutlet" = "#E56B00", 
-  "TanadaCopperLakes" = "#993F00FF")
+  "Klutina Lake" = "#FF8E32FF", 
+  "Klutina Tonsina Outlet" = "#E56B00", 
+  "Tanada Copper Lakes" = "#993F00FF")
 
 GSI_fecundity$Facet <- "Fecundity"
 
@@ -555,14 +595,14 @@ work.fecundity <- ggplot() +
   ) +
   # Points for all stocks except Chitina
   geom_point(
-    data = GSI_fecundity %>% filter(GSI != "GulkanaHatchery"),
+    data = GSI_fecundity %>% filter(GSI != "Gulkana Hatchery"),
     aes(x = Avg_Work, y = Estimated_Fecundity, color = GSI),
     shape = 16,
     size = 12
   ) +
   # Chitina as X
   geom_point(
-    data = GSI_fecundity %>% filter(GSI == "GulkanaHatchery"),
+    data = GSI_fecundity %>% filter(GSI == "Gulkana Hatchery"),
     aes(x = Avg_Work, y = Estimated_Fecundity, color = GSI),
     shape = 4,
     size = 12,
@@ -588,7 +628,7 @@ work.fecundity <- ggplot() +
     axis.title.y = element_text(size = 30, face = "bold", margin = margin(r = 15)),
     #legend edits
     legend.title = element_text(size =24, face = "bold"),
-    legend.text = element_text(size =20),
+    legend.text = element_text(size =24),
     # Axis text
     axis.text = element_text(size = 24, color = "black"),
     # Panel border
@@ -625,7 +665,7 @@ work.fecundity1 <- work.fecundity +
     data = model_stats,
     aes(x = x, y = y, label = label),
     hjust = 0, vjust = -4,    # top-left corner
-    size = 8
+    size = 10
   )
 
 work.fecundity1
@@ -649,15 +689,23 @@ library(AICcmodavg)
 
 # ========= fecundity ========
 str(GSI_fecundity)
-fecmodel_null <- lm(Estimated_Fecundity ~ 1, data = GSI_noGulkanaHatchery)
-fecmodel1 <- lm(Estimated_Fecundity ~ Avg_Work, data = GSI_noGulkanaHatchery)
-summary(fecmodel1)
-AIC(fecmodel_null, fecmodel1) #AIC -- fec model has lower AIC and therefore explains more variation in fecundity than the null model.
+fecmodel1 <- lm(Estimated_Fecundity ~ 1, data = GSI_noGulkanaHatchery)
+fecmodel2 <- lm(Estimated_Fecundity ~ Avg_Work, data = GSI_noGulkanaHatchery)
+summary(fecmodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(fecmodel1, fecmodel2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+
 
 ```
 
 
-### GSI Post Migratory Work vs condition figures 
+### Spawnning Population Post Migratory Work vs condition figures 
 ```{r}
 library(dplyr)
 library(ggplot2)
@@ -938,7 +986,7 @@ work.condition <- ggplot() +
     axis.title.y = element_text(size = 30, face = "bold", margin = margin(r = 15)),
     #legend edits
     legend.title = element_text(size =24, face = "bold"),
-    legend.text = element_text(size =20),
+    legend.text = element_text(size =24),
     # Axis text
     axis.text = element_text(size = 24, color = "black"),
     # Panel border
@@ -1001,7 +1049,7 @@ SP.work.condition <- work.condition +
   inherit.aes = FALSE,
   hjust = -0.1,  # pushes inside from left
   vjust = 1.5,   # pushes down from top
-  size = 8
+  size = 10
 ) +
   geom_text(
     data = facet_labels,
@@ -1031,24 +1079,48 @@ library(AICcmodavg)
 
 # ========= body size ========
 str(SP_noLLnoGH)
-bodymodel_null <- lm(Estimated_BodySize ~ 1, data = SP_noLLnoGH)
-bodymodel1 <- lm(Estimated_BodySize ~ Avg_Work, data = SP_noLLnoGH)
-summary(bodymodel1)
-AIC(bodymodel_null, bodymodel1) #AIC, null has lower AIC
+bodymodel1 <- lm(Estimated_BodySize ~ 1, data = SP_noLLnoGH)
+bodymodel2 <- lm(Estimated_BodySize ~ Avg_Work, data = SP_noLLnoGH)
+summary(bodymodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(bodymodel1, bodymodel2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+
 
 # ======== energy density =======
 str(SP_noLLnoGH)
-EDmodel_null <- lm(Estimated_EnergyDensity ~ 1, data = SP_noLLnoGH)
-EDmodel1 <- lm(Estimated_EnergyDensity ~ Avg_Work, data = SP_noLLnoGH)
-summary(EDmodel1)
-AIC(EDmodel_null, EDmodel1) #AIC --- including work in the model significantly improves the fit for Energy Density — unlike in previous body size example, where the null model was preferred.
+EDmodel1 <- lm(Estimated_EnergyDensity ~ 1, data = SP_noLLnoGH)
+EDmodel2 <- lm(Estimated_EnergyDensity ~ Avg_Work, data = SP_noLLnoGH)
+summary(EDmodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(EDmodel1, EDmodel2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+
+
 
 # ======= total energy =========
 str(SP_noLLnoGH)
-TEmodel_null <- lm(Estimated_TotalEnergy ~ 1, data = SP_noLLnoGH)
-TEmodel1 <- lm(Estimated_TotalEnergy ~ Avg_Work, data = SP_noLLnoGH)
-summary(TEmodel1)
-AIC(TEmodel_null, TEmodel1) #AIC --- including work in the model significantly improves the fit for Energy Density — unlike in previous body size example, where the null model was preferred
+TEmodel1 <- lm(Estimated_TotalEnergy ~ 1, data = SP_noLLnoGH)
+TEmodel2 <- lm(Estimated_TotalEnergy ~ Avg_Work, data = SP_noLLnoGH)
+summary(TEmodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(TEmodel1, TEmodel2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
 
 ```
 
@@ -1204,7 +1276,7 @@ work.egg <- ggplot() +
     axis.title.y = element_text(size = 30, face = "bold", margin = margin(r = 15)),
     #legend edits
     legend.title = element_text(size =24, face = "bold"),
-    legend.text = element_text(size =20),
+    legend.text = element_text(size =24),
     # Axis text
     axis.text = element_text(size = 24, color = "black"),
     # Panel border
@@ -1240,8 +1312,8 @@ work.egg1 <- work.egg +
   geom_text(
     data = model_stats,
     aes(x = x, y = y, label = label),
-    hjust = 1.5, vjust = -9,    # top-left corner
-    size = 8
+    hjust = 1, vjust = -3,    # top-left corner
+    size = 10
   )
 
 work.egg1
@@ -1266,10 +1338,18 @@ library(AICcmodavg)
 
 # ========= body size ========
 str(SP_noLLnoGH)
-eggmodel_null <- lm(Estimated_EggSize ~ 1, data = SP_noLLnoGH)
-eggmodel1 <- lm(Estimated_EggSize ~ Avg_Work, data = SP_noLLnoGH)
-summary(eggmodel1)
-AIC(eggmodel_null, eggmodel1) #AIC -- egg model has lower AIC than the null and therefore explains more variation in fecundity than the null model.
+eggmodel1 <- lm(Estimated_EggSize ~ 1, data = SP_noLLnoGH)
+eggmodel2 <- lm(Estimated_EggSize ~ Avg_Work, data = SP_noLLnoGH)
+summary(eggmodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(eggmodel1, eggmodel2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+
 
 ```
 
