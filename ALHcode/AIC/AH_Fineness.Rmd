@@ -168,12 +168,18 @@ write.csv(DataSet, "lowerriver_GSI_fineness.csv")
 ```
 
 ### Import Data for models
-```{r, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+```{r}
 rm(list = ls())
-lowerriver_bodycomp_fineness <- "lowerriver_GSI_fineness.csv"
+lowerriver_bodycomp_PCscores <- "lowerriver_bodycomp_PCscores.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
-DataSet<-read.csv(lowerriver_bodycomp_fineness)[,-1]
+DataSet<-read.csv(lowerriver_bodycomp_PCscores)[,-1] #79 variables, 179 observations b/c one row with NA sex is removed
+
+#### CHECK DIRECTION OF PC SCORE ###
+library(ggplot2)
+ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc_g_mm)) +
+  geom_point()
+#so direction of PC score is positive, can check with other variables
 
 # View DataSet.
 head(DataSet)
@@ -182,79 +188,428 @@ nrow(DataSet)
 str(DataSet)
 
 #make response variables factors
-DataSet$Group_Assignment <- as.factor(DataSet$Group_Assignment) 
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
 DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
 DataSet$Year<- as.factor(DataSet$Year)
 DataSet$Sex<- as.factor(DataSet$Sex)
-str(DataSet)
-
-mean(DataSet$fineness)
-
-
-
-# ======================== Figures for fineness ratio ==========================
-str(DataSet)
-
-DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup,
-                             levels = c("Early",
-                                        "Middle",
-                                        "Late"))
-
-library(ggplot2)
-ggplot(DataSet, aes(x = RunTimingGroup, y = fineness, fill = RunTimingGroup)) +
-  geom_boxplot() + 
-  stat_summary(fun = mean, geom = "text", aes(label = round(..y.., 2)), 
-               color = "black", size = 4) 
-#Shapes that are short and wide have a low fineness ratio, those that are long and narrow have high fineness ratios.
-
-levels(DataSet$Group_Assignment)
-
-DataSet$Group_Assignment <- factor(DataSet$Group_Assignment,
-                             levels = c("KlutinaTonsinaOutlet",
-                                        "KlutinaLake",
-                                        "Chitina",
-                                        "TanadaCopperLakes",
-                                        "Gulkana",
-                                        "Slana",
-                                        "Tazlina",
-                                        "Bremner",
-                                        "GulkanaHatchery"))
-
-colors_GSI <- c(
-  "Bremner" = "#E0B300",   
-  "Chitina" = "#FFE5CCFF", #"black" if need to remove 
-  "Gulkana" = "#A50021FF",   
-  "GulkanaHatchery" = "#D32826FF", #black when need to remove when included 
-  "Tazlina" = "#FF5C5C",   # reddish
-  "Slana" = "#CC5800FF",
-  "KlutinaLake" = "#FF8E32FF", 
-  "KlutinaTonsinaOutlet" = "#E56B00", 
-  "TanadaCopperLakes" = "#993F00FF")
-
-ggplot(DataSet, aes(x = Group_Assignment, y = fineness, fill = Group_Assignment)) +
-  geom_boxplot() + 
-  stat_summary(fun = mean, geom = "text", aes(label = round(..y.., 2)), 
-               color = "black", size = 4) +
-  scale_fill_manual(values = colors_GSI)
-
-library(lubridate)
-DataSet$JulianDay <- yday(DataSet$Collection_Date)
-
-ggplot(DataSet, aes(x = JulianDay, 
-                    y = fineness,
-                    color = Group_Assignment)) +   # <-- move it here
-  geom_point(size = 3) +
-  labs(x = "Collection Date",
-       y = "Fineness",
-       color = "Group Assignment") + # adds legend title
-  geom_smooth(method = "lm", se = FALSE) +
-  scale_color_manual(values = colors_GSI) +
-  theme_bw() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
+str(DataSet) #collection_rivermile_m is numeric
 
 ```
+
+
+### Making Models for fineness~RunTimingGroup, includes collection location
+```{r}
+# Models for reference
+rm(list = ls())
+DataSet <- read.csv("lowerriver_bodycomp_fineness.csv")
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
+DataSet$Year<- as.factor(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet) #collection_rivermile_m is numeric
+
+
+model1 <- lm(fineness~1, data=DataSet)
+model2 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup, data = DataSet)
+model3 <- lm(fineness~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(fineness~Collection_RiverMile_m + Year, data = DataSet)
+model5 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+model6 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
+model7 <- lm(fineness~Collection_RiverMile_m + Sex + Year, data = DataSet)
+model8 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+model9 <- lm(fineness~Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+
+
+```
+
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+library(AICcmodavg)
+#table of AIC results
+mynames1 <- paste("model", as.character(1:10), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("fineness~Collection_RiverMile_m + RunTimingGroup + Year",
+                      "fineness~Collection_RiverMile_m + Sex + Year + Sex:Year",
+                      "fineness~Collection_RiverMile_m + RunTimingGroup + Sex + Year",
+                      "fineness~Collection_RiverMile_m + Year",
+                      "fineness~Collection_RiverMile_m + Sex + Year",
+                      "fineness~Collection_RiverMile_m + RunTimingGroup",
+                      "fineness~Collection_RiverMile_m + RunTimingGroup + Sex",
+                      "fineness~Collection_RiverMile_m + Sex",
+                      "fineness~Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
+                      "fineness~1")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "fineness_runtiminggroup/AICresults_fineness~RunTimingGroup.csv", row.names = FALSE)
+
+
+
+```
+
+
+### Model Averaging
+```{r}
+library(MuMIn)
+
+# List your models (already fit with na.action=na.fail)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+# Model averaging based on AICc, conditional averaging (default is full=TRUE)
+model_avg <- model.avg(models, rank = "AICc", full = TRUE)
+
+# Summary with coefficients, SE, CIs
+summary(model_avg)
+
+# Full averaged coefficients
+avg_coefs_full <- coef(model_avg, full = TRUE)
+
+# Full averaged confidence intervals
+avg_confint_full <- confint(model_avg, full = TRUE)
+
+# Full averaged variance-covariance matrix and SE
+avg_vcov_full <- vcov(model_avg, full = TRUE)
+avg_se_full <- sqrt(diag(avg_vcov_full))
+
+# Create tidy data frame with full averages
+coefs_df_full <- as.data.frame(avg_coefs_full)
+colnames(coefs_df_full) <- "Avg_Coef"
+coefs_df_full$CI_Lower <- avg_confint_full[, 1]
+coefs_df_full$CI_Upper <- avg_confint_full[, 2]
+coefs_df_full$SE <- avg_se_full
+
+# Calculate parameter importance (parameter likelihoods)
+param_likelihoods <- sw(model_avg)
+format(sw(model_avg), digits = 6, nsmall = 4)
+
+
+# Manually specify parameter likelihoods from sw(model_avg)
+manual_likelihoods <- c(
+  "(Intercept)" = 1.0,
+  "Collection_RiverMile_m" = 1.0,
+  "RunTimingGroupLate" = 0.654250,
+  "RunTimingGroupMiddle" = 0.654250,
+  "SexM" = 0.515721,
+  "Year2020" = 1.0,
+  "Year2021" = 1.0,
+  "RunTimingGroupLate:SexM" = 4.13539e-19,
+  "RunTimingGroupMiddle:SexM" = 4.13539e-19,
+  "SexM:Year2020" = 0.250895,
+  "SexM:Year2021" = 0.250895
+)
+
+# Add ParamLikelihoods by matching rownames
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
+
+# View final table
+print(coefs_df_full)
+
+write.csv(coefs_df_full, file = "fineness_runtiminggroup/fineness~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
+```
+
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
+
+
+
+
+
+
+
+
+
+
+
+### Making Models for fineness~GSI, includes collection location
+```{r}
+# Models for reference
+rm(list = ls())
+DataSet <- read.csv("lowerriver_GSI_fineness.csv")
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+DataSet$Group_Assignment <- as.factor(DataSet$Group_Assignment)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet) #collection_rivermile_m is numeric
+
+
+levels(DataSet$Group_Assignment) #levels are not all consistent. Need to fix this
+
+
+#models for fineness
+model1 <- lm(fineness~1, data=DataSet)
+model2 <- lm(fineness~Collection_RiverMile_m + Group_Assignment, data = DataSet)
+model3 <- lm(fineness~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(fineness~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+
+
+```
+
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:4), sep = "")
+models <- list(model1, model2, model3, model4)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("fineness~Collection_RiverMile_m + Sex",
+                      "fineness~Collection_RiverMile_m + Group_Assignment + Sex",
+                      "fineness~Collection_RiverMile_m + Group_Assignment",
+                      "fineness~1")
+
+
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "fineness_GSI/AICresults_fineness~GSI.csv", row.names = FALSE)
+
+summary(model3)
+
+```
+
+
+### Model Averaging
+```{r}
+library(MuMIn)
+
+# List your models (already fit with na.action=na.fail)
+models <- list(model1, model2, model3, model4)
+
+# Model averaging based on AICc, conditional averaging (default is full=TRUE)
+model_avg <- model.avg(models, rank = "AICc", full = TRUE)
+
+# Summary with coefficients, SE, CIs
+summary(model_avg)
+
+# Full averaged coefficients
+avg_coefs_full <- coef(model_avg, full = TRUE)
+
+# Full averaged confidence intervals
+avg_confint_full <- confint(model_avg, full = TRUE)
+
+# Full averaged variance-covariance matrix and SE
+avg_vcov_full <- vcov(model_avg, full = TRUE)
+avg_se_full <- sqrt(diag(avg_vcov_full))
+
+# Create tidy data frame with full averages
+coefs_df_full <- as.data.frame(avg_coefs_full)
+colnames(coefs_df_full) <- "Avg_Coef"
+coefs_df_full$CI_Lower <- avg_confint_full[, 1]
+coefs_df_full$CI_Upper <- avg_confint_full[, 2]
+coefs_df_full$SE <- avg_se_full
+
+# Calculate parameter importance (parameter likelihoods)
+param_likelihoods <- sw(model_avg)
+as.data.frame(param_likelihoods)
+
+# Manually specify parameter likelihoods from sw(model_avg)
+manual_likelihoods <- c(
+  "(Intercept)" = 1.0,
+  "Collection_RiverMile_m" = 1.00000000,
+  "Group_AssignmentChitina" = 0.00838759,
+  "Group_AssignmentGulkana" = 0.00838759,
+  "Group_AssignmentGulkanaHatchery" = 0.00838759,
+  "Group_AssignmentKlutinaLake" = 0.00838759,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 0.00838759,
+  "Group_AssignmentSlana" = 0.00838759,
+  "Group_AssignmentTanadaCopperLakes" = 0.00838759,
+  "Group_AssignmentTazlina" = 0.00838759,
+  "SexM" = 0.99690290	
+)
+
+
+
+# Add ParamLikelihoods by matching rownames
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
+
+# View final table
+print(coefs_df_full)
+
+write.csv(coefs_df_full, file = "fineness_GSI/fineness_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
+
+```
+
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
+
+
+
+
+
+### Making Models for fineness~SP, includes gonad_wt_g
+```{r}
+# Models for reference
+rm(list = ls())
+DataSet <- read.csv("upperriver_bodycomp_fineness.csv")[-1]
+DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
+levels(DataSet$Collection_Location) # 7 unique locations
+DataSet$Year<- as.factor(DataSet$Year)
+levels(DataSet$Year)
+DataSet$Sex<- as.factor(DataSet$Sex)
+str(DataSet)
+
+
+#check gonad weight for NAs
+DataSet$Gonad_Wt_g <- DataSet$Gonad_Wt * 1000
+any(is.na(DataSet$Gonad_Wt_g))
+DataSet[is.na(DataSet$Gonad_Wt_g), ] #need to eliminate these rows or model selection will not work
+DataSet <- DataSet[-c(125, 136, 137, 148, 152, 154, 167, 176, 187, 188, 190, 198, 201, 228, 229, 231),]
+any(is.na(DataSet$Gonad_Wt_g)) #FALSE
+
+#DataSet$Work <- factor(DataSet$Work) #This is an important fix, otherwise its numeric but in fact its discrete factors
+
+model1 <- lm(fineness~1, data=DataSet)
+model2 <- lm(fineness~ Gonad_Wt_g + Collection_Location, data = DataSet)
+model3 <- lm(fineness~ Gonad_Wt_g + Sex, data = DataSet)
+model4 <- lm(fineness~ Gonad_Wt_g + Year, data = DataSet)
+model5 <- lm(fineness~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
+model6 <- lm(fineness~ Gonad_Wt_g + Collection_Location + Year, data = DataSet)
+model7 <- lm(fineness~ Gonad_Wt_g + Sex + Year, data = DataSet)
+model8 <- lm(fineness~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
+model9 <- lm(fineness~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(fineness~ Gonad_Wt_g + Collection_Location + Sex + Year, data = DataSet)
+```
+
+### AICc Model Selection
+```{r}
+AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:10), sep = "")
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+# Generate AIC table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+# Convert AIC table to a data frame for easier manipulation
+aic_df <- as.data.frame(myaicc1)
+aic_df$ModelName <- c("fineness~ Gonad_Wt_g + Collection_Location + Year",
+                      "fineness~ Gonad_Wt_g + Collection_Location + Sex + Year",
+                      "fineness~ Gonad_Wt_g + Year",
+                      "fineness~Gonad_Wt_g + Sex + Year + Sex:Year",
+                      "fineness~ Gonad_Wt_g + Sex + Year",
+                      "fineness~ Gonad_Wt_g + Collection_Location",
+                      "fineness~ Gonad_Wt_g + Collection_Location + Sex",
+                      "fineness~ 1",
+                      "fineness~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex",
+                      "fineness~ Gonad_Wt_g + Sex")
+colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
+
+# Write the data frame to a CSV file
+write.csv(aic_df, file = "fineness_spawningpopulation/AICresults_fineness~SpawningPopulation.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+# ---- Load necessary packages ----
+library(MuMIn)
+
+# List your models (already fit with na.action=na.fail)
+models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+
+# Model averaging based on AICc, conditional averaging (default is full=TRUE)
+model_avg <- model.avg(models, rank = "AICc", full = TRUE)
+
+# Summary with coefficients, SE, CIs
+summary(model_avg)
+
+# Full averaged coefficients
+avg_coefs_full <- coef(model_avg, full = TRUE)
+
+# Full averaged confidence intervals
+avg_confint_full <- confint(model_avg, full = TRUE)
+
+# Full averaged variance-covariance matrix and SE
+avg_vcov_full <- vcov(model_avg, full = TRUE)
+avg_se_full <- sqrt(diag(avg_vcov_full))
+
+# Create tidy data frame with full averages
+coefs_df_full <- as.data.frame(avg_coefs_full)
+colnames(coefs_df_full) <- "Avg_Coef"
+coefs_df_full$CI_Lower <- avg_confint_full[, 1]
+coefs_df_full$CI_Upper <- avg_confint_full[, 2]
+coefs_df_full$SE <- avg_se_full
+
+# Calculate parameter importance (parameter likelihoods)
+param_likelihoods <- sw(model_avg)
+as.data.frame(param_likelihoods)
+
+# Manually specify parameter likelihoods from sw(model_avg)
+manual_likelihoods <- c(
+  "(Intercept)" = 1.0,
+  "Gonad_Wt_g" = 1.000000,
+  "Collection_LocationGulkana Hatchery" = 9.99996e-01, 
+  "Collection_LocationLong Lake" = 9.99996e-01,
+  "Collection_LocationMahlo" = 9.99996e-01,
+  "Collection_LocationMentasta" = 9.99996e-01,
+  "Collection_LocationSt Anne" = 9.99996e-01,
+  "Collection_LocationTanada" = 9.99996e-01,
+  "Year2020" = 1.00000,
+  "Year2021" = 1.00000, 
+  "SexM" = 4.60785e-01,
+  "SexM:Year2020" = 1.18928e-06,
+  "SexM:Year2021" = 1.18928e-06,
+  "Collection_LocationGulkana Hatchery:SexM" = 3.10862e-28,
+  "Collection_LocationLong Lake:SexM" = 3.10862e-28,
+  "Collection_LocationMahlo:SexM" = 3.10862e-28,
+  "Collection_LocationMentasta:SexM" = 3.10862e-28,
+  "Collection_LocationSt Anne:SexM" = 3.10862e-28,
+  "Collection_LocationTanada:SexM" = 3.10862e-28
+)
+
+
+# Add ParamLikelihoods by matching rownames
+coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
+
+# View final table
+print(coefs_df_full)
+
+write.csv(coefs_df_full, file = "fineness_spawningpopulation/fineness_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
+
+```
+
+### Calculating actual parameter estimates according to intercept
+```{r}
+coefs_df_full$Actual_Param <- with(coefs_df_full, 
+                                   Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
+coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -339,38 +694,6 @@ str(DataSet$fineness)
 
 # Create new data file that includes fineness data in the upper river fish
 write.csv(DataSet, "upperriver_bodycomp_fineness.csv")
-
-
-# =============== Plotting Fineness Ratio for Upper River =======================
-DataSet$Collection_Location <- factor(DataSet$Collection_Location)
-levels(DataSet$Collection_Location)
-
-
-DataSet$Collection_Location <- factor(DataSet$Collection_Location,
-                             levels = c("Long Lake",
-                                        "St Anne",
-                                        "Mahlo",
-                                        "Mentasta",
-                                        "Tanada",
-                                        "Gulkana Hatchery",
-                                        "Fish Creek Gulkana"))
-
-colors_SP <- c(
-  "Long Lake" = "#FFE5CCFF", #black when not included
-  "Fish Creek Gulkana" = "#A50021FF",   
-  "Gulkana Hatchery" = "#D82632FF", 
-  "St Anne" = "#FFAD65FF",   # reddish
-  "Mahlo" = "#FF8E32FF",
-  "Mentasta" = "#CC5800FF", 
-  "Tanada" = "#993F00FF")
-
-library(ggplot2)
-ggplot(DataSet, aes(x = Collection_Location, y = fineness, fill = Collection_Location)) +
-  geom_boxplot() + 
-  stat_summary(fun = mean, geom = "text", aes(label = round(..y.., 2)), 
-               color = "black", size = 4) +
-  scale_fill_manual(values = colors_SP)
-#Shapes that are short and wide have a low fineness ratio, those that are long and narrow have high fineness ratios.
 
 
 
