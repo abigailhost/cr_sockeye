@@ -705,6 +705,259 @@ print(myaicc1)
 ```
 
 
+### GSI Early Migratory Work vs Fineness Figure
+```{r}
+library(dplyr)
+library(ggplot2)
+
+rm(list = ls())
+
+#Download Work Data set
+WorkData <- read.csv("lowerriver_GSI_PCscores.csv")[-1]
+str(WorkData)
+WorkData$Group_Assignment <- as.factor(WorkData$Group_Assignment)
+levels(WorkData$Group_Assignment) #levels are not all consistent. Need to fix this
+
+# Strip whitespace
+WorkData$Group_Assignment <- trimws(WorkData$Group_Assignment)
+
+# Standardize levels
+WorkData$Group_Assignment <- factor(WorkData$Group_Assignment)
+levels(WorkData$Group_Assignment)
+
+# Clean up levels manually
+levels(WorkData$Group_Assignment)[levels(WorkData$Group_Assignment) == "Gulkana "] <- "Gulkana"
+levels(WorkData$Group_Assignment)[levels(WorkData$Group_Assignment) == "Gulkanahatchery"] <- "GulkanaHatchery"
+levels(WorkData$Group_Assignment)[levels(WorkData$Group_Assignment) == "KlutinaTonsinaOutlets"] <- "KlutinaTonsinaOutlet"
+levels(WorkData$Group_Assignment)[levels(WorkData$Group_Assignment) == "insufficient genotypes"] <- "insufficient_genotypes"
+
+# Then drop the insufficient genotypes
+WorkData <- subset(WorkData, Group_Assignment != "insufficient_genotypes")
+WorkData <- subset(WorkData, Group_Assignment != "LowerGroups")
+WorkData$Group_Assignment <- droplevels(WorkData$Group_Assignment)
+
+
+
+#download coefficient datasets for body size, energy density, total energy
+fineness <- read.csv("fineness_GSI/fineness_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = 1)
+
+
+
+#================ fineness estimate calculations according to intercept =============
+# Step 1: Extract intercept
+str(fineness)
+intercept_fineness <- fineness["(Intercept)", "Avg_Coef"]
+
+# Step 2: Extract Group_Assignment effects
+GSI_fineness <- fineness[grep("^Group_Assignment", rownames(fineness)), ]
+GSI_fineness <- GSI_fineness[!grepl(":", rownames(GSI_fineness)), ]  # remove interaction terms
+
+# Extract location names (remove "Collection_Location" from row names)
+GSI_fineness$GSI <- gsub("Group_Assignment", "", rownames(GSI_fineness))
+
+# Step 3: Add intercept to each to get estimated fineness
+GSI_fineness$Estimated_Fineness <- intercept_fineness + GSI_fineness$Avg_Coef
+
+# Step 4: Add back the reference location (intercept only)
+ref_location <- levels(WorkData$Group_Assignment)[1]  # Assumes first level is the reference
+ref_row <- data.frame(
+  Avg_Coef = intercept_fineness,
+  CI_Lower = fineness["(Intercept)", "CI_Lower"],
+  CI_Upper = fineness["(Intercept)", "CI_Upper"],
+  SE = fineness["(Intercept)", "SE"],
+  ParamLikelihood = fineness["(Intercept)", "ParamLikelihood"],
+  GSI = ref_location,
+  Estimated_Fineness = intercept_fineness
+)
+
+# Step 5: Combine
+GSI_fineness <- rbind(ref_row, GSI_fineness)
+rownames(GSI_fineness) <- NULL
+GSI_fineness <- GSI_fineness[, c("GSI", setdiff(names(GSI_fineness), "GSI"))]
+
+# Step 6: Compute average Work per location
+library(dplyr)
+
+# Check unique values
+unique(WorkData$Group_Assignment)
+avg_work_fineness <- WorkData %>%
+  dplyr::group_by(Group_Assignment) %>%
+  dplyr::summarise(Avg_Work = mean(Work_km2, na.rm = TRUE), .groups = "drop")
+
+# Step 7: Merge with estimates
+GSI_fineness <- merge(GSI_fineness, avg_work_fineness, by.x = "GSI", by.y = "Group_Assignment") 
+str(GSI_fineness) #final fecundity dataframe for work regressions
+
+
+
+
+#================== Now, make figures of regressions for early migratory work ===================
+str(GSI_fineness)
+
+GSI_fineness$GSI<-as.factor(GSI_fineness$GSI)
+
+levels(GSI_fineness$GSI)[levels(GSI_fineness$GSI) == "TanadaCopperLakes"] <- "Tanada Copper Lakes"
+levels(GSI_fineness$GSI)[levels(GSI_fineness$GSI) == "GulkanaHatchery"] <- "Gulkana Hatchery"
+levels(GSI_fineness$GSI)[levels(GSI_fineness$GSI) == "KlutinaTonsinaOutlet"] <- "Klutina Tonsina Outlet"
+levels(GSI_fineness$GSI)[levels(GSI_fineness$GSI) == "KlutinaLake"] <- "Klutina Lake"
+
+GSI_fineness$GSI <- factor(GSI_fineness$GSI,
+                 levels = c("Bremner",
+                            "Chitina",
+                            "Klutina Tonsina Outlet",
+                            "Klutina Lake",
+                            "Tazlina",
+                            "Slana",
+                            "Gulkana",
+                            "Tanada Copper Lakes",
+                            "Gulkana Hatchery"))
+
+# Data excluding Gulkana Hathcery for regression fits
+GSI_noGulkanaHatchery <- GSI_fineness %>% filter(GSI != "Gulkana Hatchery")
+
+#fecundity color is = "#0072B2"
+
+colors_GSI <- c(
+  "Bremner" = "#E0B300",   
+  "Chitina" = "#FFE5CCFF", #"black" if need to remove 
+  "Gulkana" = "#A50021FF",   
+  "Gulkana Hatchery" = "black", #D32826FF when included 
+  "Tazlina" = "#FF5C5C",   # reddish
+  "Slana" = "#CC5800FF",
+  "Klutina Lake" = "#FF8E32FF", 
+  "Klutina Tonsina Outlet" = "#E56B00", 
+  "Tanada Copper Lakes" = "#993F00FF")
+
+GSI_fineness$Facet <- "Fineness"
+
+work.fineness <- ggplot() +
+  # Regression lines manually colored by facet
+  geom_smooth(
+    data = GSI_noGulkanaHatchery,
+    aes(x = Avg_Work, y = Estimated_Fineness),
+    method = "lm",
+    se = TRUE,
+    color = "black",
+    fill = "lightgrey",
+    alpha = 0.4,
+    linewidth = 1.5,
+    inherit.aes = FALSE,
+    show.legend = FALSE
+  ) +
+  # Points for all stocks except Chitina
+  geom_point(
+    data = GSI_fineness %>% filter(GSI != "Gulkana Hatchery"),
+    aes(x = Avg_Work, y = Estimated_Fineness, color = GSI),
+    shape = 16,
+    size = 12
+  ) +
+  # Chitina as X
+  geom_point(
+    data = GSI_fineness %>% filter(GSI == "Gulkana Hatchery"),
+    aes(x = Avg_Work, y = Estimated_Fineness, color = GSI),
+    shape = 4,
+    size = 12,
+    stroke = 1.5
+  ) +
+  scale_color_manual(values = colors_GSI) +
+  # Labels and theme
+  labs(
+    x = "Migratory Work (km²)",
+    y = "Average Weighted Parameter Estimate",
+    color = "Genetic Stock"
+  ) +
+  facet_wrap(~Facet, strip.position = "top") +
+  theme_minimal() +
+  theme(
+    panel.spacing.x = unit(2, "lines"),
+    panel.spacing = unit(1.5, "lines"),
+    # Facet header styling
+    strip.text = element_text(size = 30, face = "bold", color = "white"),
+    strip.background = element_rect(fill = "black", color = "black"),
+    # Axis title margins
+    axis.title.x = element_text(size = 30, face = "bold", margin = margin(t = 15)),
+    axis.title.y = element_text(size = 30, face = "bold", margin = margin(r = 15)),
+    #legend edits
+    legend.title = element_text(size =24, face = "bold"),
+    legend.text = element_text(size =24),
+    # Axis text
+    axis.text = element_text(size = 24, color = "black"),
+    # Panel border
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
+    # Grid tweaks
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90")
+  )
+
+work.fineness
+
+
+
+
+#================ Add regression stats to plots ===================
+library(dplyr)
+library(broom)
+
+# Fit linear model excluding Chitina
+fineness_model <- lm(Estimated_Fineness ~ Avg_Work, data = GSI_noGulkanaHatchery)
+
+
+# 2. Extract R² 
+model_stats <- broom::glance(fineness_model) %>%
+  mutate(
+    label = paste0("R² = ", round(r.squared, 3)),
+    x = min(GSI_noGulkanaHatchery$Avg_Work),   # x position for label
+    y = max(GSI_noGulkanaHatchery$Estimated_Fineness) # y position for label
+  )
+
+# 3. Add the label to your plot
+work.fineness1 <- work.fineness +
+  geom_text(
+    data = model_stats,
+    aes(x = x, y = y, label = label),
+    hjust = 0, vjust = -2,    # top-left corner
+    size = 10
+  )
+
+work.fineness1
+
+
+
+ggsave(
+  filename = "AICFigures/Work_GSI_Fineness_RegressionPlot.jpeg",    # output file name
+  plot = work.fineness1,              # the ggplot object
+  width = 18,                     # width in inches
+  height = 12,                    # height in inches
+  dpi = 300                        # resolution (higher = better quality)
+)
+
+```
+
+
+### Compare null condition models to fineness GSI work models 
+```{r}
+library(AICcmodavg)
+
+# ========= fecundity ========
+str(GSI_fineness)
+finmodel1 <- lm(Estimated_Fineness ~ 1, data = GSI_noGulkanaHatchery)
+finmodel2 <- lm(Estimated_Fineness ~ Avg_Work, data = GSI_noGulkanaHatchery)
+summary(finmodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(finmodel1, finmodel2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+
+
+```
+
+
+
+
 ### Spawnning Population Post Migratory Work vs condition figures 
 ```{r}
 library(dplyr)
@@ -1353,3 +1606,233 @@ print(myaicc1)
 
 ```
 
+
+
+
+
+
+### Spawning Population Post-Migratory Work vs fineness Figure
+```{r}
+library(dplyr)
+library(ggplot2)
+
+rm(list = ls())
+
+WorkData <- read.csv("upperriver_bodycomp_PCscores.csv")[-1]
+str(WorkData)
+WorkData$Collection_Location <- as.factor(WorkData$Collection_Location)
+levels(WorkData$Collection_Location)
+#Make work metric (migratory difficulty metric where work = F x distance)
+WorkData$Elevation_m <- as.numeric(WorkData$Elevation_m)
+WorkData$Work <- round((WorkData$Collection_RiverMile_m * WorkData$Elevation_m) / (1000 * 1000), digits = 1) #in km^2
+str(WorkData) 
+
+
+#download coefficient datasets for egg size
+fineness <- read.csv("fineness_spawningpopulation/fineness_spawningpopulation_ModelAvg_Coefs_WithLikelihoods.csv", row.names = 1)
+
+
+
+#================ fecundity estimate calculations according to intercept =============
+# Step 1: Extract intercept
+str(fineness)
+intercept_fineness <- fineness["(Intercept)", "Avg_Coef"]
+
+# Step 2: Extract Group_Assignment effects
+SP_fineness <- fineness[grep("^Collection_Location", rownames(fineness)), ]
+SP_fineness <- SP_fineness[!grepl(":", rownames(SP_fineness)), ]  # remove interaction terms
+
+# Extract location names (remove "Collection_Location" from row names)
+SP_fineness$Location <- gsub("Collection_Location", "", rownames(SP_fineness))
+
+# Step 3: Add intercept to each to get estimated fecundity
+SP_fineness$Estimated_Fineness <- intercept_fineness + SP_fineness$Avg_Coef
+
+# Step 4: Add back the reference location (intercept only)
+ref_location <- levels(WorkData$Collection_Location)[1]  # Assumes first level is the reference
+ref_row <- data.frame(
+  Avg_Coef = intercept_fineness,
+  CI_Lower = fineness["(Intercept)", "CI_Lower"],
+  CI_Upper = fineness["(Intercept)", "CI_Upper"],
+  SE = fineness["(Intercept)", "SE"],
+  ParamLikelihood = fineness["(Intercept)", "ParamLikelihood"],
+  Location = ref_location,
+  Estimated_Fineness = intercept_fineness
+)
+
+# Step 5: Combine
+SP_fineness <- rbind(ref_row, SP_fineness)
+rownames(SP_fineness) <- NULL
+SP_fineness <- SP_fineness[, c("Location", setdiff(names(SP_fineness), "Location"))]
+
+# Step 6: Compute average Work per location
+library(dplyr)
+
+# Check unique values
+unique(WorkData$Collection_Location)
+avg_work_fineness <- WorkData %>%
+  dplyr::group_by(Collection_Location) %>%
+  dplyr::summarise(Avg_Work = mean(Work, na.rm = TRUE), .groups = "drop")
+
+# Step 7: Merge with estimates
+SP_fineness <- merge(SP_fineness, avg_work_fineness, by.x = "Location", by.y = "Collection_Location")
+str(SP_fineness) #final fecundity dataframe for work regressions
+
+
+
+
+#================== Now, make figures of regressions for early migratory work ===================
+str(SP_fineness)
+SP_fineness$Location <- factor(SP_fineness$Location,
+                 levels = c("Long Lake",
+                            "St Anne",
+                            "Mahlo",
+                            "Mentasta",
+                            "Tanada",
+                            "Gulkana Hatchery",
+                            "Fish Creek Gulkana"))
+
+# Data excluding Gulkana Hathcery for regression fits
+SP_noLLnoGH <- SP_fineness %>%
+  filter(!Location %in% c("Gulkana Hatchery", "Long Lake"))
+
+#fecundity color is = "#0072B2"
+
+colors_SP <- c(
+  "Long Lake" = "black", #FFE5CCFF" when included
+  "Fish Creek Gulkana" = "#A50021FF",   
+  "Gulkana Hatchery" = "#D82632FF", 
+  "St Anne" = "#FFAD65FF",   # reddish
+  "Mahlo" = "#FF8E32FF",
+  "Mentasta" = "#CC5800FF", 
+  "Tanada" = "#993F00FF")
+
+SP_fineness$Facet <- "Fineness"
+
+finenessmodel <- lm(SP_noLLnoGH$Estimated_Fineness ~ SP_noLLnoGH$Avg_Work)
+summary(finenessmodel)
+
+work.fineness <- ggplot() +
+  # Regression lines manually colored by facet
+  geom_smooth(
+    data = SP_noLLnoGH,
+    aes(x = Avg_Work, y = Estimated_Fineness),
+    method = "lm",
+    se = TRUE,
+    color = "black",
+    fill = "lightgrey",
+    alpha = 0.4,
+    linewidth = 1.5,
+    inherit.aes = FALSE,
+    show.legend = FALSE
+  ) +
+  # Points for all stocks except Chitina and GH
+   geom_point(
+    data = SP_fineness %>% filter(!Location %in% c("Long Lake", "Gulkana Hatchery")),
+    aes(x = Avg_Work, y = Estimated_Fineness, color = Location),
+    shape = 16,
+    size = 12
+) +
+  geom_point(
+    data = SP_fineness %>% filter(Location %in% c("Long Lake", "Gulkana Hatchery")),
+    aes(x = Avg_Work, y = Estimated_Fineness, color = Location),
+    shape = 4,
+    size = 12,
+    stroke = 1.5
+) +
+  scale_color_manual(values = colors_SP) +
+  # Labels and theme
+  labs(
+    x = "Migratory Work (km²)",
+    y = "Average Weighted Parameter Estimate",
+    color = "Location"
+  ) +
+  facet_wrap(~Facet, strip.position = "top") +
+  theme_minimal() +
+  theme(
+    panel.spacing.x = unit(2, "lines"),
+    panel.spacing = unit(1.5, "lines"),
+    # Facet header styling
+    strip.text = element_text(size = 30, face = "bold", color = "white"),
+    strip.background = element_rect(fill = "black", color = "black"),
+    # Axis title margins
+    axis.title.x = element_text(size = 30, face = "bold", margin = margin(t = 15)),
+    axis.title.y = element_text(size = 30, face = "bold", margin = margin(r = 15)),
+    #legend edits
+    legend.title = element_text(size =24, face = "bold"),
+    legend.text = element_text(size =24),
+    # Axis text
+    axis.text = element_text(size = 24, color = "black"),
+    # Panel border
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
+    # Grid tweaks
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90")
+  )
+
+work.fineness
+
+
+
+
+#================ Add regression stats to plots ===================
+library(dplyr)
+library(broom)
+
+# Fit linear model excluding Chitina
+fineness_model <- lm(Estimated_Fineness ~ Avg_Work, data = SP_noLLnoGH)
+
+
+# 2. Extract R² 
+model_stats <- broom::glance(fineness_model) %>%
+  mutate(
+    label = paste0("R² = ", round(r.squared, 3)),
+    x = min(SP_noLLnoGH$Avg_Work),   # x position for label
+    y = max(SP_noLLnoGH$Estimated_Fineness) # y position for label
+  )
+
+# 3. Add the label to your plot
+work.fineness1 <- work.fineness +
+  geom_text(
+    data = model_stats,
+    aes(x = x, y = y, label = label),
+    hjust = 0.75, vjust = -5,    # top-left corner
+    size = 10
+  )
+
+work.fineness1
+
+
+
+ggsave(
+  filename = "AICFigures/Work_SP_Fineness_RegressionPlot.jpeg",    # output file name
+  plot = work.fineness1,              # the ggplot object
+  width = 18,                     # width in inches
+  height = 12,                    # height in inches
+  dpi = 300                        # resolution (higher = better quality)
+)
+
+
+```
+
+
+### Compare null condition models to fineness SP work models 
+```{r}
+library(AICcmodavg)
+
+# ========= body size ========
+str(SP_noLLnoGH)
+model1 <- lm(Estimated_Fineness ~ 1, data = SP_noLLnoGH)
+model2 <- lm(Estimated_Fineness ~ Avg_Work, data = SP_noLLnoGH)
+summary(eggmodel2)
+
+#table of AIC results
+mynames1 <- paste("model", as.character(1:2), sep = "")
+models <- list(model1, model2)
+
+# Generate AICc table
+myaicc1 <- aictab(models, modnames = mynames1)
+print(myaicc1)
+
+
+```

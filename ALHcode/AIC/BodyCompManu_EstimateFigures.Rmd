@@ -1069,3 +1069,333 @@ combined_plot
 
 ```
 
+
+
+### Fineness ~ RTG and GSI Plot
+```{r}
+library(dplyr)
+library(ggplot2)
+library(stringr)
+
+rm(list = ls())
+#fecundity and egg size, side by side 
+fineness_rtg <- read.csv("fineness_runtiminggroup/fineness~runtiminggroup_models_CoefEstimates_withLikelihoods.csv")
+fineness_gsi <- read.csv("fineness_GSI/fineness_GSI_ModelAvg_Coefs_withLikelihoods.csv")
+
+#Look at structure
+str(fineness_rtg)
+str(fineness_gsi)
+
+levels(factor(fineness_rtg$X))
+fineness_rtg$X <- factor(fineness_rtg$X,
+                 levels = rev(c("(Intercept)",
+                                "Collection_RiverMile_m",
+                                "RunTimingGroupMiddle",
+                                "RunTimingGroupLate", 
+                                "SexM",
+                                "juliandate",
+                                "RunTimingGroupMiddle:SexM",
+                                "RunTimingGroupLate:SexM")))
+     
+
+levels(factor(fineness_gsi$X))
+fineness_gsi$X <- factor(fineness_gsi$X,
+                 levels = rev(c("(Intercept)", 
+                                "Collection_RiverMile_m",
+                                "juliandate",
+                                "Group_AssignmentChitina",
+                                "Group_AssignmentKlutinaLake",
+                                "Group_AssignmentKlutinaTonsinaOutlet",
+                                "Group_AssignmentTazlina",
+                                "Group_AssignmentSlana",
+                                "Group_AssignmentTanadaCopperLakes",
+                                "Group_AssignmentGulkana",
+                                "Group_AssignmentGulkanaHatchery",
+                                "SexM")))
+
+
+
+#now data has been restructured for figures, need to remove collection river mile from all structure, does not need to be graphed
+fineness_rtg <- fineness_rtg %>%
+  filter(X != "Collection_RiverMile_m")
+fineness_rtg <- fineness_rtg %>%
+  filter(X != "juliandate")
+fineness_gsi <- fineness_gsi %>%
+  filter(X != "Collection_RiverMile_m")
+fineness_gsi <- fineness_gsi %>%
+  filter(X != "juliandate")
+
+#filter out interactions
+fineness_rtg <- fineness_rtg %>%
+  filter(!grepl(":", X))
+
+
+colors <- c(
+  "#E69F00", # orange
+  "#56B4E9", # sky blue
+  "#009E73", # bluish green
+  "#F0E442", # yellow
+  "#0072B2", # blue
+  "#D55E00", # vermillion
+  "#CC79A7", # reddish purple
+  "#999999"  # gray
+)
+#going to use  "#D55E00", # blue for fineness
+
+
+
+
+######============Fineness RTG plot===================
+
+#Re Labeling
+levels(fineness_rtg$X)[levels(fineness_rtg$X) == "RunTimingGroupLate"] <- "Late Run Timing Group"
+levels(fineness_rtg$X)[levels(fineness_rtg$X) == "RunTimingGroupMiddle"] <- "Middle Run Timing Group"
+levels(fineness_rtg$X)[levels(fineness_rtg$X) == "SexM"] <- "Male"
+
+# Add a dummy column for faceting
+fineness_rtg$Facet <- "Fineness"
+
+fineness_rtg <- fineness_rtg %>%
+  mutate(sig = ifelse(CI_Lower > 0 | CI_Upper < 0, TRUE, FALSE))
+
+plot_rtg <- ggplot(fineness_rtg, aes(x = Avg_Coef, y = X)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey40", size = 2) +
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper),
+                 height = 0.25, size = 2, color = "#D55E00") +
+  geom_point(size = 9, shape = 21, fill = "#D55E00", color = "black") +
+  geom_point(
+    data = subset(fineness_rtg, sig == TRUE & X != "(Intercept)"),
+    aes(x = Avg_Coef, y = X),
+    shape = 21, fill = NA, color = "red", size = 12, stroke = 1
+  ) + 
+  scale_y_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  labs(x = "Coefficient Estimate", y = "Main Effect Parameter") +
+  facet_wrap(~Facet, strip.position = "top") +   # The magic line
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 30, face = "bold", color = "white"),
+    strip.background = element_rect(fill = "black", color = "black"),
+    axis.title.x = element_text(margin = margin(t = 15)),
+    axis.title.y = element_text(margin = margin(r = 15)),
+    axis.text = element_text(size = 24, color = "black"),
+    axis.title = element_text(size = 30, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.spacing = unit(1.5, "lines"),
+    legend.position = "none"
+  )
+plot_rtg
+
+
+
+
+######============Fineness GSI plot===================
+
+#Re Labeling
+levels(fineness_gsi$X)
+levels(fineness_gsi$X)[levels(fineness_gsi$X) == "SexM"] <- "Male"
+levels(fineness_gsi$X)[levels(fineness_gsi$X) == "Group_AssignmentTazlina"] <- "Tazlina"
+levels(fineness_gsi$X)[levels(fineness_gsi$X) == "Group_AssignmentTanadaCopperLakes"] <- "Tanada Copper Lakes"
+levels(fineness_gsi$X)[levels(fineness_gsi$X) == "Group_AssignmentSlana"] <- "Slana"
+levels(fineness_gsi$X)[levels(fineness_gsi$X) == "Group_AssignmentKlutinaTonsinaOutlet"] <- "Klutina Tonsina Outlet"
+levels(fineness_gsi$X)[levels(fineness_gsi$X) == "Group_AssignmentKlutinaLake"] <- "Klutina Lake"
+levels(fineness_gsi$X)[levels(fineness_gsi$X) == "Group_AssignmentGulkanaHatchery"] <- "Gulkana Hatchery"
+levels(fineness_gsi$X)[levels(fineness_gsi$X) == "Group_AssignmentGulkana"] <- "Gulkana"
+levels(fineness_gsi$X)[levels(fineness_gsi$X) == "Group_AssignmentChitina"] <- "Chitina"
+
+
+# Add a dummy column for faceting
+fineness_gsi$Facet <- "Fineness"
+
+fineness_gsi <- fineness_gsi %>%
+  mutate(sig = ifelse(CI_Lower > 0 | CI_Upper < 0, TRUE, FALSE))
+
+plot_gsi <- ggplot(
+  fineness_gsi %>% 
+    filter(!is.na(Avg_Coef), !is.na(CI_Lower), !is.na(CI_Upper), !is.na(X)),
+  aes(x = Avg_Coef, y = X)
+) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey40", size = 2) +
+  
+  geom_errorbarh(
+    aes(xmin = CI_Lower, xmax = CI_Upper),
+    height = 0.25, size = 2, color = "#D55E00"
+  ) +
+  geom_point(size = 9, shape = 21, fill = "#D55E00", color = "black") +
+  geom_point(
+    data = fineness_gsi %>%
+      filter(sig == TRUE, X != "(Intercept)",
+             !is.na(Avg_Coef), !is.na(X)),
+    aes(x = Avg_Coef, y = X),
+    shape = 21, fill = NA, color = "red", size = 12, stroke = 1
+  ) + 
+   scale_y_discrete(labels = function(x) str_wrap(x, width = 15)) + 
+  labs(x = "Coefficient Estimate", y = "Main Effect Parameter") +
+  facet_wrap(~Facet, strip.position = "top") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 30, face = "bold", color = "white"),
+    strip.background = element_rect(fill = "black", color = "black"),
+    axis.title.x = element_text(margin = margin(t = 15)),
+    axis.title.y = element_text(margin = margin(r = 15)),
+    axis.text = element_text(size = 24, color = "black"),
+    axis.title = element_text(size = 30, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.spacing = unit(1.5, "lines"),
+    legend.position = "none"
+  )
+plot_gsi
+
+
+
+#======================= Plot RTG and GSI fecundity estimate plots side by side =============
+library(patchwork)
+plot_rtg_tagged <- plot_rtg +
+  labs(tag = "a", x = "Coefficient Estimate", y = "Main Effect Parameter") +
+  theme(plot.tag = element_text(size = 30, face = "bold"),
+        plot.tag.position = c(0.97, 0.12),
+        plot.margin = margin(5, 20, 5, 5))
+
+plot_gsi_tagged <- plot_gsi +
+  labs(tag = "b", x = "Coefficient Estimate", y = "Main Effect Parameter") +
+  theme(plot.tag = element_text(size = 30, face = "bold"),
+        plot.tag.position = c(0.97, 0.12),
+        plot.margin = margin(5, 5, 5, 5))
+
+combined_plot <- (plot_rtg_tagged | plot_gsi_tagged) +
+  plot_layout(axis_titles = "collect")
+
+combined_plot
+
+
+
+# Display
+combined_plot
+
+
+
+ggsave(
+  filename = "AICFigures/RTG_GSI_Fineness_EstimatesPlot.jpeg",    # output file name
+  plot = combined_plot,              # the ggplot object
+  width = 18,                     # width in inches
+  height = 12,                    # height in inches
+  dpi = 300                        # resolution (higher = better quality)
+)
+
+
+
+
+```
+
+
+
+### Fineness ~ SP plot
+```{r}
+library(dplyr)
+library(ggplot2)
+library(stringr)
+
+rm(list = ls())
+fineness_sp<- read.csv("fineness_spawningpopulation/fineness_spawningpopulation_ModelAvg_Coefs_WithLikelihoods.csv")
+
+#Look at structure
+str(fineness_sp)
+
+
+levels(factor(fineness_sp$X))
+fineness_sp$X <- factor(fineness_sp$X,
+                 levels = rev(c("(Intercept)", 
+                                "Gonad_Wt_g",
+                                "Collection_LocationLong Lake",
+                                "Collection_LocationSt Anne",
+                                "Collection_LocationMahlo",
+                                "Collection_LocationMentasta",
+                                "Collection_LocationTanada",
+                                "Collection_LocationGulkana Hatchery",
+                                "SexM",
+                                "Year2020",
+                                "Year2021",
+                                "Collection_LocationGulkana Hatchery:SexM",       
+                                "Collection_LocationLong Lake:SexM",
+                                "Collection_LocationMahlo:SexM",
+                                "Collection_LocationMentasta:SexM",
+                                "Collection_LocationSt Anne:SexM",
+                                "Collection_LocationTanada:SexM",
+                                "SexM:Year2020",
+                                "SexM:Year2021"))) #now data has all be re-leveled
+
+#now data has been restructured for figures, need to remove collection river mile from all structure, does not need to be graphed
+
+fineness_sp <- fineness_sp %>%
+  filter(X != "Gonad_Wt_g")
+
+#filter out interactions
+fineness_sp <- fineness_sp %>%
+  filter(!grepl(":", X))
+
+
+
+#======================== Fineness Spawning Population Plot ==========================
+#Re Labeling
+levels(fineness_sp$X)
+levels(fineness_sp$X)[levels(fineness_sp$X) == "SexM"] <- "Male"
+levels(fineness_sp$X)[levels(fineness_sp$X) == "Year2020"] <- "2020"
+levels(fineness_sp$X)[levels(fineness_sp$X) == "Year2021"] <- "2021"
+levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationGulkana Hatchery"] <- "Gulkana Hatchery"
+levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationTanada"] <- "Tanada"
+levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationMentasta"] <- "Mentasta"
+levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationMahlo"] <- "Mahlo"
+levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationSt Anne"] <- "St Anne"
+levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationLong Lake"] <- "Long Lake"
+
+# Add a dummy column for faceting
+fineness_sp$Facet <- "Fineness"
+
+fineness_sp <- fineness_sp %>%
+  mutate(sig = ifelse(CI_Lower > 0 | CI_Upper < 0, TRUE, FALSE))
+
+plot_fineness <- ggplot(fineness_sp, aes(x = Avg_Coef, y = X)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey40", size = 2) +
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper),
+                 height = 0.25, size = 2, color = "#D55E00") +
+  geom_point(size = 9, shape = 21, fill = "#D55E00", color = "black") +
+  geom_point(
+    data = subset(fineness_sp, sig == TRUE & X != "(Intercept)"),
+    aes(x = Avg_Coef, y = X),
+    shape = 21, fill = NA, color = "red", size = 12, stroke = 1
+  ) + 
+  scale_y_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  labs(x = "Coefficient Estimate", y = "Main Effect Parameter") +
+  facet_wrap(~Facet, strip.position = "top") +   # The magic line
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 30, face = "bold", color = "white"),
+    strip.background = element_rect(fill = "black", color = "black"),
+    axis.title.x = element_text(margin = margin(t = 15)),
+    axis.title.y = element_text(margin = margin(r = 15)),
+    axis.text = element_text(size = 24, color = "black"),
+    axis.title = element_text(size = 30, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.spacing = unit(1.5, "lines"),
+    legend.position = "none"
+  )
+plot_fineness
+
+ggsave(
+  filename = "AICFigures/SP_fineness_EstimatesPlot.jpeg",    # output file name
+  plot = plot_fineness,              # the ggplot object
+  width = 15,                     # width in inches
+  height = 10,                    # height in inches
+  dpi = 300                        # resolution (higher = better quality)
+)
+
+
+
+
+
+```
