@@ -919,17 +919,7 @@ work.fineness1 <- work.fineness +
     size = 10
   )
 
-work.fineness1
-
-
-
-ggsave(
-  filename = "AICFigures/Work_GSI_Fineness_RegressionPlot.jpeg",    # output file name
-  plot = work.fineness1,              # the ggplot object
-  width = 18,                     # width in inches
-  height = 12,                    # height in inches
-  dpi = 300                        # resolution (higher = better quality)
-)
+work.fineness1 #no figure to save as it is not supported more than null!
 
 ```
 
@@ -1312,6 +1302,7 @@ SP.work.condition <- work.condition +
     inherit.aes = FALSE
   )
 
+SP.work.condition
 
 ggsave(
   filename = "AICFigures/Work_SP_Condition_RegressionPlot.jpeg",    # output file name
@@ -1800,17 +1791,7 @@ work.fineness1 <- work.fineness +
     size = 10
   )
 
-work.fineness1
-
-
-
-ggsave(
-  filename = "AICFigures/Work_SP_Fineness_RegressionPlot.jpeg",    # output file name
-  plot = work.fineness1,              # the ggplot object
-  width = 18,                     # width in inches
-  height = 12,                    # height in inches
-  dpi = 300                        # resolution (higher = better quality)
-)
+work.fineness1 #no figure to save because of AICc model selection
 
 
 ```
@@ -1824,7 +1805,7 @@ library(AICcmodavg)
 str(SP_noLLnoGH)
 model1 <- lm(Estimated_Fineness ~ 1, data = SP_noLLnoGH)
 model2 <- lm(Estimated_Fineness ~ Avg_Work, data = SP_noLLnoGH)
-summary(eggmodel2)
+summary(model2)
 
 #table of AIC results
 mynames1 <- paste("model", as.character(1:2), sep = "")

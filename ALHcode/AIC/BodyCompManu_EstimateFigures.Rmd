@@ -1091,18 +1091,14 @@ fineness_rtg$X <- factor(fineness_rtg$X,
                  levels = rev(c("(Intercept)",
                                 "Collection_RiverMile_m",
                                 "RunTimingGroupMiddle",
-                                "RunTimingGroupLate", 
-                                "SexM",
-                                "juliandate",
-                                "RunTimingGroupMiddle:SexM",
-                                "RunTimingGroupLate:SexM")))
+                                "RunTimingGroupLate",
+                                "SexM")))
      
 
 levels(factor(fineness_gsi$X))
 fineness_gsi$X <- factor(fineness_gsi$X,
                  levels = rev(c("(Intercept)", 
                                 "Collection_RiverMile_m",
-                                "juliandate",
                                 "Group_AssignmentChitina",
                                 "Group_AssignmentKlutinaLake",
                                 "Group_AssignmentKlutinaTonsinaOutlet",
@@ -1118,16 +1114,8 @@ fineness_gsi$X <- factor(fineness_gsi$X,
 #now data has been restructured for figures, need to remove collection river mile from all structure, does not need to be graphed
 fineness_rtg <- fineness_rtg %>%
   filter(X != "Collection_RiverMile_m")
-fineness_rtg <- fineness_rtg %>%
-  filter(X != "juliandate")
 fineness_gsi <- fineness_gsi %>%
   filter(X != "Collection_RiverMile_m")
-fineness_gsi <- fineness_gsi %>%
-  filter(X != "juliandate")
-
-#filter out interactions
-fineness_rtg <- fineness_rtg %>%
-  filter(!grepl(":", X))
 
 
 colors <- c(
@@ -1148,8 +1136,8 @@ colors <- c(
 ######============Fineness RTG plot===================
 
 #Re Labeling
-levels(fineness_rtg$X)[levels(fineness_rtg$X) == "RunTimingGroupLate"] <- "Late Run Timing Group"
 levels(fineness_rtg$X)[levels(fineness_rtg$X) == "RunTimingGroupMiddle"] <- "Middle Run Timing Group"
+levels(fineness_rtg$X)[levels(fineness_rtg$X) == "RunTimingGroupLate"] <- "Late Run Timing Group"
 levels(fineness_rtg$X)[levels(fineness_rtg$X) == "SexM"] <- "Male"
 
 # Add a dummy column for faceting
@@ -1315,17 +1303,8 @@ fineness_sp$X <- factor(fineness_sp$X,
                                 "Collection_LocationMentasta",
                                 "Collection_LocationTanada",
                                 "Collection_LocationGulkana Hatchery",
-                                "SexM",
-                                "Year2020",
-                                "Year2021",
-                                "Collection_LocationGulkana Hatchery:SexM",       
-                                "Collection_LocationLong Lake:SexM",
-                                "Collection_LocationMahlo:SexM",
-                                "Collection_LocationMentasta:SexM",
-                                "Collection_LocationSt Anne:SexM",
-                                "Collection_LocationTanada:SexM",
-                                "SexM:Year2020",
-                                "SexM:Year2021"))) #now data has all be re-leveled
+                                "SexM"
+                                ))) #now data has all be re-leveled
 
 #now data has been restructured for figures, need to remove collection river mile from all structure, does not need to be graphed
 
@@ -1342,8 +1321,6 @@ fineness_sp <- fineness_sp %>%
 #Re Labeling
 levels(fineness_sp$X)
 levels(fineness_sp$X)[levels(fineness_sp$X) == "SexM"] <- "Male"
-levels(fineness_sp$X)[levels(fineness_sp$X) == "Year2020"] <- "2020"
-levels(fineness_sp$X)[levels(fineness_sp$X) == "Year2021"] <- "2021"
 levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationGulkana Hatchery"] <- "Gulkana Hatchery"
 levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationTanada"] <- "Tanada"
 levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationMentasta"] <- "Mentasta"

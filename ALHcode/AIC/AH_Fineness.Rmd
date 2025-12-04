@@ -167,34 +167,7 @@ write.csv(DataSet, "lowerriver_GSI_fineness.csv")
 
 ```
 
-### Import Data for models
-```{r}
-rm(list = ls())
-lowerriver_bodycomp_PCscores <- "lowerriver_bodycomp_PCscores.csv"
 
-# Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
-DataSet<-read.csv(lowerriver_bodycomp_PCscores)[,-1] #79 variables, 179 observations b/c one row with NA sex is removed
-
-#### CHECK DIRECTION OF PC SCORE ###
-library(ggplot2)
-ggplot(DataSet, aes(x=Fish_Leng_1, y=bodysize_pc_g_mm)) +
-  geom_point()
-#so direction of PC score is positive, can check with other variables
-
-# View DataSet.
-head(DataSet)
-summary(DataSet)
-nrow(DataSet)
-str(DataSet)
-
-#make response variables factors
-DataSet$Collection_Location <- as.factor(DataSet$Collection_Location)
-DataSet$RunTimingGroup <- as.factor(DataSet$RunTimingGroup)
-DataSet$Year<- as.factor(DataSet$Year)
-DataSet$Sex<- as.factor(DataSet$Sex)
-str(DataSet) #collection_rivermile_m is numeric
-
-```
 
 
 ### Making Models for fineness~RunTimingGroup, includes collection location
@@ -212,13 +185,15 @@ DataSet$juliandate <- as.numeric(
   DataSet$Collection_Date - as.Date(paste0(DataSet$Year, "-06-01"))
 )
 str(DataSet)
+DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup)
 
 
 model1 <- lm(fineness~1, data=DataSet)
-model2 <- lm(fineness~Collection_RiverMile_m + juliandate, data = DataSet)
+model2 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup, data = DataSet)
 model3 <- lm(fineness~Collection_RiverMile_m + Sex, data = DataSet)
-model4 <- lm(fineness~Collection_RiverMile_m + juliandate + Sex, data = DataSet)
+model4 <- lm(fineness~Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
 
+summary(model4)
 
 ```
 
@@ -237,8 +212,8 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("fineness~Collection_RiverMile_m + juliandate",
-                      "fineness~Collection_RiverMile_m + juliandate + Sex",
+aic_df$ModelName <- c("fineness~Collection_RiverMile_m + RunTimingGroup",
+                      "fineness~Collection_RiverMile_m + RunTimingGroup + Sex",
                       "fineness~Collection_RiverMile_m + Sex",
                       "fineness~1")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
@@ -284,15 +259,15 @@ coefs_df_full$SE <- avg_se_full
 # Calculate parameter importance (parameter likelihoods)
 param_likelihoods <- sw(model_avg)
 as.data.frame(param_likelihoods)
-format(sw(model_avg), digits = 6, nsmall = 4)
 
 
 # Manually specify parameter likelihoods from sw(model_avg)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
   "Collection_RiverMile_m" = 1.0,
-  "juliandate" = 1.0,
-  "SexM" = 0.318683
+  "RunTimingGroupMiddle" = 0.865978,
+  "RunTimingGroupLate" = 0.865978,
+  "SexM" = 0.134022
 )
 
 # Add ParamLikelihoods by matching rownames
@@ -334,6 +309,7 @@ DataSet$Sex<- as.factor(DataSet$Sex)
 DataSet$Collection_Date <- as.Date(DataSet$Collection_Date)
 DataSet$juliandate <- as.numeric(
   DataSet$Collection_Date - as.Date(paste0(DataSet$Year, "-06-01")))
+DataSet$RunTimingGroup <- factor(DataSet$RunTimingGroup)
 str(DataSet) #collection_rivermile_m is numeric
 
 
@@ -342,23 +318,13 @@ levels(DataSet$Group_Assignment) #levels are not all consistent. Need to fix thi
 
 #models for fineness
 model1 <- lm(fineness~1, data=DataSet)
-model2 <- lm(fineness~Collection_RiverMile_m + juliandate + Group_Assignment, data = DataSet)
-model3 <- lm(fineness~Collection_RiverMile_m + juliandate + Sex, data = DataSet)
-model4 <- lm(fineness~Collection_RiverMile_m + juliandate + Group_Assignment + Sex, data = DataSet)
+model2 <- lm(fineness~Collection_RiverMile_m + Sex, data = DataSet)
+model3 <- lm(fineness~Collection_RiverMile_m + Group_Assignment, data = DataSet)
+model4 <- lm(fineness~Collection_RiverMile_m + Sex + Group_Assignment, data = DataSet)
+
+summary(model2)
 
 
-ggplot(data = DataSet, aes(x = juliandate, y = fineness)) +
-  geom_point(alpha = 0.5) +
-  geom_smooth(method = "lm", se = TRUE, color = "black") +
-  labs(x = "Julian Date",
-       y = "Fineness Ratio") +
-  theme_linedraw() +
-  theme(
-    axis.title = element_text(size = 26, face = "bold"),
-    axis.text = element_text(size = 24),
-    legend.title = element_text(size = 26, face = "bold"),
-    legend.text = element_text(size = 24)
-  )
 
 
 ```
@@ -377,9 +343,9 @@ myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("fineness~Collection_RiverMile_m + juliandate + Sex",
-                      "fineness~Collection_RiverMile_m + juliandate + Group_Assignment + Sex",
-                      "fineness~Collection_RiverMile_m + juliandate + Group_Assignment",
+aic_df$ModelName <- c("fineness~Collection_RiverMile_m + Sex",
+                      "fineness~Collection_RiverMile_m + Sex + Group_Assignment ",
+                      "fineness~Collection_RiverMile_m + Group_Assignment",
                       "fineness~1")
 
 
@@ -431,16 +397,15 @@ as.data.frame(param_likelihoods)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
   "Collection_RiverMile_m" = 1.00000000,
-  "juliandate" = 1.000000,
-  "Group_AssignmentChitina" = 0.00386804,
-  "Group_AssignmentGulkana" = 0.00386804,
-  "Group_AssignmentGulkanaHatchery" = 0.00386804,
-  "Group_AssignmentKlutinaLake" = 0.00386804,
-  "Group_AssignmentKlutinaTonsinaOutlet" = 0.00386804,
-  "Group_AssignmentSlana" = 0.00386804,
-  "Group_AssignmentTanadaCopperLakes" = 0.00386804,
-  "Group_AssignmentTazlina" = 0.00386804,
-  "SexM" = 0.99866114	
+  "Group_AssignmentChitina" = 0.00838759,
+  "Group_AssignmentGulkana" = 0.00838759,
+  "Group_AssignmentGulkanaHatchery" = 0.00838759,
+  "Group_AssignmentKlutinaLake" = 0.00838759,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 0.00838759,
+  "Group_AssignmentSlana" = 0.00838759,
+  "Group_AssignmentTanadaCopperLakes" = 0.00838759,
+  "Group_AssignmentTazlina" = 0.00838759,
+  "SexM" = 0.99690290	
 )
 
 
@@ -491,39 +456,29 @@ any(is.na(DataSet$Gonad_Wt_g)) #FALSE
 model1 <- lm(fineness~1, data=DataSet)
 model2 <- lm(fineness~ Gonad_Wt_g + Collection_Location, data = DataSet)
 model3 <- lm(fineness~ Gonad_Wt_g + Sex, data = DataSet)
-model4 <- lm(fineness~ Gonad_Wt_g + Year, data = DataSet)
-model5 <- lm(fineness~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
-model6 <- lm(fineness~ Gonad_Wt_g + Collection_Location + Year, data = DataSet)
-model7 <- lm(fineness~ Gonad_Wt_g + Sex + Year, data = DataSet)
-model8 <- lm(fineness~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
-model9 <- lm(fineness~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(fineness~ Gonad_Wt_g + Collection_Location + Sex + Year, data = DataSet)
+model4 <- lm(fineness~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
 
-summary(model10)
+summary(model4)
+
+
 ```
 
 ### AICc Model Selection
 ```{r}
-AIC(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+AIC(model1, model2, model3, model4)
 
 #table of AIC results
-mynames1 <- paste("model", as.character(1:10), sep = "")
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+mynames1 <- paste("model", as.character(1:4), sep = "")
+models <- list(model1, model2, model3, model4)
 
 # Generate AIC table
 myaicc1 <- aictab(models, modnames = mynames1)
 print(myaicc1)
 # Convert AIC table to a data frame for easier manipulation
 aic_df <- as.data.frame(myaicc1)
-aic_df$ModelName <- c("fineness~ Gonad_Wt_g + Collection_Location + Year",
-                      "fineness~ Gonad_Wt_g + Collection_Location + Sex + Year",
-                      "fineness~ Gonad_Wt_g + Year",
-                      "fineness~Gonad_Wt_g + Sex + Year + Sex:Year",
-                      "fineness~ Gonad_Wt_g + Sex + Year",
-                      "fineness~ Gonad_Wt_g + Collection_Location",
+aic_df$ModelName <- c("fineness~ Gonad_Wt_g + Collection_Location",
                       "fineness~ Gonad_Wt_g + Collection_Location + Sex",
                       "fineness~ 1",
-                      "fineness~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex",
                       "fineness~ Gonad_Wt_g + Sex")
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
@@ -538,7 +493,7 @@ write.csv(aic_df, file = "fineness_spawningpopulation/AICresults_fineness~Spawni
 library(MuMIn)
 
 # List your models (already fit with na.action=na.fail)
-models <- list(model1, model2, model3, model4, model5, model6, model7, model8, model9, model10)
+models <- list(model1, model2, model3, model4)
 
 # Model averaging based on AICc, conditional averaging (default is full=TRUE)
 model_avg <- model.avg(models, rank = "AICc", full = TRUE)
@@ -570,24 +525,14 @@ as.data.frame(param_likelihoods)
 # Manually specify parameter likelihoods from sw(model_avg)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
-  "Gonad_Wt_g" = 1.000000,
-  "Collection_LocationGulkana Hatchery" = 9.99996e-01, 
-  "Collection_LocationLong Lake" = 9.99996e-01,
-  "Collection_LocationMahlo" = 9.99996e-01,
-  "Collection_LocationMentasta" = 9.99996e-01,
-  "Collection_LocationSt Anne" = 9.99996e-01,
-  "Collection_LocationTanada" = 9.99996e-01,
-  "Year2020" = 1.00000,
-  "Year2021" = 1.00000, 
-  "SexM" = 4.60785e-01,
-  "SexM:Year2020" = 1.18928e-06,
-  "SexM:Year2021" = 1.18928e-06,
-  "Collection_LocationGulkana Hatchery:SexM" = 3.10862e-28,
-  "Collection_LocationLong Lake:SexM" = 3.10862e-28,
-  "Collection_LocationMahlo:SexM" = 3.10862e-28,
-  "Collection_LocationMentasta:SexM" = 3.10862e-28,
-  "Collection_LocationSt Anne:SexM" = 3.10862e-28,
-  "Collection_LocationTanada:SexM" = 3.10862e-28
+  "Gonad_Wt_g" = 0.971629,
+  "Collection_LocationGulkana Hatchery" = 0.964420, 
+  "Collection_LocationLong Lake" = 0.964420,
+  "Collection_LocationMahlo" = 0.964420,
+  "Collection_LocationMentasta" = 0.964420,
+  "Collection_LocationSt Anne" = 0.964420,
+  "Collection_LocationTanada" = 0.964420,
+  "SexM" = 0.340892
 )
 
 
