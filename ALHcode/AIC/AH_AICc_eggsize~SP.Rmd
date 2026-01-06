@@ -71,6 +71,7 @@ nrow(DataSetF)
 str(DataSetF)
 ```
 
+
 ### Making Models for fecundity~RunTimingGroup, includes collection location
 ```{r}
 # Models for reference
@@ -134,6 +135,7 @@ colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 write.csv(aic_df, file = "eggsize_spawningpopulation/AICresults_eggsize~SpawningPopulation.csv", row.names = FALSE)
 
 ```
+
 
 ### Model Averaging
 ```{r}

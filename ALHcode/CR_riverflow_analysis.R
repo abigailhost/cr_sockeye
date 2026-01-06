@@ -1,6 +1,202 @@
-### Copper River Flow Data Figures 2019-2021
+### Copper River Flow Data Figures 2011-2021
+
+rm(list = ls())
+FlowData <- read.csv("ALHcode/odata/million_dollar_bridge_discharge_data_1988-2025.csv") #7523 observations, 12 variables
+
+# Load data
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+FlowAll <- FlowData %>%
+  mutate(
+    Date = mdy(time),
+    Year = year(Date),
+    DOY  = yday(Date)
+  ) %>%
+  filter(
+    Year %in% 2012:2021,
+    Date >= make_date(Year, 5, 1),
+    Date <= make_date(Year, 11, 1)
+  )
+
+# Peak per year (based on actual date, but plotted on DOY)
+PeakFlow <- FlowAll %>%
+  group_by(Year) %>%
+  filter(value == max(value)) %>%
+  slice(1)
 
 
+year_colors <- c(
+  "#693829FF",
+  "#894B33FF",
+  "#A56A3EFF",
+  "#CFB267FF",
+  "#D9C5B6FF",
+  "#9CA9BAFF",
+  "#2F3E52FF",
+  "#08306B",
+  "#1F78B4",
+  "#6BAED6"
+)
+
+
+
+
+
+riverdischarge_overlay <- ggplot(
+  FlowAll,
+  aes(x = DOY, y = value, color = factor(Year))
+) +
+  
+  # Shaded sampling window (June 1 – Sept 1 on DOY axis)
+  geom_rect(
+    data = data.frame(
+      xmin = yday(as.Date("2020-06-01")),
+      xmax = yday(as.Date("2020-09-01")),
+      ymin = -Inf, ymax = Inf
+    ),
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    inherit.aes = FALSE,
+    fill = "gray85", alpha = 0.5
+  ) +
+  scale_color_manual(values = year_colors) + 
+  # ll years overlaid
+  geom_line(linewidth = 2, alpha = 1) +
+  
+  # Peak points
+  geom_point(
+    data = PeakFlow,
+    aes(x = DOY, y = value),
+    inherit.aes = FALSE,
+    size = 6,
+    color = "red"
+  ) +
+  
+  scale_x_continuous(
+    breaks = yday(as.Date(paste0("2020-", c("04-01","05-01","06-01","07-01","08-01","09-01", "10-01", "11-01")))),
+    labels = c("Apr","May","Jun","Jul","Aug","Sep", "Oct", "Nov")
+  ) +
+  
+  scale_y_continuous(
+    labels = function(x) format(x, scientific = FALSE),
+    expand = expansion(mult = c(0, 0.12))
+  ) +
+  
+  labs(
+    x = "Month",
+    y = "Discharge (ft³/s)",
+    color = "Year"
+  ) +
+  
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = 24),
+    axis.title = element_text(size = 30, face = "bold"),
+    plot.title = element_text(size = 30, face = "bold", hjust = 0.5),
+    legend.text = element_text(size = 24),
+    legend.title = element_text(size = 30, face = "bold"),
+    legend.position = "right"
+  ) + 
+  guides(color = guide_legend(override.aes = list(linewidth = 4)))
+
+riverdischarge_overlay
+
+ggsave(
+  filename = "ALHcode/AIC/AICFigures/CopperRiver_AnnualDischarge.jpeg",    # output file name
+  plot = riverdischarge_overlay,              # the ggplot object
+  width = 22,                     # width in inches
+  height = 12,                    # height in inches
+  dpi = 300                        # resolution (higher = better quality)
+)
+
+
+
+
+#mean flow from 2012-2021 in form of one single line
+MeanFlow <- FlowAll %>%
+  group_by(DOY) %>%
+  summarise(
+    mean_value = mean(value, na.rm = TRUE)
+  )
+
+PeakMean <- MeanFlow %>%
+  filter(mean_value == max(mean_value)) %>%
+  slice(1)
+
+riverdischarge_mean <- ggplot(
+  MeanFlow,
+  aes(x = DOY, y = mean_value)
+) +
+  
+  # Shaded sampling window (same as other plot)
+  geom_rect(
+    data = data.frame(
+      xmin = yday(as.Date("2020-06-01")),
+      xmax = yday(as.Date("2020-09-01")),
+      ymin = -Inf, ymax = Inf
+    ),
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    inherit.aes = FALSE,
+    fill = "gray85", alpha = 0.5
+  ) +
+  
+  # 0-year mean hydrograph
+  geom_line(
+    color = "navy",
+    linewidth = 4
+  ) +
+  # Peak of the mean hydrograph
+  geom_point(
+    data = PeakMean,
+    aes(x = DOY, y = mean_value),
+    inherit.aes = FALSE,
+    size = 7,
+    color = "red"
+  ) +
+  
+  scale_x_continuous(
+    breaks = yday(as.Date(paste0(
+      "2020-", c("04-01","05-01","06-01","07-01",
+                 "08-01","09-01","10-01","11-01")
+    ))),
+    labels = c("Apr","May","Jun","Jul","Aug","Sep","Oct","Nov")
+  ) +
+  
+  scale_y_continuous(
+    labels = function(x) format(x, scientific = FALSE),
+    expand = expansion(mult = c(0, 0.12))
+  ) +
+  
+  labs(
+    x = "Month",
+    y = "Mean Discharge (ft³/s)"
+  ) +
+  
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = 24),
+    axis.title = element_text(size = 30, face = "bold"),
+    plot.title = element_text(size = 30, face = "bold", hjust = 0.5)
+  )
+
+riverdischarge_mean
+
+ggsave(
+  filename = "ALHcode/AIC/AICFigures/CopperRiver_MeanDischarge_2012-2021.jpeg",    # output file name
+  plot = riverdischarge_mean,              # the ggplot object
+  width = 22,                     # width in inches
+  height = 12,                    # height in inches
+  dpi = 300                        # resolution (higher = better quality)
+)
+
+
+
+
+
+#### For just 2019-2021
 #download data
 rm(list = ls())
 FlowData <- read.csv("ALHcode/odata/million_dollar_bridge_discharge_data_1988-2025.csv") #7523 observations, 12 variables
@@ -20,6 +216,14 @@ FlowData <- FlowData %>%
 str(FlowData)
 
 #filter data for each year of interest
+Flow2011 <- FlowData %>% filter(year(Date) == 2011)
+Flow2012 <- FlowData %>% filter(year(Date) == 2012)
+Flow2013 <- FlowData %>% filter(year(Date) == 2013)
+Flow2014 <- FlowData %>% filter(year(Date) == 2014)
+Flow2015 <- FlowData %>% filter(year(Date) == 2015)
+Flow2016 <- FlowData %>% filter(year(Date) == 2016)
+Flow2017 <- FlowData %>% filter(year(Date) == 2017)
+Flow2018 <- FlowData %>% filter(year(Date) == 2018)
 Flow2019 <- FlowData %>% filter(year(Date) == 2019)
 Flow2020 <- FlowData %>% filter(year(Date) == 2020)
 Flow2021 <- FlowData %>% filter(year(Date) == 2021)
@@ -180,11 +384,4 @@ riverdischarge <- ggplot(FlowFacet, aes(x = Date, y = value)) +
   )
 
 
-ggsave(
-  filename = "ALHcode/AIC/AICFigures/CopperRiver_AnnualDischarge.jpeg",    # output file name
-  plot = riverdischarge,              # the ggplot object
-  width = 18,                     # width in inches
-  height = 12,                    # height in inches
-  dpi = 300                        # resolution (higher = better quality)
-)
  

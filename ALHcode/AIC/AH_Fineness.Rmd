@@ -294,10 +294,6 @@ coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Av
 
 
 
-
-
-
-
 ### Making Models for fineness~GSI, includes collection location
 ```{r}
 # Models for reference

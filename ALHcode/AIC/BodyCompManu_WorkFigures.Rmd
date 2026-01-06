@@ -654,11 +654,10 @@ fec_model <- lm(Estimated_Fecundity ~ Avg_Work, data = GSI_noGulkanaHatchery)
 # 2. Extract R² 
 model_stats <- broom::glance(fec_model) %>%
   mutate(
-    label = paste0("R² = ", round(r.squared, 3)),
-    x = min(GSI_noGulkanaHatchery$Avg_Work),   # x position for label
-    y = max(GSI_noGulkanaHatchery$Estimated_Fecundity) # y position for label
+    label = sprintf("R² = %.2f", r.squared),
+    x = min(GSI_noGulkanaHatchery$Avg_Work),
+    y = max(GSI_noGulkanaHatchery$Estimated_Fecundity)
   )
-
 # 3. Add the label to your plot
 work.fecundity1 <- work.fecundity +
   geom_text(

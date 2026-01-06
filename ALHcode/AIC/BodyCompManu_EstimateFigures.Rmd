@@ -216,16 +216,16 @@ coef_plot2
 facet_labels <- data.frame(
   Trait = c("Body size", "Energy density", "Total energy"),  # must match your facet variable names exactly
   label = c("a", "b", "c"),
-  x = Inf,
-  y = -Inf
+  x = -Inf,
+  y = Inf
 )
 
 RTGplot <- coef_plot2 +
   geom_text(
     data = facet_labels,
     aes(x = x, y = y, label = label),
-    hjust = 2, vjust = -1,     # push inward from the edges
-    size = 12, fontface = "bold",  # adjust size/style
+    hjust = -0.5, vjust = 1.3,     # push inward from the edges
+    size = 14, fontface = "bold",  # adjust size/style
     inherit.aes = FALSE
   )
 RTGplot
@@ -452,16 +452,16 @@ coef_plot2
 facet_labels <- data.frame(
   Trait = c("Body size", "Energy density", "Total energy"),  # must match your facet variable names exactly
   label = c("a", "b", "c"),
-  x = Inf,
-  y = -Inf
+  x = -Inf,
+  y = Inf
 )
 
 GSIplot <- coef_plot2 +
   geom_text(
     data = facet_labels,
     aes(x = x, y = y, label = label),
-    hjust = 2, vjust = -1,     # push inward from the edges
-    size = 12, fontface = "bold",  # adjust size/style
+    hjust = -0.2, vjust = 1.3,     # push inward from the edges
+    size = 14, fontface = "bold",  # adjust size/style
     inherit.aes = FALSE
   )
 GSIplot
@@ -726,7 +726,7 @@ SPplot <- coef_plot2 +
     data = facet_labels,
     aes(x = x, y = y, label = label),
     hjust = 2, vjust = -1,     # push inward from the edges
-    size = 12, fontface = "bold",  # adjust size/style
+    size = 14, fontface = "bold",  # adjust size/style
     inherit.aes = FALSE
   )
 SPplot
@@ -943,14 +943,14 @@ plot_gsi
 library(patchwork)
 plot_rtg_tagged <- plot_rtg +
   labs(tag = "a", x = "Coefficient Estimate", y = "Main Effect Parameter") +
-  theme(plot.tag = element_text(size = 30, face = "bold"),
-        plot.tag.position = c(0.97, 0.12),
+  theme(plot.tag = element_text(size = 35, face = "bold"),
+        plot.tag.position = c(0.38, 0.93),  # ← top-left
         plot.margin = margin(5, 20, 5, 5))
 
 plot_gsi_tagged <- plot_gsi +
   labs(tag = "b", x = "Coefficient Estimate", y = "Main Effect Parameter") +
-  theme(plot.tag = element_text(size = 30, face = "bold"),
-        plot.tag.position = c(0.97, 0.12),
+  theme(plot.tag = element_text(size = 35, face = "bold"),
+        plot.tag.position = c(0.33, 0.93),  # ← top-left
         plot.margin = margin(5, 5, 5, 5))
 
 combined_plot <- (plot_rtg_tagged | plot_gsi_tagged) +
@@ -1141,7 +1141,7 @@ levels(fineness_rtg$X)[levels(fineness_rtg$X) == "RunTimingGroupLate"] <- "Late 
 levels(fineness_rtg$X)[levels(fineness_rtg$X) == "SexM"] <- "Male"
 
 # Add a dummy column for faceting
-fineness_rtg$Facet <- "Fineness"
+fineness_rtg$Facet <- "Fineness Ratio"
 
 fineness_rtg <- fineness_rtg %>%
   mutate(sig = ifelse(CI_Lower > 0 | CI_Upper < 0, TRUE, FALSE))
@@ -1194,7 +1194,7 @@ levels(fineness_gsi$X)[levels(fineness_gsi$X) == "Group_AssignmentChitina"] <- "
 
 
 # Add a dummy column for faceting
-fineness_gsi$Facet <- "Fineness"
+fineness_gsi$Facet <- "Fineness Ratio"
 
 fineness_gsi <- fineness_gsi %>%
   mutate(sig = ifelse(CI_Lower > 0 | CI_Upper < 0, TRUE, FALSE))
@@ -1243,14 +1243,14 @@ plot_gsi
 library(patchwork)
 plot_rtg_tagged <- plot_rtg +
   labs(tag = "a", x = "Coefficient Estimate", y = "Main Effect Parameter") +
-  theme(plot.tag = element_text(size = 30, face = "bold"),
-        plot.tag.position = c(0.97, 0.12),
+  theme(plot.tag = element_text(size = 40, face = "bold"),
+        plot.tag.position = c(0.95, 0.15),
         plot.margin = margin(5, 20, 5, 5))
 
 plot_gsi_tagged <- plot_gsi +
   labs(tag = "b", x = "Coefficient Estimate", y = "Main Effect Parameter") +
-  theme(plot.tag = element_text(size = 30, face = "bold"),
-        plot.tag.position = c(0.97, 0.12),
+  theme(plot.tag = element_text(size = 40, face = "bold"),
+        plot.tag.position = c(0.95, 0.15),
         plot.margin = margin(5, 5, 5, 5))
 
 combined_plot <- (plot_rtg_tagged | plot_gsi_tagged) +
@@ -1329,7 +1329,7 @@ levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationSt Anne"] <- 
 levels(fineness_sp$X)[levels(fineness_sp$X) == "Collection_LocationLong Lake"] <- "Long Lake"
 
 # Add a dummy column for faceting
-fineness_sp$Facet <- "Fineness"
+fineness_sp$Facet <- "Fineness Ratio"
 
 fineness_sp <- fineness_sp %>%
   mutate(sig = ifelse(CI_Lower > 0 | CI_Upper < 0, TRUE, FALSE))
