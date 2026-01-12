@@ -47,16 +47,18 @@ write.csv(lowerriver_GSI_all, "lowerriver_GSI_all.csv")
 # Total energy = PDry_1 * Fish_Wt == mJ energy
 lowerriver_GSI_all$EnergyPDry_1_mJ_g <- lowerriver_GSI_all$EnergyPDry_1 / 1000
 lowerriver_GSI_all$Fish_Wt_g <- lowerriver_GSI_all$Fish_Wt * 1000
+lowerriver_GSI_all$Carcass.guts_Wt_g <- lowerriver_GSI_all$Carcass.guts_Wt * 1000
 lowerriver_GSI_all$TotalEnergy_mJ <- lowerriver_GSI_all$EnergyPDry_1_mJ_g * lowerriver_GSI_all$Fish_Wt_g
+lowerriver_GSI_all$TotalEnergy_carcass_mJ <- lowerriver_GSI_all$EnergyPDry_1_mJ_g * lowerriver_GSI_all$Carcass.guts_Wt_g
 str(lowerriver_GSI_all)
 
-write.csv(lowerriver_GSI_all, "lowerriver_GSI_TotalEnergy.csv")
+write.csv(lowerriver_GSI_all, "lowerriver_GSI_TotalEnergy_1.12.2026.csv")
 ```
 
 ### Import Data for models
 ```{r}
 rm(list = ls())
-lowerriver_GSI_TE <- "lowerriver_GSI_TotalEnergy.csv"
+lowerriver_GSI_TE <- "lowerriver_GSI_TotalEnergy_1.12.2026.csv"
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
 DataSet<-read.csv(lowerriver_GSI_TE)[,-1] #83 variables, 120 observations b/c one row with NA sex is removed
@@ -118,10 +120,12 @@ totalenergy_GSI_modelset <- "totalenergy_GSI/TotalEnergy~GSI_modelset.csv"
 
 ModelSet<-read.csv(totalenergy_GSI_modelset)
 
-model1 <- lm(TotalEnergy_mJ~1, data=DataSet)
-model2 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment, data = DataSet)
-model3 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Sex, data = DataSet)
-model4 <- lm(TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+model1 <- lm(TotalEnergy_carcass_mJ~1, data=DataSet)
+model2 <- lm(TotalEnergy_carcass_mJ~Collection_RiverMile_m + Group_Assignment, data = DataSet)
+model3 <- lm(TotalEnergy_carcass_mJ~Collection_RiverMile_m + Sex, data = DataSet)
+model4 <- lm(TotalEnergy_carcass_mJ~Collection_RiverMile_m + Group_Assignment + Sex, data = DataSet)
+
+summary(model4)
 
 ```
 
@@ -147,7 +151,7 @@ aic_df$ModelName <- c("TotalEnergy_mJ~Collection_RiverMile_m + Group_Assignment 
 colnames(aic_df)[colnames(aic_df) == "Modnames"] <- "Model #"
 
 # Write the data frame to a CSV file
-write.csv(aic_df, file = "totalenergy_GSI/AICresults_TotalEnergy~GSI.csv", row.names = FALSE)
+write.csv(aic_df, file = "totalenergy2_GSI/AICresults_TotalEnergy~GSI.csv", row.names = FALSE)
 
 
 ```
@@ -189,16 +193,16 @@ as.data.frame(param_likelihoods)
 # Manually specify parameter likelihoods from sw(model_avg)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
-  "Collection_RiverMile_m" = 0.9999997,
-  "Group_AssignmentChitina" = 0.9754684,
-  "Group_AssignmentGulkana" = 0.9754684,
-  "Group_AssignmentGulkanaHatchery" = 0.9754684,
-  "Group_AssignmentKlutinaLake" = 0.9754684,
-  "Group_AssignmentKlutinaTonsinaOutlet" = 0.9754684,
-  "Group_AssignmentSlana" = 0.9754684,
-  "Group_AssignmentTanadaCopperLakes" = 0.9754684,
-  "Group_AssignmentTazlina" = 0.9754684,
-  "SexM" = 0.7116766
+  "Collection_RiverMile_m" = 1.000,
+  "Group_AssignmentChitina" = 0.9999314,
+  "Group_AssignmentGulkana" = 0.9999314,
+  "Group_AssignmentGulkanaHatchery" = 0.9999314,
+  "Group_AssignmentKlutinaLake" = 0.9999314,
+  "Group_AssignmentKlutinaTonsinaOutlet" = 0.9999314,
+  "Group_AssignmentSlana" = 0.9999314,
+  "Group_AssignmentTanadaCopperLakes" = 0.9999314,
+  "Group_AssignmentTazlina" = 0.9999314,
+  "SexM" = 0.9904312
 )
 
 
@@ -209,9 +213,10 @@ coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
 # View final table
 print(coefs_df_full)
 
-write.csv(coefs_df_full, file = "totalenergy_GSI/TotalEnergy_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
+write.csv(coefs_df_full, file = "totalenergy2_GSI/TotalEnergy_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
 ```
+
 ### Using summed weighted parameter estimates for total energy by GSI ~ work (successful size for migration, as continuous variable)
 ```{r}
 # Step 1: Extract intercept

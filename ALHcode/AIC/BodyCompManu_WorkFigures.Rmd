@@ -45,7 +45,7 @@ WorkData$Group_Assignment <- droplevels(WorkData$Group_Assignment)
 #download coefficient datasets for body size, energy density, total energy
 body <- read.csv("bodysize_GSI/bodysize_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = 1)
 energy_mJkg <- read.csv("energydensity_GSI/EnergyPDry_1_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = 1)
-energy_mJ <- read.csv("totalenergy_GSI/TotalEnergy_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = 1)
+energy_mJ <- read.csv("totalenergy2_GSI/TotalEnergy_GSI_ModelAvg_Coefs_withLikelihoods.csv", row.names = 1)
 
 #================ body size estimate calculations according to intercept =============
 # Step 1: Extract intercept

@@ -48,16 +48,19 @@ write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_all.csv")
 # Total energy = PDry_1 * Fish_Wt == mJ energy
 lowerriver_bodycomp_all$EnergyPDry_1_mJ_g <- lowerriver_bodycomp_all$EnergyPDry_1 / 1000
 lowerriver_bodycomp_all$Fish_Wt_g <- lowerriver_bodycomp_all$Fish_Wt * 1000
+lowerriver_bodycomp_all$Carcass.guts_Wt_g <- lowerriver_bodycomp_all$Carcass.guts_Wt * 1000
 lowerriver_bodycomp_all$TotalEnergy_g <- lowerriver_bodycomp_all$EnergyPDry_1_mJ_g * lowerriver_bodycomp_all$Fish_Wt_g
+lowerriver_bodycomp_all$TotalEnergy_carcass_g <- lowerriver_bodycomp_all$EnergyPDry_1_mJ_g * lowerriver_bodycomp_all$Carcass.guts_Wt_g
+
 str(lowerriver_bodycomp_all)
 
-write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_TotalEnergy.csv")
+write.csv(lowerriver_bodycomp_all, "lowerriver_bodycomp_TotalEnergy_1.12.2026.csv")
 ```
 
 ### Import Data for models, check for NAs and eliminate as needed
 ```{r}
 rm(list = ls())
-lowerriver_bodycomp_all<- "lowerriver_bodycomp_TotalEnergy.csv"
+lowerriver_bodycomp_all<- "lowerriver_bodycomp_TotalEnergy_1.12.2026.csv" #changed from standard total energy doc___ can quickly change csv to go back to old code
 
 # Import the data. Be sure to check the structure of the data and that R is reading continuous and categorical variables appropriately.
 DataSet<-read.csv(lowerriver_bodycomp_all)[,-1]
@@ -93,16 +96,18 @@ TotalEnergy_RTG_modelset <- "totalenergy_runtiminggroup/TotalEnergy~RunTimingGro
 ModelSet<-read.csv(TotalEnergy_RTG_modelset)
 
 #models
-teModel1 <- lm(TotalEnergy_g ~ 1, data = DataSet)
-teModel2 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet)
-teModel3 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + Sex, data = DataSet)
-teModel4 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + Year, data = DataSet)
-teModel5 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
-teModel6 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
-teModel7 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
-teModel8 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
-teModel9 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
-teModel10 <- lm(TotalEnergy_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+teModel1 <- lm(TotalEnergy_carcass_g ~ 1, data = DataSet)
+teModel2 <- lm(TotalEnergy_carcass_g ~ Collection_RiverMile_m + RunTimingGroup, data = DataSet)
+teModel3 <- lm(TotalEnergy_carcass_g ~ Collection_RiverMile_m + Sex, data = DataSet)
+teModel4 <- lm(TotalEnergy_carcass_g ~ Collection_RiverMile_m + Year, data = DataSet)
+teModel5 <- lm(TotalEnergy_carcass_g ~ Collection_RiverMile_m + RunTimingGroup + Sex, data = DataSet)
+teModel6 <- lm(TotalEnergy_carcass_g ~ Collection_RiverMile_m + RunTimingGroup + Year, data = DataSet)
+teModel7 <- lm(TotalEnergy_carcass_g ~ Collection_RiverMile_m + Sex + Year, data = DataSet)
+teModel8 <- lm(TotalEnergy_carcass_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex, data = DataSet)
+teModel9 <- lm(TotalEnergy_carcass_g ~ Collection_RiverMile_m + Sex + Year + Sex:Year, data = DataSet)
+teModel10 <- lm(TotalEnergy_carcass_g ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year, data = DataSet)
+
+summary(teModel5)
 ```
 
 ### AICc Model Selection
@@ -119,18 +124,18 @@ print(te_aicc) #so model 5 is preferred (lowest AIC score) followed by model 8 a
 # Convert AIC table to a data frame for easier manipulation
 TEaic_df <- as.data.frame(te_aicc)
 TEaic_df$ModelName <- c("TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex",
-                      "TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
                       "TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex + Year",
-                      "TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup",
+                      "TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Sex + RunTimingGroup:Sex",
                       "TotalEnergy ~ Collection_RiverMile_m + Sex",
                       "TotalEnergy ~ Collection_RiverMile_m + Sex + Year",
-                      "TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Year",
                       "TotalEnergy ~ Collection_RiverMile_m + Sex + Year + Sex:Year",
+                      "TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup",
+                      "TotalEnergy ~ Collection_RiverMile_m + RunTimingGroup + Year",
                       "TotalEnergy ~ Collection_RiverMile_m + Year",
                       "TotalEnergy ~ 1")
 colnames(TEaic_df)[colnames(TEaic_df) == "Modnames"] <- "Model #"
 
-write.csv(TEaic_df, file = "totalenergy_runtiminggroup/AICresults_TotalEnergy~RunTimingGroup.csv", row.names = FALSE)
+write.csv(TEaic_df, file = "totalenergy2_runtiminggroup/AICresults_TotalEnergy~RunTimingGroup.csv", row.names = FALSE)
 
 ```
 
@@ -172,15 +177,15 @@ as.data.frame(param_likelihoods)
 manual_likelihoods <- c(
   "(Intercept)" = 1.0,
   "Collection_RiverMile_m" = 1.0,
-  "RunTimingGroupLate" = 0.9893962106,
-  "RunTimingGroupMiddle" = 0.9893962106,
-  "SexM" = 0.9798975906,
-  "Year2020" = 0.0955135790,
-  "Year2021" = 0.0955135790,
-  "RunTimingGroupLate:SexM" = 0.1284309811,
-  "RunTimingGroupMiddle:SexM" = 0.1284309811,
-  "SexM:Year2020" = 0.0004820978,
-  "SexM:Year2021" = 0.0004820978
+  "RunTimingGroupLate" = 0.936138096,
+  "RunTimingGroupMiddle" = 0.936138096,
+  "SexM" = 0.999779142,
+  "Year2020" = 0.133603661,
+  "Year2021" = 0.133603661,
+  "RunTimingGroupLate:SexM" = 0.109421821,
+  "RunTimingGroupMiddle:SexM" = 0.109421821,
+  "SexM:Year2020" = 0.003327999,
+  "SexM:Year2021" = 0.003327999
 )
 
 # Add ParamLikelihoods by matching rownames
@@ -189,61 +194,13 @@ coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
 # View final table
 print(coefs_df_full)
 
-write.csv(coefs_df_full, file = "totalenergy_runtiminggroup/TotalEnergy~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
+write.csv(coefs_df_full, file = "totalenergy2_runtiminggroup/TotalEnergy~runtiminggroup_models_CoefEstimates_withLikelihoods.csv", row.names = TRUE)
 ```
 ### Calculating actual parameter estimates according to intercept
 ```{r}
 coefs_df_full$Actual_Param <- with(coefs_df_full, 
                                    Avg_Coef + coefs_df_full["(Intercept)", "Avg_Coef"])
 coefs_df_full["(Intercept)", "Actual_Param"] <- coefs_df_full["(Intercept)", "Avg_Coef"]
-```
-
-### Figure that displays parameter estimates + CI for each parameter in the model set
-```{r}
-paramestimates_te <- "totalenergy_runtiminggroup/TotalEnergy~runtiminggroup_models_CoefEstimates_withLikelihoods.csv"
-
-estimates_te<-read.csv(paramestimates_te)
-str(estimates_te)
-
-levels(factor(estimates_te$X))
-estimates_te$X <- factor(estimates_te$X, 
-                           levels = rev(c("(Intercept)", 
-                                      "Collection_RiverMile_m",
-                                      "RunTimingGroupMiddle", 
-                                      "RunTimingGroupLate", 
-                                      "SexM",
-                                      "Year2020",
-                                      "Year2021",
-                                      "RunTimingGroupMiddle:SexM",
-                                      "RunTimingGroupLate:SexM",
-                                      "SexM:Year2020",
-                                       "SexM:Year2021")))
-
-
-library(ggplot2)
-ggplot(estimates_te, aes(x = Avg_Coef, y = X)) + 
-  geom_point(size = 3) +  # For the coefficient estimate as dots
-  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
-  labs(x = "Parameter Estimate", y = "Parameter") +
-  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
-  theme_minimal() +
-  theme(axis.title = element_text(size = 24), 
-        axis.text = element_text(size = 24))
-
-library(dplyr)
-estimates_te_filtered <- estimates_te %>%
-  filter(X != "Collection_RiverMile_m") #filter out collection river mile, as it is not necessary for the estimates
-
-te_plot <- ggplot(estimates_te_filtered, aes(x = Avg_Coef, y = X)) + 
-  geom_point(size = 3) +  # For the coefficient estimate as dots
-  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) + # Horizontal CI bars
-  labs(x = "Parameter Estimate", y = "Parameter") +
-  geom_vline(xintercept = 0, color = "red", linetype = "dashed", size = 1) +
-  theme_minimal() +
-  theme(axis.title = element_text(size = 24), 
-        axis.text = element_text(size = 24))
-
-ggsave("totalenergy_runtiminggroup/TotalEnergy_ParamEstimates_Plot.png", plot=te_plot, height=8, width=12, units="in")
 ```
 
 

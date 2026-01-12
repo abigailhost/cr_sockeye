@@ -18,7 +18,7 @@ rm(list = ls())
 #body size, energy, total energy side by side
 body <- read.csv("bodysize_runtiminggroup/bodysize~runtiminggroup_models_CoefEstimates_withLikelihoods.csv")
 energy_mJkg <- read.csv("energydensity_runtiminggroup/EnergyPDry_1~runtiminggroup_models_CoefEstimates_withLikelihoods.csv")
-energy_mJ <- read.csv("totalenergy_runtiminggroup/TotalEnergy~runtiminggroup_models_CoefEstimates_withLikelihoods.csv")
+energy_mJ <- read.csv("totalenergy2_runtiminggroup/TotalEnergy~runtiminggroup_models_CoefEstimates_withLikelihoods.csv")
 
 
 
@@ -117,7 +117,10 @@ coef_plot <- ggplot(AllData, aes(x = Avg_Coef, y = X, color = Trait)) +
   facet_wrap(~Trait, ncol = 3, scales = "free_x") +
   scale_fill_manual(values = colors) +
   scale_color_manual(values = colors) +
-  scale_x_continuous(labels = scales::label_number(accuracy = 0.001)) +  # ✅ call with namespace
+  scale_x_continuous(
+  labels = scales::label_number(accuracy = 0.001),
+  breaks = scales::pretty_breaks(n = 4)
+) +  # ✅ call with namespace
   labs(x = "Coefficient Estimate", y = "Parameter") +
   theme_minimal(base_size = 16) +
   theme(
@@ -180,7 +183,10 @@ coef_plot2 <- ggplot(AllData, aes(x = Avg_Coef, y = X, color = Trait)) +
   facet_wrap(~Trait, ncol = 3, scales = "free_x") +
   scale_fill_manual(values = colors) +
   scale_color_manual(values = colors) +
-  scale_x_continuous(labels = scales::label_number(accuracy = 0.001)) +
+  scale_x_continuous(
+  labels = scales::label_number(accuracy = 0.001),
+  breaks = scales::pretty_breaks(n = 4)
+) +
   scale_y_discrete(labels = function(x) str_wrap(x, width = 15)) +
   labs(x = "Coefficient Estimate", y = "Main Effect Parameter") +
   theme_minimal() +
@@ -250,7 +256,7 @@ rm(list = ls())
 #body size, energy, total energy side by side
 body <- read.csv("bodysize_GSI/bodysize_GSI_ModelAvg_Coefs_withLikelihoods.csv")
 energy_mJkg <- read.csv("energydensity_GSI/EnergyPDry_1_GSI_ModelAvg_Coefs_withLikelihoods.csv")
-energy_mJ <- read.csv("totalenergy_GSI/TotalEnergy_GSI_ModelAvg_Coefs_withLikelihoods.csv")
+energy_mJ <- read.csv("totalenergy2_GSI/TotalEnergy_GSI_ModelAvg_Coefs_withLikelihoods.csv")
 
 
 
