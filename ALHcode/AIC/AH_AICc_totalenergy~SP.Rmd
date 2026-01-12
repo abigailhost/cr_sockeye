@@ -47,18 +47,19 @@ write.csv(upperriver_bodycomp_all, "upperriver_bodycomp_all.csv")
 # Total energy = PDry_1 * Fish_Wt == mJ energy
 upperriver_bodycomp_all$EnergyPDry_1_mJ_g <- upperriver_bodycomp_all$EnergyPDry_1 / 1000
 upperriver_bodycomp_all$Fish_Wt_g <- upperriver_bodycomp_all$Fish_Wt * 1000
+upperriver_bodycomp_all$Carcass.guts_Wt_g <- upperriver_bodycomp_all$Carcass.guts_Wt * 1000
 upperriver_bodycomp_all$TotalEnergy_mJ <- upperriver_bodycomp_all$EnergyPDry_1_mJ_g * upperriver_bodycomp_all$Fish_Wt_g
+upperriver_bodycomp_all$TotalEnergy_carcass_mJ <- upperriver_bodycomp_all$EnergyPDry_1_mJ_g * upperriver_bodycomp_all$Carcass.guts_Wt_g
 str(upperriver_bodycomp_all)
 
-write.csv(upperriver_bodycomp_all, "upperriver_bodycomp_TotalEnergy.csv")
+write.csv(upperriver_bodycomp_all, "upperriver_bodycomp_TotalEnergy_1.12.2026.csv")
 ```
 
 
 ### Import Data for models, check for NAs and eliminate as needed
-
 ```{r, include = FALSE}
 rm(list = ls())
-upperriver_bodycomp_TotalEnergy <- "upperriver_bodycomp_TotalEnergy.csv"
+upperriver_bodycomp_TotalEnergy <- "upperriver_bodycomp_TotalEnergy_1.12.2026.csv"
 DataSet<-read.csv(upperriver_bodycomp_TotalEnergy)[,-1]
 
 ##### For the Upper River Data, I want to elimiate Power Creek Cordova, Eyak Weir Cordova, Bone Creek, Klutina River, and Upper Klutina, and Copper Lake data points as they don't apply to my spawning populations of interest ####
@@ -79,11 +80,11 @@ DataSet[is.na(DataSet$Sex), ] #row 87 and 110 has no sex value, eliminate it for
 #check gonad weight for NAs
 any(is.na(DataSet$Gonad_Wt_g))
 DataSet[is.na(DataSet$Gonad_Wt_g), ] #need to eliminate these rows or model selection will not work
-DataSet[is.na(DataSet$TotalEnergy_mJ), ] #Row 35 does not have a Total Energy value, so eliminate for analysis
-DataSet <- DataSet[-c(18,35,36,40,61,65,77,87,102,110,118,141,142,144,161,164,221, 222,224),] #excludes row missing sex file
+DataSet[is.na(DataSet$TotalEnergy_carcass_mJ), ] #Row 35 does not have a Total Energy value, so eliminate for analysis
+DataSet <- DataSet[-c(18,22,35,36,40,61,65,70,77,87,102,110,118,141,142,144,154,161,164,221, 222,224),] #excludes row missing sex file
 any(is.na(DataSet$Sex)) #FALSE
 any(is.na(DataSet$Gonad_Wt_g)) #FALSE
-any(is.na(DataSet$TotalEnergy_mJ))
+any(is.na(DataSet$TotalEnergy_carcass_mJ))
 
 
 
@@ -118,16 +119,18 @@ totalenergy_SP_modelset <- "totalenergy_spawningpopulation/TotalEnergy~SP_models
 
 ModelSet<-read.csv(totalenergy_SP_modelset)
 
-model1 <- lm(TotalEnergy_mJ~1, data=DataSet)
-model2 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location, data = DataSet)
-model3 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Sex, data = DataSet)
-model4 <- lm(TotalEnergy_mJ~Gonad_Wt_g + Year, data = DataSet)
-model5 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
-model6 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Year, data = DataSet)
-model7 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Sex + Year, data = DataSet)
-model8 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
-model9 <- lm(TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
-model10 <- lm(TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex + Year, data = DataSet)
+model1 <- lm(TotalEnergy_carcass_mJ~1, data=DataSet)
+model2 <- lm(TotalEnergy_carcass_mJ~ Gonad_Wt_g + Collection_Location, data = DataSet)
+model3 <- lm(TotalEnergy_carcass_mJ~ Gonad_Wt_g + Sex, data = DataSet)
+model4 <- lm(TotalEnergy_carcass_mJ~Gonad_Wt_g + Year, data = DataSet)
+model5 <- lm(TotalEnergy_carcass_mJ~ Gonad_Wt_g + Collection_Location + Sex, data = DataSet)
+model6 <- lm(TotalEnergy_carcass_mJ~ Gonad_Wt_g + Collection_Location + Year, data = DataSet)
+model7 <- lm(TotalEnergy_carcass_mJ~ Gonad_Wt_g + Sex + Year, data = DataSet)
+model8 <- lm(TotalEnergy_carcass_mJ~ Gonad_Wt_g + Collection_Location + Sex + Collection_Location:Sex, data = DataSet)
+model9 <- lm(TotalEnergy_carcass_mJ~Gonad_Wt_g + Sex + Year + Sex:Year, data = DataSet)
+model10 <- lm(TotalEnergy_carcass_mJ~ Gonad_Wt_g + Collection_Location + Sex + Year, data = DataSet)
+
+summary(model10)
 ```
 
 ### AICc Model Selection
@@ -149,13 +152,13 @@ TEaic_df$ModelName <- c("TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Sex 
                         "TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location + Year",
                         "TotalEnergy_mJ~ Gonad_Wt_g + Collection_Location",
                         "TotalEnergy_mJ~ Gonad_Wt_g + Sex + Year",
-                        "TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year",
                         "TotalEnergy_mJ~ Gonad_Wt_g + Sex",
+                        "TotalEnergy_mJ~Gonad_Wt_g + Sex + Year + Sex:Year",
                         "TotalEnergy_mJ~Gonad_Wt_g + Year",
                         "TotalEnergy_mJ~1")
 colnames(TEaic_df)[colnames(TEaic_df) == "Modnames"] <- "Model #"
 
-write.csv(TEaic_df, file = "totalenergy_spawningpopulation/AICresults_TotalEnergy~SpawningPopulation.csv", row.names = FALSE)
+write.csv(TEaic_df, file = "totalenergy2_spawningpopulation/AICresults_TotalEnergy~SpawningPopulation.csv", row.names = FALSE)
 
 ```
 
@@ -203,17 +206,17 @@ manual_likelihoods <- c(
   "Collection_LocationMentasta" = 1.0000,
   "Collection_LocationSt Anne" = 1.0000,
   "Collection_LocationTanada" = 1.0000,
-  "Year2020" = 0.9872105,
-  "Year2021" = 0.9872105, 
-  "SexM" = 0.9999564,
-  "SexM:Year2020" = 1.541287e-10,
-  "SexM:Year2021" = 1.541287e-10,
-  "Collection_LocationGulkana Hatchery:SexM" = 8.631624e-05,
-  "Collection_LocationLong Lake:SexM" = 8.631624e-05,
-  "Collection_LocationMahlo:SexM" = 8.631624e-05,
-  "Collection_LocationMentasta:SexM" = 8.631624e-05,
-  "Collection_LocationSt Anne:SexM" = 8.631624e-05,
-  "Collection_LocationTanada:SexM" = 8.631624e-05
+  "Year2020" = 9.204447e-01,
+  "Year2021" = 9.204447e-01, 
+  "SexM" = 1.00000,
+  "SexM:Year2020" = 3.629613e-11,
+  "SexM:Year2021" = 3.629613e-11,
+  "Collection_LocationGulkana Hatchery:SexM" = 2.054929e-03,
+  "Collection_LocationLong Lake:SexM" = 2.054929e-03,
+  "Collection_LocationMahlo:SexM" = 2.054929e-03,
+  "Collection_LocationMentasta:SexM" = 2.054929e-03,
+  "Collection_LocationSt Anne:SexM" = 2.054929e-03,
+  "Collection_LocationTanada:SexM" = 2.054929e-03
 )
 
 
@@ -224,7 +227,7 @@ coefs_df_full$ParamLikelihood <- manual_likelihoods[rownames(coefs_df_full)]
 # View final table
 print(coefs_df_full)
 
-write.csv(coefs_df_full, file = "totalenergy_spawningpopulation/TotalEnergy_SP_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
+write.csv(coefs_df_full, file = "totalenergy2_spawningpopulation/TotalEnergy_SP_ModelAvg_Coefs_withLikelihoods.csv", row.names = TRUE)
 
 ```
 

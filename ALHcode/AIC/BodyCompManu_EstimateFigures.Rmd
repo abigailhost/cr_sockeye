@@ -493,7 +493,7 @@ rm(list = ls())
 #body size, energy, total energy side by side
 body <- read.csv("bodysize_spawningpopulation/bodysize_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv")
 energy_mJkg <- read.csv("energydensity_spawningpopulation/energydensity_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv")
-energy_mJ <- read.csv("totalenergy_spawningpopulation/TotalEnergy_SP_ModelAvg_Coefs_withLikelihoods.csv")
+energy_mJ <- read.csv("totalenergy2_spawningpopulation/TotalEnergy_SP_ModelAvg_Coefs_withLikelihoods.csv")
 
 #Look at structure
 str(body)

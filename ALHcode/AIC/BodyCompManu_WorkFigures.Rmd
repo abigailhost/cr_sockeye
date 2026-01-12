@@ -968,7 +968,7 @@ str(WorkData)
 #download coefficient datasets for body size, energy density, total energy
 body <- read.csv("bodysize_spawningpopulation/bodysize_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv", row.names = 1)
 energy_mJkg <- read.csv("energydensity_spawningpopulation/energydensity_spawningpopulation_ModelAvg_Coefs_withLikelihoods.csv", row.names = 1)
-energy_mJ <- read.csv("totalenergy_spawningpopulation/TotalEnergy_SP_ModelAvg_Coefs_withLikelihoods.csv", row.names = 1)
+energy_mJ <- read.csv("totalenergy2_spawningpopulation/TotalEnergy_SP_ModelAvg_Coefs_withLikelihoods.csv", row.names = 1)
 
 #================ body size estimate calculations according to intercept =============
 # Step 1: Extract intercept
