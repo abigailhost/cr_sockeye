@@ -91,11 +91,13 @@ riverdischarge_overlay <- ggplot(
   
   theme_minimal() +
   theme(
+    axis.title.y = element_text(margin = margin(r = 25)),
+    axis.title.x = element_text(margin = margin(t = 25)),
     panel.grid.minor = element_blank(),
-    axis.text = element_text(size = 24),
+    axis.text = element_text(size = 26),
     axis.title = element_text(size = 30, face = "bold"),
     plot.title = element_text(size = 30, face = "bold", hjust = 0.5),
-    legend.text = element_text(size = 24),
+    legend.text = element_text(size = 26),
     legend.title = element_text(size = 30, face = "bold"),
     legend.position = "right"
   ) + 
@@ -125,74 +127,35 @@ PeakMean <- MeanFlow %>%
   filter(mean_value == max(mean_value)) %>%
   slice(1)
 
-riverdischarge_mean <- ggplot(
-  MeanFlow,
-  aes(x = DOY, y = mean_value)
-) +
-  
-  # Shaded sampling window (same as other plot)
-  geom_rect(
-    data = data.frame(
-      xmin = yday(as.Date("2020-06-01")),
-      xmax = yday(as.Date("2020-09-01")),
-      ymin = -Inf, ymax = Inf
-    ),
-    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-    inherit.aes = FALSE,
-    fill = "gray85", alpha = 0.5
-  ) +
-  
-  # 0-year mean hydrograph
+
+### Combine two plots such that all lines are still present along with a mean line ###
+riverdischarge_combined <- riverdischarge_overlay +
+  # Mean hydrograph (single bold line)
   geom_line(
+    data = MeanFlow,
+    aes(x = DOY, y = mean_value),
+    inherit.aes = FALSE,
     color = "navy",
     linewidth = 4
   ) +
-  # Peak of the mean hydrograph
+  # Peak of mean hydrograph
   geom_point(
     data = PeakMean,
     aes(x = DOY, y = mean_value),
     inherit.aes = FALSE,
     size = 7,
     color = "red"
-  ) +
-  
-  scale_x_continuous(
-    breaks = yday(as.Date(paste0(
-      "2020-", c("04-01","05-01","06-01","07-01",
-                 "08-01","09-01","10-01","11-01")
-    ))),
-    labels = c("Apr","May","Jun","Jul","Aug","Sep","Oct","Nov")
-  ) +
-  
-  scale_y_continuous(
-    labels = function(x) format(x, scientific = FALSE),
-    expand = expansion(mult = c(0, 0.12))
-  ) +
-  
-  labs(
-    x = "Month",
-    y = "Mean Discharge (ft³/s)"
-  ) +
-  
-  theme_minimal() +
-  theme(
-    panel.grid.minor = element_blank(),
-    axis.text = element_text(size = 24),
-    axis.title = element_text(size = 30, face = "bold"),
-    plot.title = element_text(size = 30, face = "bold", hjust = 0.5)
   )
 
-riverdischarge_mean
+riverdischarge_combined
 
 ggsave(
-  filename = "ALHcode/AIC/AICFigures/CopperRiver_MeanDischarge_2012-2021.jpeg",    # output file name
-  plot = riverdischarge_mean,              # the ggplot object
+  filename = "ALHcode/AIC/AICFigures/CopperRiver_YearlyAndMeanDischarge_2012-2021.jpeg",    # output file name
+  plot = riverdischarge_combined,              # the ggplot object
   width = 22,                     # width in inches
   height = 12,                    # height in inches
   dpi = 300                        # resolution (higher = better quality)
 )
-
-
 
 
 

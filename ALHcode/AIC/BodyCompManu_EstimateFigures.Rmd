@@ -82,14 +82,14 @@ energy_mJkg <- energy_mJkg %>%
 #combine data set according to metric
 # Add a variable for dataset type
 body$Trait <- "Body size"
-energy_mJkg$Trait <- "Energy density"
-energy_mJ$Trait <- "Total energy"
+energy_mJkg$Trait <- "Somatic energy density"
+energy_mJ$Trait <- "Total somatic energy"
 
 # Combine all
 AllData <- bind_rows(body, energy_mJkg, energy_mJ)
 
 # Optional: order Trait for facet order
-AllData$Trait <- factor(AllData$Trait, levels = c("Body size", "Energy density", "Total energy"))
+AllData$Trait <- factor(AllData$Trait, levels = c("Body size", "Somatic energy density", "Total somatic energy"))
 str(AllData)
 levels(AllData$X)[levels(AllData$X) == "RunTimingGroupLate"] <- "Late Run Timing Group"
 levels(AllData$X)[levels(AllData$X) == "RunTimingGroupMiddle"] <- "Middle Run Timing Group"
@@ -200,7 +200,7 @@ coef_plot2 <- ggplot(AllData, aes(x = Avg_Coef, y = X, color = Trait)) +
     axis.title.y = element_text(margin = margin(r = 15)), # move y-title over
     
     # General text/axes
-    axis.text = element_text(size = 24, color = "black"),
+    axis.text = element_text(size = 26, color = "black"),
     axis.title = element_text(size = 30, face = "bold"),
     
     # Panel outlines
@@ -220,7 +220,7 @@ coef_plot2
 #### Add A, B, C labels to each panel
 # Create a small data frame of facet labels
 facet_labels <- data.frame(
-  Trait = c("Body size", "Energy density", "Total energy"),  # must match your facet variable names exactly
+  Trait = c("Body size", "Somatic energy density", "Total somatic energy"),  # must match your facet variable names exactly
   label = c("a", "b", "c"),
   x = -Inf,
   y = Inf
@@ -241,7 +241,7 @@ ggsave(
   filename = "AICFigures/RunTiming_Condition_EstimatesPlot.jpeg",    # output file name
   plot = RTGplot,              # the ggplot object
   width = 20,                     # width in inches
-  height = 13,                    # height in inches
+  height = 12,                    # height in inches
   dpi = 300                        # resolution (higher = better quality)
 )
 ```
@@ -320,14 +320,14 @@ energy_mJkg <- energy_mJkg %>%
 #combine data set according to metric
 # Add a variable for dataset type
 body$Trait <- "Body size"
-energy_mJkg$Trait <- "Energy density"
-energy_mJ$Trait <- "Total energy"
+energy_mJkg$Trait <- "Somatic energy density"
+energy_mJ$Trait <- "Total somatic energy"
 
 # Combine all
 AllData <- bind_rows(body, energy_mJkg, energy_mJ)
 
 # Optional: order Trait for facet order
-AllData$Trait <- factor(AllData$Trait, levels = c("Body size", "Energy density", "Total energy"))
+AllData$Trait <- factor(AllData$Trait, levels = c("Body size", "Somatic energy density", "Total somatic energy"))
 
 #Re Labeling
 str(AllData)
@@ -422,7 +422,10 @@ coef_plot2 <- ggplot(AllData, aes(x = Avg_Coef, y = X, color = Trait)) +
   facet_wrap(~Trait, ncol = 3, scales = "free_x") +
   scale_fill_manual(values = colors) +
   scale_color_manual(values = colors) +
-  scale_x_continuous(labels = scales::label_number(accuracy = 0.001)) +
+  scale_x_continuous(
+  labels = scales::label_number(accuracy = 0.001),
+  breaks = scales::pretty_breaks(n = 3)
+) +
   scale_y_discrete(labels = function(x) str_wrap(x, width = 15)) +
   labs(x = "Coefficient Estimate", y = "Main Effect Parameter") +
   theme_minimal() +
@@ -436,7 +439,7 @@ coef_plot2 <- ggplot(AllData, aes(x = Avg_Coef, y = X, color = Trait)) +
     axis.title.y = element_text(margin = margin(r = 15)), # move y-title over
     
     # General text/axes
-    axis.text = element_text(size = 24, color = "black"),
+    axis.text = element_text(size = 26, color = "black"),
     axis.title = element_text(size = 30, face = "bold"),
     
     # Panel outlines
@@ -456,7 +459,7 @@ coef_plot2
 #### Add A, B, C labels to each panel
 # Create a small data frame of facet labels
 facet_labels <- data.frame(
-  Trait = c("Body size", "Energy density", "Total energy"),  # must match your facet variable names exactly
+  Trait = c("Body size", "Somatic energy density", "Total somatic energy"),  # must match your facet variable names exactly
   label = c("a", "b", "c"),
   x = -Inf,
   y = Inf
@@ -477,7 +480,7 @@ GSIplot
 ggsave(
   filename = "AICFigures/GSI_Condition_EstimatesPlot.jpeg",    # output file name
   plot = GSIplot,              # the ggplot object
-  width = 18,                     # width in inches
+  width = 19,                     # width in inches
   height = 12,                    # height in inches
   dpi = 300                        # resolution (higher = better quality)
 )
@@ -580,14 +583,14 @@ energy_mJkg <- energy_mJkg %>%
 #combine data set according to metric
 # Add a variable for dataset type
 body$Trait <- "Body size"
-energy_mJkg$Trait <- "Energy density"
-energy_mJ$Trait <- "Total energy"
+energy_mJkg$Trait <- "Somatic energy density"
+energy_mJ$Trait <- "Total somatic energy"
 
 # Combine all
 AllData <- bind_rows(body, energy_mJkg, energy_mJ)
 
 # Optional: order Trait for facet order
-AllData$Trait <- factor(AllData$Trait, levels = c("Body size", "Energy density", "Total energy"))
+AllData$Trait <- factor(AllData$Trait, levels = c("Body size", "Somatic energy density", "Total somatic energy"))
 
 #Re Labeling
 str(AllData)
@@ -686,7 +689,10 @@ coef_plot2 <- ggplot(AllData, aes(x = Avg_Coef, y = X, color = Trait)) +
   facet_wrap(~Trait, ncol = 3, scales = "free_x") +
   scale_fill_manual(values = colors) +
   scale_color_manual(values = colors) +
-  scale_x_continuous(labels = scales::label_number(accuracy = 0.001)) +
+  scale_x_continuous(
+  labels = scales::label_number(accuracy = 0.001),
+  breaks = scales::pretty_breaks(n = 3)
+) +
   scale_y_discrete(labels = function(x) str_wrap(x, width = 15)) +
   labs(x = "Coefficient Estimate", y = "Main Effect Parameter") +
   theme_minimal() +
@@ -700,7 +706,7 @@ coef_plot2 <- ggplot(AllData, aes(x = Avg_Coef, y = X, color = Trait)) +
     axis.title.y = element_text(margin = margin(r = 15)), # move y-title over
     
     # General text/axes
-    axis.text = element_text(size = 24, color = "black"),
+    axis.text = element_text(size = 26, color = "black"),
     axis.title = element_text(size = 30, face = "bold"),
     
     # Panel outlines
@@ -721,7 +727,7 @@ coef_plot2
 #### Add A, B, C labels to each panel
 # Create a small data frame of facet labels
 facet_labels <- data.frame(
-  Trait = c("Body size", "Energy density", "Total energy"),  # must match your facet variable names exactly
+  Trait = c("Body size", "Somatic energy density", "Total somatic energy"),  # must match your facet variable names exactly
   label = c("a", "b", "c"),
   x = Inf,
   y = -Inf
@@ -740,7 +746,7 @@ SPplot
 ggsave(
   filename = "AICFigures/SpawningPopulation_Condition_EstimatesPlot.jpeg",    # output file name
   plot = SPplot,              # the ggplot object
-  width = 18,                     # width in inches
+  width = 19,                     # width in inches
   height = 12,                    # height in inches
   dpi = 300                        # resolution (higher = better quality)
 )
